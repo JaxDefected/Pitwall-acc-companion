@@ -1,0 +1,100 @@
+{
+  "entities": {
+    "Setup": {
+      "title": "Setup",
+      "description": "An ACC setup file and metadata.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "car": { "type": "string" },
+        "track": { "type": "string" },
+        "notes": { "type": "string" },
+        "rawData": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "uploadedBy": { "type": "string" },
+        "uploadedByName": { "type": "string" }
+      },
+      "required": ["id", "name", "car", "track", "rawData", "createdAt", "updatedAt", "uploadedBy"]
+    },
+    "Guide": {
+      "title": "Guide",
+      "description": "Custom engineering or troubleshooting guides uploaded by the team.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "content": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "updatedBy": { "type": "string" }
+      },
+      "required": ["id", "content", "updatedAt", "updatedBy"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "A customized driver profile with chosen sim username and series configurations.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "username": { "type": "string" },
+        "pinnedSeriesCars": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["uid", "username", "pinnedSeriesCars"]
+    },
+    "SavedSetup": {
+      "title": "SavedSetup",
+      "description": "A tweaked custom setup saved as a variant of a parent setup.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "parentSetupId": { "type": "string" },
+        "authorUsername": { "type": "string" },
+        "versionNote": { "type": "string" },
+        "isTeamWorkspace": { "type": "boolean" },
+        "car": { "type": "string" },
+        "track": { "type": "string" },
+        "notes": { "type": "string" },
+        "rawData": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "parentSetupId", "authorUsername", "versionNote", "isTeamWorkspace", "car", "track", "rawData"]
+    },
+    "SetupRating": {
+      "title": "SetupRating",
+      "description": "Community dynamic rating and tags given to a particular setup.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "setupId": { "type": "string" },
+        "rating": { "type": "integer" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "username": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "setupId", "rating", "tags", "username"]
+    }
+  },
+  "firestore": {
+    "/setups/{setupId}": {
+      "schema": "Setup",
+      "description": "The collection of AC Competizione setups."
+    },
+    "/guides/{guideId}": {
+      "schema": "Guide",
+      "description": "The custom setup troubleshooting guides."
+    },
+    "/users/{uid}": {
+      "schema": "UserProfile",
+      "description": "Custom driver profiles containing chosen handles and active car filters."
+    },
+    "/savedSetups/{savedSetupId}": {
+      "schema": "SavedSetup",
+      "description": "Tweaked custom setup files authored by drivers."
+    },
+    "/setupRatings/{ratingId}": {
+      "schema": "SetupRating",
+      "description": "Stars and handling tag reviews for each setup."
+    }
+  }
+}

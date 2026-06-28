@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>PitWall ACC Setup Lab - Late Night Racing Beta</title>
+    <meta name="description" content="ACC Companion App" />
+    
+    <!-- Open Graph (OG) metadata for social sharing -->
+    <meta property="og:title" content="PitWall ACC Setup Lab - Late Night Racing Beta" />
+    <meta property="og:description" content="ACC Companion App" />
+    <meta property="og:type" content="website" />
+    <!-- Prevent window.fetch read-only property assignment crashes in certain iframe or polyfilled environments -->
+    <script>
+      (function() {
+        try {
+          var originalFetch = window.fetch;
+          Object.defineProperty(window, 'fetch', {
+            get: function() {
+              return originalFetch;
+            },
+            set: function(val) {
+              originalFetch = val;
+            },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {
+          console.warn('Failed to define configurable window.fetch:', e);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;750;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+body {
+  background-color: #fafafa;
+  color: #18181b;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  /* Safe-area padding integration for notch devices and Dynamic Islands */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+/* Prevent accidental text highlighting and disable double-tap zoom on all interactive elements on mobile fast taps */
+button,
+select,
+input,
+textarea,
+a,
+[role="button"],
+.interactive-card,
+.clickable-row {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Ensure inputs are fully text-selectable but keep touch-action optimal */
+input[type="text"],
+input[type="number"],
+textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  touch-action: manipulation;
+}
+
+/* Set up dynamic stable gutter spacing for scrollable containers to prevent content layout shifts */
+.scroll-container,
+.custom-scrollbar,
+main,
+section,
+div {
+  scrollbar-gutter: stable;
+}
+
+/* Global custom elite racing scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(180, 180, 180, 0.4);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(180, 180, 180, 0.6);
+}

@@ -1,0 +1,6 @@
+{
+  "name": "PitWall - ACC Setup Manager & AI Engineer",
+  "description": "ACC Companion App",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
