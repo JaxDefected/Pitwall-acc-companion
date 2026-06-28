@@ -164,9 +164,62 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                   style={{ whiteSpace: "normal" }}
                 >
                   <option value="" style={{ whiteSpace: "normal" }} className="whitespace-normal break-words py-1 text-xs text-white">Select a Car</option>
-                  {Object.entries(ACC_CARS).map(([key, value]) => (
-                    <option key={key} value={key} style={{ whiteSpace: "normal" }} className="whitespace-normal break-words py-1 text-xs text-white">{value}</option>
-                  ))}
+                  {(() => {
+                    // Group cars by class
+                    const groups: Record<string, [string, string][]> = {
+                      "GT3": [],
+                      "GT4": [],
+                      "GT2": [],
+                      "TCX": [],
+                      "Cup / Challenge (GTC)": []
+                    };
+                    const uncategorized: [string, string][] = [];
+
+                    Object.entries(ACC_CARS).forEach(([key, value]) => {
+                      const lower = key.toLowerCase();
+                      if (lower.includes("gt4") || lower === "alpine_a110_gt4" || lower === "chevrolet_camaro_gt4r" || lower === "ktm_xbow_gt4" || lower === "maserati_mc_gt4" || lower === "ginetta_g55_gt4" || lower === "aston_martin_vantage_gt4") {
+                        groups["GT4"].push([key, value]);
+                      } else if (lower.includes("gt2") || lower === "porsche_935") {
+                        groups["GT2"].push([key, value]);
+                      } else if (lower.includes("gt3") || lower === "jaguar_g3" || lower.includes("audi_r8_lms") || lower.includes("bentley_continental") || lower.includes("lexus_rc_f") || lower.includes("lamborghini_gallardo_rex") || lower.includes("mclaren_650s") || lower === "mercedes_amg_gt3" || lower.includes("nissan_gt_r")) {
+                        groups["GT3"].push([key, value]);
+                      } else if (lower.includes("m2_cs") || lower.includes("tcx")) {
+                        groups["TCX"].push([key, value]);
+                      } else if (lower.includes("cup") || lower.includes("challenge") || lower.includes("st_evo")) {
+                        groups["Cup / Challenge (GTC)"].push([key, value]);
+                      } else {
+                        uncategorized.push([key, value]);
+                      }
+                    });
+
+                    // Sort groups alphabetically by display name
+                    const sortByName = (list: [string, string][]) => {
+                      return list.sort((a, b) => a[1].localeCompare(b[1]));
+                    };
+
+                    const renderGroup = (label: string, carsList: [string, string][]) => {
+                      const sortedList = sortByName(carsList);
+                      if (sortedList.length === 0) return null;
+                      return (
+                        <optgroup key={label} label={label} className="bg-zinc-900 text-zinc-400 font-bold py-1">
+                          {sortedList.map(([key, value]) => (
+                            <option key={key} value={key} style={{ whiteSpace: "normal" }} className="whitespace-normal break-words py-1 text-xs text-white bg-zinc-900 font-normal">
+                              {value}
+                            </option>
+                          ))}
+                        </optgroup>
+                      );
+                    };
+
+                    return [
+                      renderGroup("GT3", groups["GT3"]),
+                      renderGroup("GT4", groups["GT4"]),
+                      renderGroup("GT2", groups["GT2"]),
+                      renderGroup("TCX", groups["TCX"]),
+                      renderGroup("Cup / Challenge (GTC)", groups["Cup / Challenge (GTC)"]),
+                      renderGroup("Uncategorized", uncategorized)
+                    ];
+                  })()}
                 </select>
               </div>
 

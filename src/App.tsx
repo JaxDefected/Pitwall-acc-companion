@@ -2075,11 +2075,55 @@ export default function App() {
                     if (profile?.pinnedSeriesCars && profile.pinnedSeriesCars.length > 0 && onlyPinnedCarsFilter) {
                       allCars = allCars.filter(carKey => profile.pinnedSeriesCars.includes(carKey));
                     }
-                    return allCars.map((carKey) => (
-                      <option key={carKey} value={carKey}>
-                        {ACC_CARS[carKey] || carKey}
-                      </option>
-                    ));
+
+                    // Group cars by class
+                    const groups: Record<string, string[]> = {
+                      "GT3": [],
+                      "GT4": [],
+                      "GT2": [],
+                      "TCX": [],
+                      "Cup / Challenge (GTC)": []
+                    };
+                    const uncategorized: string[] = [];
+
+                    allCars.forEach((carKey) => {
+                      const lower = carKey.toLowerCase();
+                      if (lower.includes("gt4") || lower === "alpine_a110_gt4" || lower === "chevrolet_camaro_gt4r" || lower === "ktm_xbow_gt4" || lower === "maserati_mc_gt4" || lower === "ginetta_g55_gt4" || lower === "aston_martin_vantage_gt4") {
+                        groups["GT4"].push(carKey);
+                      } else if (lower.includes("gt2") || lower === "porsche_935") {
+                        groups["GT2"].push(carKey);
+                      } else if (lower.includes("gt3") || lower === "jaguar_g3" || lower.includes("audi_r8_lms") || lower.includes("bentley_continental") || lower.includes("lexus_rc_f") || lower.includes("lamborghini_gallardo_rex") || lower.includes("mclaren_650s") || lower === "mercedes_amg_gt3" || lower.includes("nissan_gt_r")) {
+                        groups["GT3"].push(carKey);
+                      } else if (lower.includes("m2_cs") || lower.includes("tcx")) {
+                        groups["TCX"].push(carKey);
+                      } else if (lower.includes("cup") || lower.includes("challenge") || lower.includes("st_evo")) {
+                        groups["Cup / Challenge (GTC)"].push(carKey);
+                      } else {
+                        uncategorized.push(carKey);
+                      }
+                    });
+
+                    const renderGroup = (label: string, carsList: string[]) => {
+                      if (carsList.length === 0) return null;
+                      return (
+                        <optgroup key={label} label={label}>
+                          {carsList.map((carKey) => (
+                            <option key={carKey} value={carKey}>
+                              {ACC_CARS[carKey] || carKey}
+                            </option>
+                          ))}
+                        </optgroup>
+                      );
+                    };
+
+                    return [
+                      renderGroup("GT3", groups["GT3"]),
+                      renderGroup("GT4", groups["GT4"]),
+                      renderGroup("GT2", groups["GT2"]),
+                      renderGroup("TCX", groups["TCX"]),
+                      renderGroup("Cup / Challenge (GTC)", groups["Cup / Challenge (GTC)"]),
+                      renderGroup("Uncategorized", uncategorized)
+                    ];
                   })()}
                 </select>
               </div>
