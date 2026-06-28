@@ -654,7 +654,7 @@ export default function App() {
         if (!cachedTree) {
           handleScanMultipleRepos([
             { repo: "Temetias/acc-sets", branch: "master" },
-            { repo: "Lon3035/ACC_Setups", branch: "master" }
+            { repo: "JaxDefected/ACC_Setups", branch: "master" }
           ], true);
         }
       } catch (err) {
@@ -907,7 +907,7 @@ export default function App() {
     if (activeGarageTab === "github") {
       handleScanMultipleRepos([
         { repo: "Temetias/acc-sets", branch: "master" },
-        { repo: "Lon3035/ACC_Setups", branch: "master" }
+        { repo: "JaxDefected/ACC_Setups", branch: "master" }
       ], true);
     }
   }, [activeGarageTab]);
