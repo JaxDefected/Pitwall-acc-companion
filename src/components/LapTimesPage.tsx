@@ -38,7 +38,7 @@ const GT4_COLUMNS = [
 ];
 
 export default function LapTimesPage() {
-  const [selectedClass, setSelectedClass] = useState<"GT3" | "GT4" | "GT2">("GT3");
+  const [selectedClass, setSelectedClass] = useState<"GT2" | "GT3" | "GT4">("GT3");
   const [selectedCar, setSelectedCar] = useState<string>("");
   const [selectedTrack, setSelectedTrack] = useState<string>("");
   const [isBriefingOpen, setIsBriefingOpen] = useState<boolean>(true);
@@ -90,7 +90,7 @@ export default function LapTimesPage() {
   }, [activeCarObj, availableCars]);
 
   // Handle class shift as clean reset
-  const handleClassChange = (cls: "GT3" | "GT4" | "GT2") => {
+  const handleClassChange = (cls: "GT2" | "GT3" | "GT4") => {
     setSelectedClass(cls);
     setSelectedCar("");
     setSelectedTrack("");
@@ -121,7 +121,7 @@ export default function LapTimesPage() {
             ACC LFM Lap Times Reference
           </h2>
           <p className="text-zinc-600 text-[11.5px] sm:text-xs font-medium">
-            Review expected race pace benchmarks and qualifying targets across GT3, GT4, and GT2 configurations
+            Review expected race pace benchmarks and qualifying targets across GT2, GT3, and GT4 configurations
           </p>
         </div>
       </div>
@@ -134,22 +134,22 @@ export default function LapTimesPage() {
           <span className="text-zinc-600 font-bold uppercase tracking-wide text-[10px]">1. Select Category</span>
           <div className="flex bg-zinc-100 p-1 rounded border border-zinc-200 gap-1">
             <button
-              onClick={() => handleClassChange("GT3")}
+              onClick={() => handleClassChange("GT2")}
               className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center ${selectedClass === "GT3" ? "bg-white text-red-655 shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
+            >
+              GT2
+            </button>
+            <button
+              onClick={() => handleClassChange("GT3")}
+              className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center ${selectedClass === "GT4" ? "bg-white text-red-655 shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
             >
               GT3
             </button>
             <button
               onClick={() => handleClassChange("GT4")}
-              className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center ${selectedClass === "GT4" ? "bg-white text-red-655 shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
-            >
-              GT4
-            </button>
-            <button
-              onClick={() => handleClassChange("GT2")}
               className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center ${selectedClass === "GT2" ? "bg-white text-red-655 shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
             >
-              GT2
+              GT4
             </button>
           </div>
         </div>
