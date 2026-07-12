@@ -264,53 +264,110 @@ function parseSetupFilenameMetadata(fileName: string): SetupFilenameMetadata {
   return { grade, gradeLabel, patch, session, sessionLabel, temp, isCustomFormat };
 }
 
+function detectCarFromSegment(segment: string): string {
+  const clean = segment.toLowerCase().trim();
+  if (!clean) return "unknown";
+
+  // 1. Direct shorthand/synonym mapping overrides
+  if (clean === "amr_v12_vantage_gt3" || clean === "amr_v12" || clean === "vantage_v12" || clean.includes("amr_v12") || clean.includes("amrv12")) {
+    return "aston_martin_v12_vantage_gt3";
+  }
+  if (clean === "audi_r8_gt4" || clean === "r8_gt4" || clean === "audi_gt4" || clean.includes("audi_r8_gt4") || clean.includes("audir8gt4")) {
+    return "audi_r8_lms_gt4";
+  }
+  if (clean === "bmw_m6_gt3" || clean === "m6_gt3" || clean === "bmwm6") {
+    return "bmw_m6_gt3";
+  }
+
+  // 2. Check keys and labels
+  for (const [key, label] of Object.entries(ACC_CARS)) {
+    const kLower = key.toLowerCase();
+    const lLower = label.toLowerCase();
+    
+    // Normalize for spaces and underscores
+    const normClean = clean.replace(/[-_\s]/g, "");
+    const normKey = kLower.replace(/[-_\s]/g, "");
+    const normLabel = lLower.replace(/[-_\s]/g, "");
+
+    if (
+      clean === kLower ||
+      normClean === normKey ||
+      normClean === normLabel ||
+      kLower.includes(clean) ||
+      lLower.includes(clean) ||
+      clean.includes(kLower) ||
+      clean.includes(lLower) ||
+      normKey.includes(normClean) ||
+      normLabel.includes(normClean) ||
+      normClean.includes(normKey) ||
+      normClean.includes(normLabel)
+    ) {
+      if (normClean.length > 2 && normClean !== "sets" && normClean !== "setup" && normClean !== "setups") {
+        return key;
+      }
+    }
+  }
+  return "unknown";
+}
+
+function detectTrackFromSegment(segment: string): string {
+  const clean = segment.toLowerCase().trim();
+  if (!clean) return "unknown";
+
+  for (const [key, label] of Object.entries(ACC_TRACKS)) {
+    const kLower = key.toLowerCase();
+    const lLower = label.toLowerCase();
+    
+    const normClean = clean.replace(/[-_\s]/g, "");
+    const normKey = kLower.replace(/[-_\s]/g, "");
+    const normLabel = lLower.replace(/[-_\s]/g, "");
+
+    if (
+      clean === kLower ||
+      normClean === normKey ||
+      normClean === normLabel ||
+      kLower.includes(clean) ||
+      lLower.includes(clean) ||
+      clean.includes(kLower) ||
+      clean.includes(lLower) ||
+      normKey.includes(normClean) ||
+      normLabel.includes(normClean) ||
+      normClean.includes(normKey) ||
+      normClean.includes(normLabel)
+    ) {
+      if (normClean.length > 2) {
+        return key;
+      }
+    }
+  }
+  return "unknown";
+}
+
 function parseGithubPath(path: string): { carKey: string; trackKey: string; fileName: string; meta: SetupFilenameMetadata } {
-  const segments = path.toLowerCase().split("/");
+  // Normalize path separators to forward slash to split correctly on both Windows and UNIX style paths
+  const segments = path.toLowerCase().replace(/\\/g, "/").split("/");
   const fileName = segments[segments.length - 1] || "";
   
   let carKey = "unknown";
   let trackKey = "unknown";
   
-  // Try matching search mapping in segments
-  for (const segment of segments) {
-    // Check cars
+  // Try matching search mapping in segments (folders first)
+  for (let i = 0; i < segments.length - 1; i++) {
+    const segment = segments[i];
     if (carKey === "unknown") {
-      for (const [key, label] of Object.entries(ACC_CARS)) {
-        if (segment === key || segment.includes(key) || label.toLowerCase().includes(segment) || segment.includes(label.toLowerCase())) {
-          carKey = key;
-          break;
-        }
-      }
+      carKey = detectCarFromSegment(segment);
     }
-    // Check tracks
     if (trackKey === "unknown") {
-      for (const [key, label] of Object.entries(ACC_TRACKS)) {
-        const cleanLabel = label.toLowerCase();
-        if (segment === key || segment.includes(key) || cleanLabel.includes(segment) || segment.includes(cleanLabel)) {
-          trackKey = key;
-          break;
-        }
-      }
+      trackKey = detectTrackFromSegment(segment);
     }
   }
   
-  // If still unknown, scan filename
-  const fnLower = fileName.toLowerCase();
+  // If still unknown, scan filename (last segment)
   if (carKey === "unknown") {
-    for (const [key, label] of Object.entries(ACC_CARS)) {
-      if (fnLower.includes(key) || fnLower.includes(label.toLowerCase().replace(/[^a-z0-9]/g, "_"))) {
-        carKey = key;
-        break;
-      }
-    }
+    carKey = detectCarFromSegment(fileName);
   }
   if (trackKey === "unknown") {
-    for (const [key, label] of Object.entries(ACC_TRACKS)) {
-      if (fnLower.includes(key) || fnLower.includes(label.toLowerCase().replace(/[^a-z0-9]/g, "_"))) {
-        trackKey = key;
-        break;
-      }
-    }
+    trackKey = detectTrackFromSegment(fileName);
   }
   
   return { carKey, trackKey, fileName, meta: parseSetupFilenameMetadata(fileName) };
@@ -967,25 +1024,15 @@ export default function App() {
             // Normalize path helper for Folder items
             const relPath = file.webkitRelativePath || "";
             if (relPath) {
-              const pathLower = relPath.toLowerCase();
-              for (const key of Object.keys(ACC_TRACKS)) {
-                if (
-                  pathLower.includes(`/${key}/`) || 
-                  pathLower.includes(`/${key}_`) || 
-                  pathLower.includes(`_${key}/`) || 
-                  pathLower.startsWith(`${key}/`)
-                ) {
-                  trackKey = key;
+              const segments = relPath.toLowerCase().replace(/\\/g, "/").split("/");
+              // Check segments (parent folders first)
+              for (let i = 0; i < segments.length - 1; i++) {
+                const segment = segments[i];
+                if (carKey === "unknown") {
+                  carKey = detectCarFromSegment(segment);
                 }
-              }
-              for (const key of Object.keys(ACC_CARS)) {
-                if (
-                  pathLower.includes(`/${key}/`) || 
-                  pathLower.includes(`/${key}_`) || 
-                  pathLower.includes(`_${key}/`) || 
-                  pathLower.startsWith(`${key}/`)
-                ) {
-                  carKey = key;
+                if (trackKey === "unknown") {
+                  trackKey = detectTrackFromSegment(segment);
                 }
               }
             }
@@ -993,20 +1040,10 @@ export default function App() {
             // Fallbacks from filename
             const fnLower = file.name.toLowerCase();
             if (trackKey === "unknown") {
-              for (const key of Object.keys(ACC_TRACKS)) {
-                if (fnLower.includes(key)) {
-                  trackKey = key;
-                  break;
-                }
-              }
+              trackKey = detectTrackFromSegment(fnLower);
             }
             if (carKey === "unknown") {
-              for (const key of Object.keys(ACC_CARS)) {
-                if (fnLower.includes(key)) {
-                  carKey = key;
-                  break;
-                }
-              }
+              carKey = detectCarFromSegment(fnLower);
             }
 
             // Auto-clean name

@@ -56,6 +56,8 @@ export const ACC_CARS: Record<string, string> = {
   porsche_992_gt3_cup: "Porsche 911 GT3 Cup (992)",
   lamborghini_huracan_st_evo2: "Lamborghini Huracan ST Evo II",
   ferrari_488_challenge_evo: "Ferrari 488 Challenge Evo",
+  bmw_m6_gt3: "BMW M6 GT3",
+  ford_mustang_gt3: "Ford Mustang GT3",
 };
 
 // Dictionary mapping for tracks in ACC
