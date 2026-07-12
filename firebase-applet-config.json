@@ -1,13 +1,9 @@
 {
-  apiKey: "AIzaSyCuuj8bAx3Tqz4kOKj3d68dBAfl106lR0w",
-  authDomain: "pitwall-companion.firebaseapp.com",
-  projectId: "pitwall-companion",
-  storageBucket: "pitwall-companion.firebasestorage.app",
-  messagingSenderId: "296082324996",
-  appId: "1:296082324996:web:add08ee83eb8e99d56ff51",
-  measurementId: "G-BCNZ7NSNE4"
-<<<<<<< HEAD
+  "apiKey": "AIzaSyCuuj8bAx3Tqz4kOKj3d68dBAfl106lR0w",
+  "authDomain": "pitwall-companion.firebaseapp.com",
+  "projectId": "pitwall-companion",
+  "storageBucket": "pitwall-companion.firebasestorage.app",
+  "messagingSenderId": "296082324996",
+  "appId": "1:296082324996:web:add08ee83eb8e99d56ff51",
+  "measurementId": "G-BCNZ7NSNE4"
 }
-=======
-}
->>>>>>> aa5656f9443d55dc277317519f6077a938753397
