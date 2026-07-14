@@ -71,7 +71,7 @@ export const ACC_TRACKS: Record<string, string> = {
   imola: "Imola",
   kyalami: "Kyalami",
   nurburgring: "Nürburgring GP",
-  nurburgring_24: "Nordschleife",
+  nurburgring_24h: "Nordschleife",
   paul_ricard: "Paul Ricard",
   zandvoort: "Zandvoort",
   zolder: "Zolder",
