@@ -313,28 +313,32 @@ function detectCarFromSegment(segment: string): string {
 function detectTrackFromSegment(segment: string): string {
   const clean = segment.toLowerCase().trim();
   if (!clean) return "unknown";
+  
+  const normClean = clean.replace(/[-_\s]/g, "");
 
+  // First Pass: Check for strict exact matches to prevent substring hijacking
   for (const [key, label] of Object.entries(ACC_TRACKS)) {
     const kLower = key.toLowerCase();
     const lLower = label.toLowerCase();
-    
-    const normClean = clean.replace(/[-_\s]/g, "");
     const normKey = kLower.replace(/[-_\s]/g, "");
     const normLabel = lLower.replace(/[-_\s]/g, "");
 
-    if (
-      clean === kLower ||
-      normClean === normKey ||
-      normClean === normLabel ||
-      kLower.includes(clean) ||
-      lLower.includes(clean) ||
-      clean.includes(kLower) ||
-      clean.includes(lLower) ||
-      normKey.includes(normClean) ||
-      normLabel.includes(normClean) ||
-      normClean.includes(normKey) ||
-      normClean.includes(normLabel)
-    ) {
+    if (clean === kLower || normClean === normKey || normClean === normLabel) {
+      return key;
+    }
+  }
+
+  // Second Pass: Fuzzy/substring mapping fallback
+  for (const [key, label] of Object.entries(ACC_TRACKS)) {
+    const kLower = key.toLowerCase();
+    const lLower = label.toLowerCase();
+    const normKey = kLower.replace(/[-_\s]/g, "");
+    const normLabel = lLower.replace(/[-_\s]/g, "");
+
+    if (kLower.includes(clean) || lLower.includes(clean) || 
+        clean.includes(kLower) || clean.includes(lLower) || 
+        normKey.includes(normClean) || normLabel.includes(normClean) || 
+        normClean.includes(normKey) || normClean.includes(normLabel)) {
       if (normClean.length > 2) {
         return key;
       }
