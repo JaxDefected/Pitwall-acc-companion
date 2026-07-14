@@ -807,9 +807,7 @@ export default function App() {
     if (!cloned.advancedSetup.aerodynamics) cloned.advancedSetup.aerodynamics = { rearWingSetting: 4, rearWing: 4 };
 
     if (field === "tyrePressure" && typeof index === "number") {
-      const rawIndexMap = [0, 2, 1, 3];
-      const rawIdx = rawIndexMap[index];
-      cloned.basicSetup.tyres.tyrePressure[rawIdx] = Math.max(0, Math.min(100, (cloned.basicSetup.tyres.tyrePressure[rawIdx] || 50) + delta));
+      cloned.basicSetup.tyres.tyrePressure[index] = Math.max(0, Math.min(100, (cloned.basicSetup.tyres.tyrePressure[index] || 50) + delta));
     } else if (field === "tc1") {
       cloned.basicSetup.electronics.tc1 = Math.max(0, Math.min(12, (cloned.basicSetup.electronics.tc1 || 3) + delta));
     } else if (field === "tc2") {

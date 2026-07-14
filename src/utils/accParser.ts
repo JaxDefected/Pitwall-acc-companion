@@ -252,9 +252,7 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
   if (tyresSection) {
     const rawPressures = tyresSection.tyrePressure || getNestedVal(tyresSection, ["tyrePressure", "tyrePressures"]);
     if (Array.isArray(rawPressures) && rawPressures.length === 4) {
-      // Reorder from [LF, LR, RF, RR] to [LF, RF, LR, RR]
-      const uiOrdered = [rawPressures[0], rawPressures[2], rawPressures[1], rawPressures[3]];
-      normalized.tyrePressures = uiOrdered.map(stepsToPsi);
+      normalized.tyrePressures = rawPressures.map(stepsToPsi);
     }
   }
   
@@ -265,17 +263,11 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
     const toe = alignmentSection.toe || getNestedVal(alignmentSection, ["toe", "toes"]);
     const caster = alignmentSection.caster || getNestedVal(alignmentSection, ["caster", "casters"]);
     
-    if (camber && Array.isArray(camber) && camber.length === 4) {
-      // Reorder from [LF, LR, RF, RR] to [LF, RF, LR, RR]
-      normalized.cambers = [camber[0], camber[2], camber[1], camber[3]];
-    } else if (camber && Array.isArray(camber)) {
+    if (camber && Array.isArray(camber)) {
       normalized.cambers = camber;
     }
 
-    if (toe && Array.isArray(toe) && toe.length === 4) {
-      // Reorder from [LF, LR, RF, RR] to [LF, RF, LR, RR]
-      normalized.toes = [toe[0], toe[2], toe[1], toe[3]];
-    } else if (toe && Array.isArray(toe)) {
+    if (toe && Array.isArray(toe)) {
       normalized.toes = toe;
     }
 
@@ -343,9 +335,7 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
     
     const wheelRateVal = getNestedVal(mechanicalGripSection, ["wheelRate", "wheelRates"]);
     if (Array.isArray(wheelRateVal) && wheelRateVal.length === 4) {
-      // Reorder from [LF, LR, RF, RR] to [LF, RF, LR, RR] (UI Order)
-      const uiOrdered = [wheelRateVal[0], wheelRateVal[2], wheelRateVal[1], wheelRateVal[3]];
-      normalized.wheelRates = uiOrdered.map((v, i) => {
+      normalized.wheelRates = wheelRateVal.map((v, i) => {
         if (v < 100) {
           if (i < 2) {
             if (car && car.wheelRatesFront && v < car.wheelRatesFront.length) {
@@ -365,9 +355,7 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
 
     const bumpStopRateVal = getNestedVal(mechanicalGripSection, ["bumpStopRate", "bumpstopRate", "bumpStopRates", "bumpstopRates"]);
     if (Array.isArray(bumpStopRateVal) && bumpStopRateVal.length === 4) {
-      // Reorder from [LF, LR, RF, RR] to [LF, RF, LR, RR] (UI Order)
-      const uiOrdered = [bumpStopRateVal[0], bumpStopRateVal[2], bumpStopRateVal[1], bumpStopRateVal[3]];
-      normalized.bumpstopRates = uiOrdered.map((v, i) => {
+      normalized.bumpstopRates = bumpStopRateVal.map((v, i) => {
         if (v < 100) {
           const bsFRateRange = car?.bumpStopFrontRateRange || car?.bumpStopRateRange || [300, 2500];
           const bsRRateRange = car?.bumpStopRearRateRange || car?.bumpStopRateRange || [300, 2500];
@@ -383,9 +371,7 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
 
     const bumpStopRangeVal = getNestedVal(mechanicalGripSection, ["bumpStopRange", "bumpstopRange", "bumpStopRanges", "bumpstopRanges"]);
     if (Array.isArray(bumpStopRangeVal) && bumpStopRangeVal.length === 4) {
-      // Reorder from [LF, LR, RF, RR] to [LF, RF, LR, RR] (UI Order)
-      const uiOrdered = [bumpStopRangeVal[0], bumpStopRangeVal[2], bumpStopRangeVal[1], bumpStopRangeVal[3]];
-      normalized.bumpstopRanges = uiOrdered.map((v, i) => {
+      normalized.bumpstopRanges = bumpStopRangeVal.map((v, i) => {
         if (v < 100) {
           const bsFRange = car?.bumpStopWindowFrontRange || [0, 50];
           const bsRRange = car?.bumpStopWindowRearRange || [0, 50];
@@ -421,15 +407,29 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
     const splitterVal = getNestedVal(aeroSection, ["splitter"]);
     const brakeDuctVal = getNestedVal(aeroSection, ["brakeDuct", "brakeDucts"]);
 
-    if (Array.isArray(rideHeightVal) && rideHeightVal.length === 2) {
-      normalized.rideHeights = rideHeightVal.map((v, i) => {
-        if (v < 45) {
-          // Convert step index/click to realistic static mm
-          if (i === 0) return 50 + v * 2;
-          return 60 + v * 2;
-        }
-        return v;
-      });
+    if (Array.isArray(rideHeightVal)) {
+      if (rideHeightVal.length === 4) {
+        const avgFront = (rideHeightVal[0] + rideHeightVal[1]) / 2;
+        const avgRear = (rideHeightVal[2] + rideHeightVal[3]) / 2;
+        
+        const fRange = car?.rideHeightFrontRange || [50, 90];
+        const rRange = car?.rideHeightRearRange || [50, 100];
+        const step = car?.rideHeightStep || 1;
+        
+        normalized.rideHeights = [
+          avgFront < 45 ? fRange[0] + avgFront * step : avgFront,
+          avgRear < 45 ? rRange[0] + avgRear * step : avgRear
+        ];
+      } else if (rideHeightVal.length === 2) {
+        normalized.rideHeights = rideHeightVal.map((v, i) => {
+          if (v < 45) {
+            const range = i === 0 ? (car?.rideHeightFrontRange || [50, 90]) : (car?.rideHeightRearRange || [50, 100]);
+            const step = car?.rideHeightStep || 1;
+            return range[0] + v * step;
+          }
+          return v;
+        });
+      }
     }
     if (rearWingVal !== undefined) normalized.rearWing = rearWingVal;
     if (splitterVal !== undefined) normalized.splitter = splitterVal;
@@ -447,16 +447,16 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
     const reboundFastVal = getNestedVal(dampersSection, ["reboundFast", "reboundFasts"]);
 
     if (Array.isArray(bumpSlowVal) && bumpSlowVal.length === 4) {
-      normalized.bumpSlow = [bumpSlowVal[0], bumpSlowVal[2], bumpSlowVal[1], bumpSlowVal[3]];
+      normalized.bumpSlow = bumpSlowVal;
     }
     if (Array.isArray(bumpFastVal) && bumpFastVal.length === 4) {
-      normalized.bumpFast = [bumpFastVal[0], bumpFastVal[2], bumpFastVal[1], bumpFastVal[3]];
+      normalized.bumpFast = bumpFastVal;
     }
     if (Array.isArray(reboundSlowVal) && reboundSlowVal.length === 4) {
-      normalized.reboundSlow = [reboundSlowVal[0], reboundSlowVal[2], reboundSlowVal[1], reboundSlowVal[3]];
+      normalized.reboundSlow = reboundSlowVal;
     }
     if (Array.isArray(reboundFastVal) && reboundFastVal.length === 4) {
-      normalized.reboundFast = [reboundFastVal[0], reboundFastVal[2], reboundFastVal[1], reboundFastVal[3]];
+      normalized.reboundFast = reboundFastVal;
     }
   }
 
