@@ -5133,49 +5133,95 @@ export default function App() {
                   </span>
                 </div>
 
-                {/* 2. Pinned Series Cars Selector */}
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="block text-zinc-650 text-xs font-mono uppercase font-black tracking-wider">
-                      Pinned Series Cars
-                    </label>
-                  </div>
-                  <p className="text-[11px] text-zinc-500 leading-tight mb-2.5 font-medium font-sans">
-                    Pin your current racing series cars to toggle layout-wide filters for quick grid assessments.
-                  </p>
-                  
-                  <div className="bg-zinc-50 border border-zinc-200 rounded p-3 h-40 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-sans">
-                    {Object.entries(ACC_CARS).map(([carKey, carName]) => {
-                      const isChecked = editPinnedCars.includes(carKey);
-                      return (
-                        <label
-                          key={carKey}
-                          className={`flex items-center gap-2 p-2 rounded border cursor-pointer select-none transition-all ${
-                            isChecked
-                              ? "bg-red-50 border-red-200 text-red-700 font-bold"
-                              : "bg-white border-zinc-200 hover:bg-zinc-100 text-zinc-800"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => {
-                              if (isChecked) {
-                                setEditPinnedCars(editPinnedCars.filter((k) => k !== carKey));
-                              } else {
-                                setEditPinnedCars([...editPinnedCars, carKey]);
-                              }
-                            }}
-                            className="accent-red-655 w-3.5 h-3.5 cursor-pointer shrink-0"
-                          />
-                          <span className="truncate pr-1 text-[11px] font-sans font-semibold" title={carName}>
-                            {carName}
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
+{/* 2. Pinned Series Cars Multi-Select Selector */}
+<div>
+  <div className="flex justify-between items-center mb-1">
+    <label className="block text-zinc-650 text-xs font-mono uppercase font-black tracking-wider">
+      Pinned Series Cars
+    </label>
+    <span className="text-[9px] text-zinc-450 font-semibold font-mono font-bold">OPTIONAL FILTER</span>
+  </div>
+  <p className="text-[11px] text-zinc-500 leading-tight mb-3 font-medium">
+    Select your current racing series cars to automatically pin them. Checking the "Series Only" toggle in the Main Registry will filter the setup list only to these choices!
+  </p>
+
+  <div className="space-y-3">
+    {(() => {
+      // 1. Group cars by class dynamically based on their underlying data properties or naming keys
+      const groups: Record<string, Array<[string, string]>> = {
+        "GT3 Class": [],
+        "GT4 Class": [],
+        "GT2 / GTC / Cup / Other": []
+      };
+
+      Object.entries(ACC_CARS).forEach(([carKey, carName]) => {
+        const lowerKey = carKey.toLowerCase();
+        if (lowerKey.includes("gt4")) {
+          groups["GT4 Class"].push([carKey, carName]);
+        } else if (lowerKey.includes("gt3") || lowerKey.includes("vantage") || lowerKey.includes("huracan") || lowerKey.includes("r8_lms") || lowerKey.includes("m6") || lowerKey.includes("991") || lowerKey.includes("992")) {
+          // Catching standard GT3 variants that lack explicit "gt3" strings in legacy keys
+          if (!lowerKey.includes("cup") && !lowerKey.includes("gt2") && !lowerKey.includes("challenge") && !lowerKey.includes("supertrofeo")) {
+            groups["GT3 Class"].push([carKey, carName]);
+          } else {
+            groups["GT2 / GTC / Cup / Other"].push([carKey, carName]);
+          }
+        } else {
+          groups["GT2 / GTC / Cup / Other"].push([carKey, carName]);
+        }
+      });
+
+      // 2. Alphabetically sort cars inside each category
+      Object.keys(groups).forEach(key => {
+        groups[key].sort((a, b) => a[1].localeCompare(b[1]));
+      });
+
+      return Object.entries(groups).map(([groupName, items]) => {
+        if (items.length === 0) return null;
+
+        return (
+          <div key={groupName} className="bg-zinc-50 border border-zinc-200 rounded-lg p-3">
+            <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 mb-2 pb-1 border-b border-zinc-200">
+              {groupName} ({items.length})
+            </h4>
+            
+            {/* Responsive grid: 1 column on mobile, 2 columns on small screens/tablets */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-sans">
+              {items.map(([carKey, carName]) => {
+                const isChecked = onboardingPinnedCars.includes(carKey);
+                return (
+                  <label
+                    key={carKey}
+                    className={`flex items-center gap-2 p-2 rounded border cursor-pointer select-none transition-all ${
+                      isChecked
+                        ? "bg-red-50 border-red-200 text-red-700 font-bold"
+                        : "bg-white border-zinc-200 hover:bg-zinc-100 text-zinc-800"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => {
+                        if (isChecked) {
+                          setOnboardingPinnedCars(onboardingPinnedCars.filter((k) => k !== carKey));
+                        } else {
+                          setOnboardingPinnedCars([...onboardingPinnedCars, carKey]);
+                        }
+                      }}
+                      className="accent-red-650 w-3.5 h-3.5 cursor-pointer shrink-0"
+                    />
+                    <span className="truncate pr-1 text-[11px] font-sans font-semibold" title={carName}>
+                      {carName}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        );
+      });
+    })()}
+  </div>
+</div>
 
                 {/* Profile Modal Submit Action Panel */}
                 <div className="pt-3 flex flex-col gap-2">
