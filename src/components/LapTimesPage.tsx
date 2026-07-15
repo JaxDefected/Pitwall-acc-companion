@@ -759,11 +759,11 @@ export default function LapTimesPage() {
                       </div>
                     )}
                   </div>
-
-);
-              })()
-            )}
+                            ) : null}
+            </div>
           </div>
-        </div>
-      );
-    }
+        );
+      })}
+    </div>
+  );
+}
