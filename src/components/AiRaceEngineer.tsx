@@ -125,8 +125,8 @@ const handleAnalyze = async () => {
           </div>
         </div>
         <div className="hidden sm:flex items-center gap-2 bg-zinc-950 px-3 py-1.5 rounded-full border border-zinc-800">
-          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
-          <span className="text-xs font-mono text-zinc-400 uppercase font-black tracking-widest">Pitwall Linked</span>
+          <div className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
+          <span className="text-xs font-mono text-zinc-400 uppercase font-black tracking-widest">AI Engineer Currently Offline</span>
         </div>
       </div>
 
