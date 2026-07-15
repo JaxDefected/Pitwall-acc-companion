@@ -471,299 +471,296 @@ export default function LapTimesPage() {
           );
         })()}
 
-        {/* State C: BOTH selectedTrack and selectedCar are selected */}
-        {selectedCar && selectedTrack && (
-          isAllNull ? (
-            <div className="flex flex-col items-center justify-center py-14 text-center bg-zinc-50 border border-dashed border-zinc-250 rounded-lg p-6 max-w-xl mx-auto w-full animate-fadeIn shadow-2xs">
-              <Clock className="w-10 h-10 text-zinc-450 mb-3 animate-pulse" />
-              <h3 className="text-xs font-black text-zinc-800 font-mono uppercase tracking-widest">
-                ⏱️ {selectedClass} Target Lap Times
-              </h3>
-              <p className="text-zinc-650 text-xs mt-2.5 font-medium max-w-xs leading-relaxed font-sans">
-                {selectedClass} target lap times are coming soon in a future update.
-              </p>
+{/* State C: BOTH selectedTrack and selectedCar are selected */}
+{selectedCar && selectedTrack && (
+  isAllNull ? (
+    <div className="flex flex-col items-center justify-center py-14 text-center bg-zinc-50 border border-dashed border-zinc-250 rounded-lg p-6 max-w-xl mx-auto w-full animate-fadeIn shadow-2xs">
+      <Clock className="w-10 h-10 text-zinc-450 mb-3 animate-pulse" />
+      <h3 className="text-xs font-black text-zinc-800 font-mono uppercase tracking-widest">
+        ⏱️ {selectedClass} Target Lap Times
+      </h3>
+      <p className="text-zinc-650 text-xs mt-2.5 font-medium max-w-xs leading-relaxed font-sans">
+        {selectedClass} target lap times are coming soon in a future update.
+      </p>
+    </div>
+  ) : (
+    trackData && (() => {
+      const circ = CIRCUIT_NOTES[selectedTrack];
+      const carNote = CAR_NOTES_DATA[selectedCar];
+      return (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start animate-fadeIn">
+          
+          {/* Left Column: Lap Time Benchmarks */}
+          <div className="lg:col-span-6 flex flex-col gap-0 w-full min-w-0">
+            <div className="border border-zinc-200 rounded-lg overflow-x-auto shadow-3xs bg-white">
+              <table className="w-full text-left border-collapse text-xs font-mono min-w-[450px]">
+                <thead>
+                  <tr className="bg-zinc-800 text-white font-black uppercase text-[10px] tracking-wider border-b border-zinc-300">
+                    <th className="px-4 py-3 pl-5">Pace Label</th>
+                    <th className="px-4 py-3">Estimated</th>
+                    <th className="px-4 py-3 flex items-center gap-1.5 whitespace-nowrap">
+                      <Award className="w-3.5 h-3.5 text-red-500" />
+                      Target Tier
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-200 text-zinc-800">
+                  {columns.map((col) => {
+                    const value = trackData[col.key];
+                    const timeStr = secondsToLapTime(value);
+                    const isBenchmark = col.key === "qualy" || col.key === "reference_time";
+                    const isBaseRatio = col.key === "p100";
+                    
+                    return (
+                      <tr
+                        key={col.key}
+                        className={`transition-colors hover:bg-zinc-50/75 ${isBenchmark ? "bg-red-50/15" : ""}`}
+                      >
+                        <td className="px-4 py-3 pl-5 font-extrabold text-zinc-900 whitespace-nowrap">
+                          {col.label}
+                        </td>
+                        <td className={`px-4 py-3 text-[12.5px] ${isBenchmark || isBaseRatio ? "text-red-655 font-black" : "font-black"}`}>
+                          <div className="flex items-center gap-1.5">
+                            <span>{timeStr}</span>
+                            {trackData.estimated && (
+                              <span className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0 font-sans tracking-wide animate-pulse" title="Estimated BoP Lap Time">
+                                EST*
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-zinc-500 italic whitespace-nowrap">
+                          {col.desc === "—" ? (
+                            <span className="text-zinc-300 not-italic font-normal">—</span>
+                          ) : col.desc || (
+                            <span className="text-zinc-300 not-italic font-normal">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {trackData.estimated && (
+                <div className="bg-amber-50/50 border-t border-zinc-200 px-4 py-2.5 flex items-center gap-2 text-[10.5px] font-sans text-amber-850 font-medium text-left">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0 animate-pulse" />
+                  <span>* <strong>Estimated BoP Lap Time:</strong> This lap time is simulated using GT2/GT3 pace proportions and BoP offsets.</span>
+                </div>
+              )}
             </div>
-          ) : (
-            trackData && (() => {
-              const circ = CIRCUIT_NOTES[selectedTrack];
-              const carNote = CAR_NOTES_DATA[selectedCar];
-              return (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start animate-fadeIn">
-                  
-                  {/* Left Column: Lap Time Benchmarks */}
-                  <div className="lg:col-span-6 flex flex-col gap-0 w-full min-w-0">
-                    <div className="border border-zinc-200 rounded-lg overflow-x-auto shadow-3xs bg-white">
-                      <table className="w-full text-left border-collapse text-xs font-mono min-w-[450px]">
-                        <thead>
-                          <tr className="bg-zinc-800 text-white font-black uppercase text-[10px] tracking-wider border-b border-zinc-300">
-                            <th className="px-4 py-3 pl-5">Pace Label</th>
-                            <th className="px-4 py-3">Estimated</th>
-                            <th className="px-4 py-3 flex items-center gap-1.5 whitespace-nowrap">
-                              <Award className="w-3.5 h-3.5 text-red-500" />
-                              Target Tier
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-200 text-zinc-800">
-                          {columns.map((col) => {
-                            const value = trackData[col.key];
-                            const timeStr = secondsToLapTime(value);
-                            const isBenchmark = col.key === "qualy" || col.key === "reference_time";
-                            const isBaseRatio = col.key === "p100";
-                            
-                            return (
-                              <tr
-                                key={col.key}
-                                className={`transition-colors hover:bg-zinc-50/75 ${isBenchmark ? "bg-red-50/15" : ""}`}
-                              >
-                                <td className="px-4 py-3 pl-5 font-extrabold text-zinc-900 whitespace-nowrap">
-                                  {col.label}
-                                </td>
-                                <td className={`px-4 py-3 text-[12.5px] ${isBenchmark || isBaseRatio ? "text-red-655 font-black" : "font-black"}`}>
-                                  <div className="flex items-center gap-1.5">
-                                    <span>{timeStr}</span>
-                                    {trackData.estimated && (
-                                      <span className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0 font-sans tracking-wide animate-pulse" title="Estimated BoP Lap Time">
-                                        EST*
-                                      </span>
-                                    )}
-                                  </div>
-                                </td>
-                                <td className="px-4 py-3 font-semibold text-zinc-500 italic whitespace-nowrap">
-                                  {col.desc === "—" ? (
-                                    <span className="text-zinc-300 not-italic font-normal">—</span>
-                                  ) : col.desc || (
-                                    <span className="text-zinc-300 not-italic font-normal">—</span>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                      {trackData.estimated && (
-                        <div className="bg-amber-50/50 border-t border-zinc-200 px-4 py-2.5 flex items-center gap-2 text-[10.5px] font-sans text-amber-850 font-medium text-left">
-                          <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0 animate-pulse" />
-                          <span>* <strong>Estimated BoP Lap Time:</strong> This lap time is simulated using GT2/GT3 pace proportions and BoP offsets.</span>
+
+            {/* GT4 BoP Ballast Note */}
+            {selectedClass === "GT4" && trackData.bop && trackData.bop !== "0" && trackData.bop !== "" && (
+              <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3.5 flex items-start gap-2.5 text-xs text-zinc-660 mt-3 shadow-5xs text-left">
+                <Info className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-extrabold uppercase font-mono tracking-widest text-[9.5px] text-zinc-500 block mb-0.5">BALANCE OF PERFORMANCE:</span>
+                  <span className="whitespace-normal break-words">BoP ballast at time of data collection: <strong className="text-zinc-900 font-extrabold text-xs">{trackData.bop}</strong></span>
+                </div>
+              </div>
+            )}
+
+            {/* GT3 Setup Typology Tag Note */}
+            {selectedClass === "GT3" && trackData.setup_tag && (
+              <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3.5 flex items-start gap-2.5 text-xs text-zinc-650 mt-3 shadow-5xs text-left">
+                <Info className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-extrabold uppercase font-mono tracking-widest text-[9.5px] text-zinc-500 block mb-0.5">SETUP SCHEMA:</span>
+                  <span className="whitespace-normal break-words">Recommended setup type: <strong className="text-zinc-900 font-extrabold uppercase text-[11px] underline font-mono tracking-wider">{trackData.setup_tag}</strong></span>
+                </div>
+              </div>
+            )}
+
+            {/* Supplementary Car details list structured beautifully under the lap times table */}
+            {carNote && (
+              <div className="border border-zinc-200 rounded-lg overflow-hidden flex flex-col shadow-3xs bg-zinc-50/50 mt-5">
+                <div className="bg-zinc-800 text-white font-mono font-extrabold text-[10px] sm:text-xs px-4 py-3 border-b border-zinc-900 uppercase tracking-widest flex items-center gap-2">
+                  <Wrench className="w-4 h-4 text-red-500 shrink-0" />
+                  <span>Engineering Profile: {selectedCar}</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 text-xs text-left">
+                  <div className="flex flex-col gap-2.5">
+                    <div className="bg-white border border-zinc-200/65 rounded-lg p-3 shadow-5xs">
+                      <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">General Car Character:</strong>
+                      <span className="italic leading-relaxed font-sans text-xs text-zinc-700 font-medium block">
+                        "{carNote.car_notes}"
+                      </span>
+                    </div>
+                    <div className="bg-white border border-zinc-200/65 rounded-lg p-3 shadow-5xs">
+                      <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Recommended Driving Styles:</strong>
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {carNote.driving_style.map((style, i) => (
+                          <span key={i} className="px-1.5 py-0.5 bg-zinc-100 border border-zinc-200 text-zinc-750 font-mono text-[9.5px] font-bold rounded uppercase tracking-wider">
+                            {style}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2.5">
+                    <div className="bg-white border border-zinc-200/65 rounded-lg p-3 shadow-5xs">
+                      <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Engine & Layout Profile:</strong>
+                      <span className="text-zinc-750 font-mono text-xs uppercase font-extrabold tracking-wide block mt-1">
+                        {carNote.engine_layout || "Standard"} Layout • {carNote.difficulty} class
+                      </span>
+                      <span className="text-[10px] text-zinc-500 leading-normal block mt-1">
+                        Sensitivity Focus: <span className="font-semibold text-zinc-650">{carNote.setup_sensitivity}</span>
+                      </span>
+                    </div>
+
+                    <div className="bg-white border border-zinc-250/65 rounded-lg p-3 shadow-5xs flex flex-col sm:grid sm:grid-cols-2 gap-3 h-auto min-h-0">
+                      <div className="flex flex-col h-auto">
+                        <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Key Advantages:</strong>
+                        <ul className="pl-0 flex flex-col gap-1.5 text-[10.5px]">
+                          {carNote.strengths.slice(0, 2).map((s, idx) => (
+                            <li key={idx} className="text-zinc-650 font-medium font-sans leading-relaxed text-left flex gap-1.5 items-start break-words whitespace-normal" title={s}>
+                              <span className="text-emerald-700 font-bold shrink-0">✓</span>
+                              <span>{s}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <div className="flex flex-col h-auto">
+                        <strong className="text-zinc-550 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Key Constraints:</strong>
+                        <ul className="pl-0 flex flex-col gap-1.5 text-[10.5px]">
+                          {carNote.weaknesses.slice(0, 2).map((w, idx) => (
+                            <li key={idx} className="text-zinc-650 font-medium font-sans leading-relaxed text-left flex gap-1.5 items-start break-words whitespace-normal" title={w}>
+                              <span className="text-rose-500 font-bold shrink-0">⚠️</span>
+                              <span>{w}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Dynamic Circuit Notes & Setup Briefing Panel */}
+          <div className="lg:col-span-6 flex flex-col gap-5 w-full min-w-0">
+            {circ ? (
+              <div className="bg-zinc-50/50 border border-zinc-200 rounded-lg overflow-hidden flex flex-col">
+                {/* Header with Title (Toggle Button for accordion) */}
+                <button
+                  onClick={() => setIsBriefingOpen(!isBriefingOpen)}
+                  className="w-full flex items-center justify-between p-4 md:p-5 bg-zinc-100 hover:bg-zinc-150/80 border-b border-zinc-200 transition-colors text-left outline-none cursor-pointer select-none border-t-0"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Compass className="w-5 h-5 text-red-655 shrink-0" />
+                    <span className="font-extrabold font-mono text-xs sm:text-sm tracking-wide text-zinc-950 uppercase truncate">
+                      Crew Briefing: {selectedTrack}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    {!isBriefingOpen && (
+                      <span className="hidden sm:inline-block px-2 py-0.5 bg-zinc-200 text-zinc-805 text-[8.5px] font-black font-mono rounded uppercase tracking-wider">
+                        {circ.acc_speed_category.replace(/_/g, " ")}
+                      </span>
+                    )}
+                    <ChevronDown className={`w-4.5 h-4.5 text-zinc-500 transition-transform duration-200 ${isBriefingOpen ? "rotate-180" : ""}`} />
+                  </div>
+                </button>
+
+                {/* Accordion Content */}
+                {isBriefingOpen && (
+                  <div className="p-4 md:p-5 flex flex-col gap-4 animate-fadeIn transition-all text-left">
+                    <div className="flex flex-wrap gap-1.5 pb-1">
+                      <span className="px-2 py-0.5 bg-zinc-200 text-zinc-800 text-[9px] font-black font-mono rounded uppercase tracking-wider whitespace-nowrap">
+                        Speed: {circ.acc_speed_category.replace(/_/g, " ")}
+                      </span>
+                      <span className={`px-2 py-0.5 text-white text-[9px] font-black font-mono rounded uppercase tracking-wider whitespace-nowrap ${
+                        circ.acc_overtaking_difficulty === "easy" ? "bg-emerald-650" :
+                        circ.acc_overtaking_difficulty === "medium" ? "bg-amber-650" : "bg-red-700"
+                      }`}>
+                        Overtaking: {circ.acc_overtaking_difficulty}
+                      </span>
+                      <span className={`px-2 py-0.5 text-white text-[9px] font-black font-mono rounded uppercase tracking-wider whitespace-nowrap ${
+                        circ.acc_wet_weather_risk === "low" ? "bg-blue-500" :
+                        circ.acc_wet_weather_risk === "medium" ? "bg-blue-600 animate-pulse" : "bg-blue-800 animate-pulse font-extrabold"
+                      }`}>
+                        Wet Risk: {circ.acc_wet_weather_risk.replace(/_/g, " ")}
+                      </span>
+                    </div>
+
+                    <div className="text-xs text-zinc-700 leading-relaxed bg-white border border-zinc-200 p-3 md:p-4 rounded-md italic whitespace-normal break-words">
+                      "{circ.circuit_notes}"
+                    </div>
+
+                    <div className="flex flex-col gap-3 font-mono text-[11px] text-zinc-700">
+                      <div className="flex gap-2.5 items-start">
+                        <Zap className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <strong className="text-zinc-900 font-extrabold uppercase text-[10px] tracking-wider block mb-0.5">Aero & Downforce:</strong>
+                          <span className="text-zinc-650 leading-relaxed font-sans text-xs block whitespace-normal break-words">{circ.setup_notes.downforce}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2.5 items-start">
+                        <Droplets className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <strong className="text-zinc-900 font-extrabold uppercase text-[10px] tracking-wider block mb-0.5">Tyre Thermal Bounds:</strong>
+                          <span className="text-zinc-650 leading-relaxed font-sans text-xs block whitespace-normal break-words">{circ.setup_notes.tyres}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2.5 items-start">
+                        <Wrench className="w-4 h-4 text-zinc-500 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <strong className="text-zinc-900 font-extrabold uppercase text-[10px] tracking-wider block mb-0.5">Braking Strategy:</strong>
+                          <span className="text-zinc-650 leading-relaxed font-sans text-xs block whitespace-normal break-words">{circ.setup_notes.brakes}</span>
+                        </div>
+                      </div>
+
+                      {circ.setup_notes.fuel?.stint_recommendation && (
+                        <div className="flex gap-2.5 items-start">
+                          <Info className="w-4 h-4 text-emerald-505 shrink-0 mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <strong className="text-zinc-900 font-extrabold uppercase text-[10px] tracking-wider block mb-0.5">Race Stint Fuel:</strong>
+                            <span className="text-zinc-650 leading-relaxed font-sans text-xs block whitespace-normal break-words">{circ.setup_notes.fuel.stint_recommendation}</span>
+                          </div>
                         </div>
                       )}
                     </div>
 
-                    {/* GT4 BoP Ballast Note */}
-                    {selectedClass === "GT4" && trackData.bop && trackData.bop !== "0" && trackData.bop !== "" && (
-                      <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3.5 flex items-start gap-2.5 text-xs text-zinc-600 mt-3 shadow-5xs text-left">
-                        <Info className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                        <div>
-                          <span className="font-extrabold uppercase font-mono tracking-widest text-[9.5px] text-zinc-500 block mb-0.5">BALANCE OF PERFORMANCE:</span>
-                          <span className="whitespace-normal break-words">BoP ballast at time of data collection: <strong className="text-zinc-900 font-extrabold text-xs">{trackData.bop}</strong></span>
+                    {circ.key_corners && circ.key_corners.length > 0 && (
+                      <div className="border-t border-zinc-200 pt-3.5 flex flex-col gap-2">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Flame className="w-4 h-4 text-red-500 shrink-0 animate-pulse" />
+                          <span className="font-extrabold font-mono text-[11px] tracking-widest text-zinc-900 uppercase">
+                            CRUCIAL CORNERS & TELEMETRY ALIGNMENTS:
+                          </span>
                         </div>
-                      </div>
-                    )}
-
-                    {/* GT3 Setup Typology Tag Note */}
-                    {selectedClass === "GT3" && trackData.setup_tag && (
-                      <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3.5 flex items-start gap-2.5 text-xs text-zinc-650 mt-3 shadow-5xs text-left">
-                        <Info className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                        <div>
-                          <span className="font-extrabold uppercase font-mono tracking-widest text-[9.5px] text-zinc-500 block mb-0.5">SETUP SCHEMA:</span>
-                          <span className="whitespace-normal break-words">Recommended setup type: <strong className="text-zinc-900 font-extrabold uppercase text-[11px] underline font-mono tracking-wider">{trackData.setup_tag}</strong></span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* State C: Supplementary Car details list structured beautifully under the lap times table */}
-                    {carNote && (
-                      <div className="border border-zinc-200 rounded-lg overflow-hidden flex flex-col shadow-3xs bg-zinc-50/50 mt-5">
-                        <div className="bg-zinc-800 text-white font-mono font-extrabold text-[10px] sm:text-xs px-4 py-3 border-b border-zinc-900 uppercase tracking-widest flex items-center gap-2">
-                          <Wrench className="w-4 h-4 text-red-500 shrink-0" />
-                          <span>Engineering Profile: {selectedCar}</span>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 text-xs text-left">
-                          <div className="flex flex-col gap-2.5">
-                            <div className="bg-white border border-zinc-200/65 rounded-lg p-3 shadow-5xs">
-                              <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">General Car Character:</strong>
-                              <span className="italic leading-relaxed font-sans text-xs text-zinc-700 font-medium block">
-                                "{carNote.car_notes}"
+                        <ul className="flex flex-col gap-2 text-xs text-zinc-700 list-none pl-0">
+                          {circ.key_corners.map((corner, i) => (
+                            <li key={i} className="flex gap-2.5 items-start bg-white border border-zinc-150 p-2.5 rounded hover:shadow-4xs transition-all">
+                              <span className="font-mono text-[10px] font-black text-red-500 bg-red-50 px-1.5 py-0.5 rounded leading-none mt-0.5 shrink-0">
+                                0{i + 1}
                               </span>
-                            </div>
-                            <div className="bg-white border border-zinc-200/65 rounded-lg p-3 shadow-5xs">
-                              <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Recommended Driving Styles:</strong>
-                              <div className="flex flex-wrap gap-1 mt-1.5">
-                                {carNote.driving_style.map((style, i) => (
-                                  <span key={i} className="px-1.5 py-0.5 bg-zinc-100 border border-zinc-200 text-zinc-750 font-mono text-[9.5px] font-bold rounded uppercase tracking-wider">
-                                    {style}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col gap-2.5">
-                            <div className="bg-white border border-zinc-200/65 rounded-lg p-3 shadow-5xs">
-                              <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Engine & Layout Profile:</strong>
-                              <span className="text-zinc-750 font-mono text-xs uppercase font-extrabold tracking-wide block mt-1">
-                                {carNote.engine_layout || "Standard"} Layout • {carNote.difficulty} class
-                              </span>
-                              <span className="text-[10px] text-zinc-500 leading-normal block mt-1">
-                                Sensitivity Focus: <span className="font-semibold text-zinc-650">{carNote.setup_sensitivity}</span>
-                              </span>
-                            </div>
-
-<div className="bg-white border border-zinc-250/65 rounded-lg p-3 shadow-5xs flex flex-col sm:grid sm:grid-cols-2 gap-3 h-auto min-h-0">
-  <div className="flex flex-col h-auto">
-    <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Key Advantages:</strong>
-    <ul className="pl-0 flex flex-col gap-1.5 text-[10.5px]">
-      {carNote.strengths.slice(0, 2).map((s, idx) => (
-        <li key={idx} className="text-zinc-650 font-medium font-sans leading-relaxed text-left flex gap-1.5 items-start break-words whitespace-normal" title={s}>
-          <span className="text-emerald-700 font-bold shrink-0">✓</span>
-          <span>{s}</span>
-        </li>
-      ))}
-    </ul>
-  </div>
-  
-  <div className="flex flex-col h-auto">
-    <strong className="text-zinc-550 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Key Constraints:</strong>
-    <ul className="pl-0 flex flex-col gap-1.5 text-[10.5px]">
-      {carNote.weaknesses.slice(0, 2).map((w, idx) => (
-        <li key={idx} className="text-zinc-650 font-medium font-sans leading-relaxed text-left flex gap-1.5 items-start break-words whitespace-normal" title={w}>
-          <span className="text-rose-500 font-bold shrink-0">⚠️</span>
-          <span>{w}</span>
-        </li>
-      ))}
-    </ul>
-  </div>
-</div>
-
-                  {/* Right Column: Dynamic Circuit Notes & Setup Briefing Panel */}
-                  <div className="lg:col-span-6 flex flex-col gap-5 w-full min-w-0">
-                    {circ ? (
-                      <div className="bg-zinc-50/50 border border-zinc-200 rounded-lg overflow-hidden flex flex-col">
-                        {/* Header with Title (Toggle Button for accordion) */}
-                        <button
-                          onClick={() => setIsBriefingOpen(!isBriefingOpen)}
-                          className="w-full flex items-center justify-between p-4 md:p-5 bg-zinc-100 hover:bg-zinc-150/80 border-b border-zinc-200 transition-colors text-left outline-none cursor-pointer select-none border-t-0"
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <Compass className="w-5 h-5 text-red-655 shrink-0" />
-                            <span className="font-extrabold font-mono text-xs sm:text-sm tracking-wide text-zinc-950 uppercase truncate">
-                              Crew Briefing: {selectedTrack}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2.5 shrink-0">
-                            {/* Compact category bubble on desktop if closed */}
-                            {!isBriefingOpen && (
-                              <span className="hidden sm:inline-block px-2 py-0.5 bg-zinc-200 text-zinc-805 text-[8.5px] font-black font-mono rounded uppercase tracking-wider">
-                                {circ.acc_speed_category.replace(/_/g, " ")}
-                              </span>
-                            )}
-                            <ChevronDown className={`w-4.5 h-4.5 text-zinc-500 transition-transform duration-200 ${isBriefingOpen ? "rotate-180" : ""}`} />
-                          </div>
-                        </button>
-
-                        {/* Accordion Content */}
-                        {isBriefingOpen && (
-                          <div className="p-4 md:p-5 flex flex-col gap-4 animate-fadeIn transition-all text-left">
-                            {/* Interactive meta tags */}
-                            <div className="flex flex-wrap gap-1.5 pb-1">
-                              <span className="px-2 py-0.5 bg-zinc-200 text-zinc-800 text-[9px] font-black font-mono rounded uppercase tracking-wider whitespace-nowrap">
-                                Speed: {circ.acc_speed_category.replace(/_/g, " ")}
-                              </span>
-                              <span className={`px-2 py-0.5 text-white text-[9px] font-black font-mono rounded uppercase tracking-wider whitespace-nowrap ${
-                                circ.acc_overtaking_difficulty === "easy" ? "bg-emerald-650" :
-                                circ.acc_overtaking_difficulty === "medium" ? "bg-amber-650" : "bg-red-700"
-                              }`}>
-                                Overtaking: {circ.acc_overtaking_difficulty}
-                              </span>
-                              <span className={`px-2 py-0.5 text-white text-[9px] font-black font-mono rounded uppercase tracking-wider whitespace-nowrap ${
-                                circ.acc_wet_weather_risk === "low" ? "bg-blue-500" :
-                                circ.acc_wet_weather_risk === "medium" ? "bg-blue-600 animate-pulse" : "bg-blue-800 animate-pulse font-extrabold"
-                              }`}>
-                                Wet Risk: {circ.acc_wet_weather_risk.replace(/_/g, " ")}
-                              </span>
-                            </div>
-
-                            {/* Circuit Summary Notes (Always readable, fully wrapped) */}
-                            <div className="text-xs text-zinc-700 leading-relaxed bg-white border border-zinc-200 p-3 md:p-4 rounded-md italic whitespace-normal break-words">
-                              "{circ.circuit_notes}"
-                            </div>
-
-                            {/* Setup Recommendations */}
-                            <div className="flex flex-col gap-3 font-mono text-[11px] text-zinc-700">
-                              
-                              <div className="flex gap-2.5 items-start">
-                                <Zap className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                                <div className="flex-1 min-w-0">
-                                  <strong className="text-zinc-900 font-extrabold uppercase text-[10px] tracking-wider block mb-0.5">Aero & Downforce:</strong>
-                                  <span className="text-zinc-650 leading-relaxed font-sans text-xs block whitespace-normal break-words">{circ.setup_notes.downforce}</span>
-                                </div>
-                              </div>
-
-                              <div className="flex gap-2.5 items-start">
-                                <Droplets className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                                <div className="flex-1 min-w-0">
-                                  <strong className="text-zinc-900 font-extrabold uppercase text-[10px] tracking-wider block mb-0.5">Tyre Thermal Bounds:</strong>
-                                  <span className="text-zinc-650 leading-relaxed font-sans text-xs block whitespace-normal break-words">{circ.setup_notes.tyres}</span>
-                                </div>
-                              </div>
-
-                              <div className="flex gap-2.5 items-start">
-                                <Wrench className="w-4 h-4 text-zinc-500 shrink-0 mt-0.5" />
-                                <div className="flex-1 min-w-0">
-                                  <strong className="text-zinc-900 font-extrabold uppercase text-[10px] tracking-wider block mb-0.5">Braking Strategy:</strong>
-                                  <span className="text-zinc-650 leading-relaxed font-sans text-xs block whitespace-normal break-words">{circ.setup_notes.brakes}</span>
-                                </div>
-                              </div>
-
-                              {circ.setup_notes.fuel?.stint_recommendation && (
-                                <div className="flex gap-2.5 items-start">
-                                  <Info className="w-4 h-4 text-emerald-505 shrink-0 mt-0.5" />
-                                  <div className="flex-1 min-w-0">
-                                    <strong className="text-zinc-900 font-extrabold uppercase text-[10px] tracking-wider block mb-0.5">Race Stint Fuel:</strong>
-                                    <span className="text-zinc-650 leading-relaxed font-sans text-xs block whitespace-normal break-words">{circ.setup_notes.fuel.stint_recommendation}</span>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Crucial Corners Checklist */}
-                            {circ.key_corners && circ.key_corners.length > 0 && (
-                              <div className="border-t border-zinc-200 pt-3.5 flex flex-col gap-2">
-                                <div className="flex items-center gap-1.5 mb-1">
-                                  <Flame className="w-4 h-4 text-red-500 shrink-0 animate-pulse" />
-                                  <span className="font-extrabold font-mono text-[11px] tracking-widest text-zinc-900 uppercase">
-                                    CRUCIAL CORNERS & TELEMETRY ALIGNMENTS:
-                                  </span>
-                                </div>
-                                <ul className="flex flex-col gap-2 text-xs text-zinc-700 list-none pl-0">
-                                  {circ.key_corners.map((corner, i) => (
-                                    <li key={i} className="flex gap-2.5 items-start bg-white border border-zinc-150 p-2.5 rounded hover:shadow-4xs transition-all">
-                                      <span className="font-mono text-[10px] font-black text-red-500 bg-red-50 px-1.5 py-0.5 rounded leading-none mt-0.5 shrink-0">
-                                        0{i + 1}
-                                      </span>
-                                      <span className="leading-snug text-zinc-800 text-[11.5px] whitespace-normal break-words">{corner}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="bg-zinc-50 border border-dashed border-zinc-200 rounded-lg p-5 text-center flex flex-col items-center justify-center py-12">
-                        <BookOpen className="w-8 h-8 text-zinc-350 mb-2 animate-pulse" />
-                        <h3 className="text-xs font-black font-mono uppercase tracking-wider text-zinc-700">No Briefing Loaded</h3>
-                        <p className="text-zinc-650 text-xs mt-1 font-medium">Select a track circuit to unlock expert lap guidance notes.</p>
+                              <span className="leading-snug text-zinc-800 text-[11.5px] whitespace-normal break-words">{corner}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     )}
                   </div>
-                            ) : null}
-            </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-zinc-50 border border-dashed border-zinc-200 rounded-lg p-5 text-center flex flex-col items-center justify-center py-12">
+                <BookOpen className="w-8 h-8 text-zinc-350 mb-2 animate-pulse" />
+                <h3 className="text-xs font-black font-mono uppercase tracking-wider text-zinc-700">No Briefing Loaded</h3>
+                <p className="text-zinc-650 text-xs mt-1 font-medium">Select a track circuit to unlock expert lap guidance notes.</p>
+              </div>
+            )}
           </div>
-        );
-      })}
-    </div>
-  );
-}
+
+        </div>
+      );
+    })()
+  )
+)}
