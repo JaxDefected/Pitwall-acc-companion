@@ -610,29 +610,31 @@ export default function LapTimesPage() {
                               </span>
                             </div>
 
-                            <div className="bg-white border border-zinc-200/65 rounded-lg p-3 shadow-5xs grid grid-cols-2 gap-2">
-                              <div>
-                                <strong className="text-zinc-550 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Key Advantages:</strong>
-                                <ul className="pl-0 flex flex-col gap-0.5 text-[10.5px]">
-                                  {carNote.strengths.slice(0, 2).map((s, idx) => (
-                                    <li key={idx} className="text-zinc-600 truncate" title={s}>• {s}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                              <div>
-                                <strong className="text-zinc-550 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Key Constraints:</strong>
-                                <ul className="pl-0 flex flex-col gap-0.5 text-[10.5px]">
-                                  {carNote.weaknesses.slice(0, 2).map((w, idx) => (
-                                    <li key={idx} className="text-zinc-600 truncate" title={w}>• {w}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
+                        <div className="bg-white border border-zinc-250/65 rounded-lg p-3 shadow-5xs flex flex-col sm:grid sm:grid-cols-2 gap-3 h-auto min-h-0">
+                          <div className="flex flex-col h-auto">
+                            <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Key Advantages:</strong>
+                            <ul className="pl-0 flex flex-col gap-1.5 text-[10.5px]">
+                              {carNote.strengths.slice(0, 2).map((s, idx) => (
+                                <li key={idx} className="text-zinc-650 font-medium font-sans leading-relaxed text-left flex gap-1.5 items-start break-words whitespace-normal" title={s}>
+                                  <span className="text-emerald-700 font-bold shrink-0">✓</span>
+                                  <span>{s}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          
+                          <div className="flex flex-col h-auto">
+                            <strong className="text-zinc-550 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Key Constraints:</strong>
+                            <ul className="pl-0 flex flex-col gap-1.5 text-[10.5px]">
+                              {carNote.weaknesses.slice(0, 2).map((w, idx) => (
+                                <li key={idx} className="text-zinc-650 font-medium font-sans leading-relaxed text-left flex gap-1.5 items-start break-words whitespace-normal" title={w}>
+                                  <span className="text-rose-500 font-bold shrink-0">⚠️</span>
+                                  <span>{w}</span>
+                                </li>
+                              ))}
+                            </ul>
                           </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
 
                   {/* Right Column: Dynamic Circuit Notes & Setup Briefing Panel */}
                   <div className="lg:col-span-6 flex flex-col gap-5 w-full min-w-0">
