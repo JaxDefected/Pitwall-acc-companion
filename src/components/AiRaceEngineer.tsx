@@ -58,41 +58,54 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
   const activeTrackLabel = ACC_TRACKS[selectedTrack] || selectedTrack || "Any Track";
   const currentIssueObj = COMMON_ISSUES.find(issue => issue.key === selectedIssue);
 
-  const handleAnalyze = async () => {
-    setIsAnalyzing(true);
-    setErrorMsg(null);
-    setAnalysisResult(null);
+const handleAnalyze = async () => {
+  setIsAnalyzing(true);
+  setErrorMsg(null);
+  setAnalysisResult(null);
 
-    const issueLabel = currentIssueObj ? currentIssueObj.label : "Custom handling feedback";
+  try {
+    const response = await fetch("/api/engineer-adjust", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        carName: activeCarLabel,
+        trackName: activeTrackLabel,
+        issueLabel: issueLabel,
+        customDescription: customDescription,
+        activeSetup: parsedSetupData,
+      }),
+    });
 
-    try {
-      const response = await fetch("/api/engineer-adjust", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          carName: activeCarLabel,
-          trackName: activeTrackLabel,
-          issueLabel: issueLabel,
-          customDescription: customDescription,
-          activeSetup: parsedSetupData,
-        }),
-      });
+    // Read raw text first to avoid breaking on malformed/HTML responses
+    const rawText = await response.text();
 
-      const data = await response.json();
-      if (!response.ok || data.error) {
-        throw new Error(data.error || "Failed to analyze setup adjustments.");
-      }
-
-      setAnalysisResult(data.reply);
-    } catch (err: any) {
-      console.error(err);
-      setErrorMsg(err.message || "An unexpected error occurred while communicating with the pitwall.");
-    } finally {
-      setIsAnalyzing(false);
+    if (!response.ok) {
+      console.error("Server error response payload:", rawText);
+      throw new Error(`Server returned status ${response.status}. Check network logs.`);
     }
-  };
+
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (parseErr) {
+      console.error("Failed to parse server response as JSON. Raw response:", rawText);
+      throw new Error("Received an invalid response format from the server.");
+    }
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    setAnalysisResult(data.reply);
+  } catch (err: any) {
+    console.error(err);
+    setErrorMsg(err.message || "An unexpected error occurred while communicating with the pitwall.");
+  } finally {
+    setIsAnalyzing(false);
+  }
+};
 
   return (
     <div className="bg-zinc-950 border border-zinc-800 shadow-xl rounded-xl overflow-hidden font-sans">
