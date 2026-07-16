@@ -514,24 +514,24 @@ if (Array.isArray(rideHeightVal)) {
   });
 
 // Convert casters
-  if (Array.isArray(caster) && caster.length >= 2) {
-    const rawLF = caster[0];
-    const rawRF = caster[1];
+if (Array.isArray(caster) && caster.length >= 2) {
+      const rawLF = caster[0];
+      const rawRF = caster[1];
 
-    if (casterArr && casterArr.length > 0) {
-      // Direct lookup from the physics array using the raw index values (e.g., 23)
-      normalized.casters[0] = rawLF < casterArr.length ? casterArr[rawLF] : rawLF;
-      normalized.casters[1] = rawRF < casterArr.length ? casterArr[rawRF] : rawRF;
-    } else {
-      const minVal = car?.casterRange?.[0] || defCasterRange[0];
-      const step = car?.casterStep || defCasterStep;
-      normalized.casters[0] = typeof rawLF === 'number' && rawLF < 45 ? Math.round((minVal + rawLF * step) * 100) / 100 : rawLF;
-      normalized.casters[1] = typeof rawRF === 'number' && rawRF < 45 ? Math.round((minVal + rawRF * step) * 100) / 100 : rawRF;
+      if (casterArr && casterArr.length > 0) {
+        // Direct lookup from the physics array using the raw index values (e.g., 23)
+        normalized.casters[0] = rawLF < casterArr.length ? casterArr[rawLF] : rawLF;
+        normalized.casters[1] = rawRF < casterArr.length ? casterArr[rawRF] : rawRF;
+      } else {
+        const minVal = car?.casterRange?.[0] || defCasterRange[0];
+        const step = car?.casterStep || defCasterStep;
+        normalized.casters[0] = typeof rawLF === 'number' && rawLF < 45 ? Math.round((minVal + rawLF * step) * 100) / 100 : rawLF;
+        normalized.casters[1] = typeof rawRF === 'number' && rawRF < 45 ? Math.round((minVal + rawRF * step) * 100) / 100 : rawRF;
+      }
     }
-  }
-  return c; // Already in physical degrees
 });
-  const warnings: string[] = [];
+ 
+const warnings: string[] = [];
   normalized.validationWarnings = warnings;
 
   function clamp(val: number, min: number, max: number, name: string): number {
