@@ -514,20 +514,19 @@ if (Array.isArray(rideHeightVal)) {
   });
 
 // Convert casters
-normalized.casters = normalized.casters.map((c) => {
-  if (Number.isInteger(c)) {
+  if (Array.isArray(caster) && caster.length >= 2) {
+    const rawLF = caster[0];
+    const rawRF = caster[1];
+
     if (casterArr && casterArr.length > 0) {
-      // If the file gives us a direct global physics index (like 23)
-      if (c < casterArr.length) {
-        return casterArr[c];
-      }
-      // Fallback for files using a UI click index offset (0-10)
-      const physicsIndex = Math.min(casterArr.length - 1, Math.max(0, casterArr.length - 11 + c));
-      return casterArr[physicsIndex];
+      // Direct lookup from the physics array using the raw index values (e.g., 23)
+      normalized.casters[0] = rawLF < casterArr.length ? casterArr[rawLF] : rawLF;
+      normalized.casters[1] = rawRF < casterArr.length ? casterArr[rawRF] : rawRF;
     } else {
       const minVal = car?.casterRange?.[0] || defCasterRange[0];
       const step = car?.casterStep || defCasterStep;
-      return Math.round((minVal + c * step) * 100) / 100;
+      normalized.casters[0] = typeof rawLF === 'number' && rawLF < 45 ? Math.round((minVal + rawLF * step) * 100) / 100 : rawLF;
+      normalized.casters[1] = typeof rawRF === 'number' && rawRF < 45 ? Math.round((minVal + rawRF * step) * 100) / 100 : rawRF;
     }
   }
   return c; // Already in physical degrees
@@ -590,16 +589,16 @@ normalized.casters = normalized.casters.map((c) => {
     normalized.cambers[3] = clamp(normalized.cambers[3], cambRRange[0], cambRRange[1], "Camber RR");
 
 // 4. Casters validation block
-if (car.casterArr && car.casterArr.length > 0) {
-  // If we have an exact array, let the snap function do the validation 
-  // without restricting it to a narrow default clamp range first
-  normalized.casters[0] = snap(normalized.casters[0], car.casterArr, "Caster LF");
-  normalized.casters[1] = snap(normalized.casters[1], car.casterArr, "Caster RF");
-} else {
-  const castRange = car.casterRange || [4.0, 15.0];
-  normalized.casters[0] = clamp(normalized.casters[0], castRange[0], castRange[1], "Caster LF");
-  normalized.casters[1] = clamp(normalized.casters[1], castRange[0], castRange[1], "Caster RF");
-}
+    if (car.casterArr && Array.isArray(car.casterArr) && car.casterArr.length > 0) {
+      // Use snap to lock onto the discrete elements in the array
+      normalized.casters[0] = snap(normalized.casters[0], car.casterArr, "Caster LF");
+      normalized.casters[1] = snap(normalized.casters[1], car.casterArr, "Caster RF");
+    } else {
+      // Fallback range limits for cars without a explicit physics lookup array
+      const castRange = car.casterRange || [4.0, 15.0];
+      normalized.casters[0] = clamp(normalized.casters[0], castRange[0], castRange[1], "Caster LF");
+      normalized.casters[1] = clamp(normalized.casters[1], castRange[0], castRange[1], "Caster RF");
+    }
 
     // 5. ECU Map and Brake Bias
     const ecuRange = car.eCUMapRange || [1, 12];
