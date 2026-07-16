@@ -305,27 +305,43 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
   const brakeBiasVal = elecSection ? getNestedVal(elecSection, ["brakeBias", "brakeBias"]) : undefined;
   const mechBrakeBias = advanced.mechanicalGrip ? getNestedVal(advanced.mechanicalGrip, ["brakeBias", "brakeBias"]) : undefined;
   const targetBB = brakeBiasVal !== undefined ? brakeBiasVal : mechBrakeBias;
-  if (targetBB !== undefined) {
-    normalized.brakeBias = targetBB > 30 ? targetBB : Math.round((50 + targetBB * 0.2) * 10) / 10;
+if (targetBB !== undefined) {
+  if (targetBB > 30) {
+    // If it's already an absolute percentage value from a custom file
+    normalized.brakeBias = targetBB;
+  } else {
+    // Dynamically look up the car bounds or fall back safely
+    const bbMin = car?.brakeBiasRange?.[0] || 50.0;
+    const bbStep = car?.brakeBiasStep || 0.2; 
+    
+    normalized.brakeBias = Math.round((bbMin + targetBB * bbStep) * 10) / 10;
   }
+}
 
   // 3. MECHANICAL GRIP (advancedSetup.mechanicalGrip)
   const mechanicalGripSection = advanced.mechanicalGrip || getNestedVal(advanced, ["mechanicalGrip"]);
   if (mechanicalGripSection) {
     const arbFrontVal = getNestedVal(mechanicalGripSection, ["antirollBarFront", "antirollbarFront", "arbFront"]);
     const arbRearVal = getNestedVal(mechanicalGripSection, ["antirollBarRear", "antirollbarRear", "arbRear"]);
-    const steerRatioVal = getNestedVal(mechanicalGripSection, ["steerRatio", "steerRatio"]);
+const steerRatioVal = getNestedVal(mechanicalGripSection, ["steerRatio"]);
     const brakeTorqueVal = getNestedVal(mechanicalGripSection, ["brakeTorque", "brakeTorque"]);
     
     if (arbFrontVal !== undefined) normalized.arbFront = Math.max(0, arbFrontVal - 1);
     if (arbRearVal !== undefined) normalized.arbRear = Math.max(0, arbRearVal - 1);
-    if (steerRatioVal !== undefined) {
-      if (steerRatioVal < 10) {
-        const srRange = car?.steerRatioRange || [10, 18];
-        const step = car?.steerRatioStep || 1;
-        normalized.steerRatio = srRange[0] + steerRatioVal * step;
+if (steerRatioVal !== undefined) {
+      if (car?.steerRatioRange && Array.isArray(car.steerRatioRange)) {
+        // If it's a raw index (0, 1, 2...), look it up directly in the car's ratio array
+        if (steerRatioVal < car.steerRatioRange.length) {
+          normalized.steerRatio = car.steerRatioRange[steerRatioVal];
+        } else {
+          // Fallback if the file already contains the raw physical value (e.g., 15)
+          normalized.steerRatio = steerRatioVal;
+        }
       } else {
-        normalized.steerRatio = steerRatioVal;
+        // Safe global fallback calculation if a car profile lacks an array
+        const minSteer = car?.steerRatioMin || 10;
+        const step = car?.steerRatioStep || 1;
+        normalized.steerRatio = steerRatioVal < 10 ? minSteer + steerRatioVal * step : steerRatioVal;
       }
     }
     
@@ -408,25 +424,27 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
     const splitterVal = getNestedVal(aeroSection, ["splitter"]);
     const brakeDuctVal = getNestedVal(aeroSection, ["brakeDuct", "brakeDucts"]);
 
-    if (Array.isArray(rideHeightVal)) {
+if (Array.isArray(rideHeightVal)) {
+      const fRange = car?.rideHeightFrontRange || [50, 90];
+      const rRange = car?.rideHeightRearRange || [50, 100];
+      
+      // Enforce a strict 1mm step value across all cars and axles
+      const currentStep = 1;
+
       if (rideHeightVal.length === 4) {
-        const avgFront = (rideHeightVal[0] + rideHeightVal[1]) / 2;
-        const avgRear = (rideHeightVal[2] + rideHeightVal[3]) / 2;
-        
-        const fRange = car?.rideHeightFrontRange || [50, 90];
-        const rRange = car?.rideHeightRearRange || [50, 100];
-        const step = car?.rideHeightStep || 1;
-        
-        normalized.rideHeights = [
-          avgFront < 45 ? fRange[0] + avgFront * step : avgFront,
-          avgRear < 45 ? rRange[0] + avgRear * step : avgRear
-        ];
+        // Map all 4 corners [LF, RF, LR, RR] individually to prevent averaging distortion
+        normalized.rideHeights = rideHeightVal.map((v, i) => {
+          if (v < 45) {
+            const minVal = i < 2 ? fRange[0] : rRange[0];
+            return minVal + v * currentStep;
+          }
+          return v;
+        });
       } else if (rideHeightVal.length === 2) {
         normalized.rideHeights = rideHeightVal.map((v, i) => {
           if (v < 45) {
-            const range = i === 0 ? (car?.rideHeightFrontRange || [50, 90]) : (car?.rideHeightRearRange || [50, 100]);
-            const step = car?.rideHeightStep || 1;
-            return range[0] + v * step;
+            const minVal = i === 0 ? fRange[0] : rRange[0];
+            return minVal + v * currentStep;
           }
           return v;
         });
@@ -474,12 +492,12 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
   const defCasterStep = car?.casterStep || 0.1;
   const casterArr = car?.casterArr || [];
 
-  // Convert cambers (index raw is non-negative, physical degrees are negative)
+// Convert cambers (index raw is non-negative, physical degrees are negative)
   normalized.cambers = normalized.cambers.map((c, idx) => {
     if (c >= 0) { // It is a raw click index
-      const maxVal = idx < 2 ? defCamberF[1] : defCamberR[1];
+      const minVal = idx < 2 ? defCamberF[0] : defCamberR[0];
       const step = defCamberStep;
-      return Math.round((maxVal - c * step) * 100) / 100;
+      return Math.round((minVal + c * step) * 100) / 100;
     }
     return c; // Already in physical degrees
   });
@@ -495,16 +513,18 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
     return t; // Already in physical degrees
   });
 
-  // Convert casters
+// Convert casters
   normalized.casters = normalized.casters.map((c) => {
     if (Number.isInteger(c)) {
       if (casterArr && casterArr.length > 0) {
-        // Caster has exactly 11 clicks (0 to 10) in game which maps to the last 11 entries of physics array
-        const physicsIndex = Math.min(casterArr.length - 1, Math.max(0, casterArr.length - 11 + c));
+        // If the click index is within bounds of the array, use it directly.
+        // Otherwise, fall back to the end of the array.
+        const physicsIndex = c < casterArr.length ? c : Math.min(casterArr.length - 1, Math.max(0, casterArr.length - 11 + c));
         return casterArr[physicsIndex];
       } else {
-        const minVal = defCasterRange[0];
-        const step = defCasterStep;
+        // If a car doesn't have a specific casterArr, use fallback bounds
+        const minVal = car?.casterRange?.[0] || defCasterRange[0];
+        const step = car?.casterStep || defCasterStep;
         return Math.round((minVal + c * step) * 100) / 100;
       }
     }
