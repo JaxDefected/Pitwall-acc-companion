@@ -514,7 +514,7 @@ if (Array.isArray(rideHeightVal)) {
   });
 
 // Convert casters
-if (Array.isArray(caster) && caster.length >= 2) {
+    if (Array.isArray(caster) && caster.length >= 2) {
       const rawLF = caster[0];
       const rawRF = caster[1];
 
@@ -529,10 +529,9 @@ if (Array.isArray(caster) && caster.length >= 2) {
         normalized.casters[1] = typeof rawRF === 'number' && rawRF < 45 ? Math.round((minVal + rawRF * step) * 100) / 100 : rawRF;
       }
     }
-});
- 
-const warnings: string[] = [];
-  normalized.validationWarnings = warnings;
+
+    const warnings: string[] = [];
+    normalized.validationWarnings = warnings;
 
   function clamp(val: number, min: number, max: number, name: string): number {
     const clamped = Math.min(Math.max(val, min), max);
