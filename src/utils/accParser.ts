@@ -257,23 +257,28 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
     }
   }
   
+// Declare raw variables at the top level of parseAccSetup so lower blocks can see them
+  let rawCamber: any = null;
+  let rawToe: any = null;
+  let rawCaster: any = null;
+
   // ALIGNMENT (basicSetup.alignment)
   const alignmentSection = basic.alignment || getNestedVal(basic, ["alignment"]);
   if (alignmentSection) {
-    const camber = alignmentSection.camber || getNestedVal(alignmentSection, ["camber", "cambers"]);
-    const toe = alignmentSection.toe || getNestedVal(alignmentSection, ["toe", "toes"]);
-    const caster = alignmentSection.caster || getNestedVal(alignmentSection, ["caster", "casters"]);
+    rawCamber = alignmentSection.camber || getNestedVal(alignmentSection, ["camber", "cambers"]);
+    rawToe = alignmentSection.toe || getNestedVal(alignmentSection, ["toe", "toes"]);
+    rawCaster = alignmentSection.caster || getNestedVal(alignmentSection, ["caster", "casters"]);
     
-    if (camber && Array.isArray(camber)) {
-      normalized.cambers = camber;
+    if (rawCamber && Array.isArray(rawCamber)) {
+      normalized.cambers = rawCamber;
     }
 
-    if (toe && Array.isArray(toe)) {
-      normalized.toes = toe;
+    if (rawToe && Array.isArray(rawToe)) {
+      normalized.toes = rawToe;
     }
 
-    if (caster && Array.isArray(caster)) {
-      normalized.casters = caster;
+    if (rawCaster && Array.isArray(rawCaster)) {
+      normalized.casters = rawCaster;
     }
   }
 
@@ -513,10 +518,10 @@ if (Array.isArray(rideHeightVal)) {
     return t; // Already in physical degrees
   });
 
-// Convert casters
-    if (Array.isArray(caster) && caster.length >= 2) {
-      const rawLF = caster[0];
-      const rawRF = caster[1];
+// Convert casters using the top-level scoped raw variable
+    if (Array.isArray(rawCaster) && rawCaster.length >= 2) {
+      const rawLF = rawCaster[0];
+      const rawRF = rawCaster[1];
 
       if (casterArr && casterArr.length > 0) {
         // Direct lookup from the physics array using the raw index values (e.g., 23)
