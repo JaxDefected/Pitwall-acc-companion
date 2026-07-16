@@ -517,12 +517,11 @@ if (Array.isArray(rideHeightVal)) {
   normalized.casters = normalized.casters.map((c) => {
     if (Number.isInteger(c)) {
       if (casterArr && casterArr.length > 0) {
-        // If the click index is within bounds of the array, use it directly.
-        // Otherwise, fall back to the end of the array.
-        const physicsIndex = c < casterArr.length ? c : Math.min(casterArr.length - 1, Math.max(0, casterArr.length - 11 + c));
+        // ACC UI click index (0-10) typically maps to the last 11 entries of the car's physics array.
+        // This ensures index 10 correctly grabs the maximum physical value.
+        const physicsIndex = Math.min(casterArr.length - 1, Math.max(0, casterArr.length - 11 + c));
         return casterArr[physicsIndex];
       } else {
-        // If a car doesn't have a specific casterArr, use fallback bounds
         const minVal = car?.casterRange?.[0] || defCasterRange[0];
         const step = car?.casterStep || defCasterStep;
         return Math.round((minVal + c * step) * 100) / 100;
