@@ -2868,7 +2868,8 @@ export default function App() {
             
             {/* active setup selector header info */}
             <div className="p-5 md:p-6 bg-zinc-50 border-b border-zinc-200 flex flex-col xl:flex-row xl:items-start justify-between gap-5">
-              <div className="space-y-1.5 min-w-0 flex-1">
+{/* Change min-w-0 to min-w-max or ensure flex-shrink doesn't collapse it */}
+              <div className="space-y-1.5 min-w-max flex-1">
                 <span className="text-[10px] font-mono bg-red-50 text-red-700 border border-red-200/60 px-2 py-0.5 rounded uppercase font-extrabold tracking-widest whitespace-nowrap inline-block">
                   ACTIVE HUD INSPECTION
                 </span>
