@@ -4164,6 +4164,7 @@ export default function App() {
                                   { label: "0 Stops", val: 0 },
                                   { label: "1 Stop", val: 1 },
                                   { label: "2 Stops", val: 2 },
+                                  { label: "3 Stops", val: 3 },
                                 ].map((tab) => {
                                   const isSelected = pitNumberOfStops === tab.val;
                                   return (
