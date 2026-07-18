@@ -3932,7 +3932,7 @@ export default function App() {
                                 <input
                                   type="range"
                                   min={5}
-                                  max={125}
+                                  max={180}
                                   step={5}
                                   value={fuelRaceTime}
                                   onChange={(e) => setFuelRaceTime(parseInt(e.target.value))}
@@ -4014,7 +4014,7 @@ export default function App() {
                                 <input
                                   type="range"
                                   min={1.0}
-                                  max={5.0}
+                                  max={15.0}
                                   step={0.05}
                                   value={fuelPerLap}
                                   onChange={(e) => setFuelPerLap(parseFloat(e.target.value))}
