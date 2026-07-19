@@ -329,7 +329,7 @@ if (alignmentSection) {
 
   // Parse Brake Bias (basicSetup.electronics.brakeBias or advancedSetup.mechanicalGrip.brakeBias)
   const brakeBiasVal = elecSection ? getNestedVal(elecSection, ["brakeBias", "brakeBias"]) : undefined;
-  const mechBrakeBias = advanced.mechanicalGrip ? getNestedVal(advanced.mechanicalGrip, ["brakeBias", "brakeBias"]) : undefined;
+  const mechBrakeBias = mechanicalGripSection ? getNestedVal(mechanicalGripSection, ["brakeBias"]) : undefined;
   const targetBB = brakeBiasVal !== undefined ? brakeBiasVal : mechBrakeBias;
 if (targetBB !== undefined) {
   if (targetBB > 30) {
@@ -345,31 +345,31 @@ if (targetBB !== undefined) {
 }
 
   // 3. MECHANICAL GRIP (advancedSetup.mechanicalGrip)
-  const mechanicalGripSection = advanced.mechanicalGrip || getNestedVal(advanced, ["mechanicalGrip"]);
+const mechanicalGripSection = advanced.mechanicalGrip 
+  || advanced.mechanicalBalance 
+  || getNestedVal(advanced, ["mechanicalGrip", "mechanicalBalance"]);
   if (mechanicalGripSection) {
     const arbFrontVal = getNestedVal(mechanicalGripSection, ["antirollBarFront", "antirollbarFront", "arbFront"]);
     const arbRearVal = getNestedVal(mechanicalGripSection, ["antirollBarRear", "antirollbarRear", "arbRear"]);
 const steerRatioVal = getNestedVal(mechanicalGripSection, ["steerRatio"]);
     const brakeTorqueVal = getNestedVal(mechanicalGripSection, ["brakeTorque", "brakeTorque"]);
     
-    if (arbFrontVal !== undefined) normalized.arbFront = Math.max(0, arbFrontVal - 1);
-    if (arbRearVal !== undefined) normalized.arbRear = Math.max(0, arbRearVal - 1);
+if (arbFrontVal !== undefined) {
+  const arbFMin = car?.antirollBarFrontRange?.[0] ?? 1;
+  normalized.arbFront = arbFrontVal + arbFMin;
+}
+if (arbRearVal !== undefined) {
+  const arbRMin = car?.antirollBarRearRange?.[0] ?? 1;
+  normalized.arbRear = arbRearVal + arbRMin;
+}
 if (steerRatioVal !== undefined) {
-      if (car?.steerRatioRange && Array.isArray(car.steerRatioRange)) {
-        // If it's a raw index (0, 1, 2...), look it up directly in the car's ratio array
-        if (steerRatioVal < car.steerRatioRange.length) {
-          normalized.steerRatio = car.steerRatioRange[steerRatioVal];
-        } else {
-          // Fallback if the file already contains the raw physical value (e.g., 15)
-          normalized.steerRatio = steerRatioVal;
-        }
-      } else {
-        // Safe global fallback calculation if a car profile lacks an array
-        const minSteer = car?.steerRatioMin || 10;
-        const step = car?.steerRatioStep || 1;
-        normalized.steerRatio = steerRatioVal < 10 ? minSteer + steerRatioVal * step : steerRatioVal;
-      }
-    }
+  const srMin = car?.steerRatioRange?.[0] || 10;
+  const srStep = car?.steerRatioStep || 1;
+  // 0-indexed: raw 1 + min 12 * step 1 = 13:1
+  normalized.steerRatio = typeof steerRatioVal === 'number' && steerRatioVal < 30
+    ? srMin + steerRatioVal * srStep
+    : steerRatioVal;
+}
     
     // Brake power (usually 100 - brakeTorque, where brakeTorque is step offset like 0 = 100%, 1=99%, etc)
     if (brakeTorqueVal !== undefined) {
@@ -635,15 +635,11 @@ if (Array.isArray(rideHeightVal)) {
     normalized.preloadDifferential = clamp(normalized.preloadDifferential, plRange[0], plRange[1], "Diff Preload");
 
     // Anti-roll bars (Translated to 0-based for user displays & manual alignments)
-    const arbFRange = car.antirollBarFrontRange 
-      ? [car.antirollBarFrontRange[0] - 1, car.antirollBarFrontRange[1] - 1] 
-      : [0, 9];
-    normalized.arbFront = clamp(normalized.arbFront, arbFRange[0], arbFRange[1], "Front ARB");
+const arbFRange = car.antirollBarFrontRange || [1, 10];
+normalized.arbFront = clamp(normalized.arbFront, arbFRange[0], arbFRange[1], "Front ARB");
 
-    const arbRRange = car.antirollBarRearRange
-      ? [car.antirollBarRearRange[0] - 1, car.antirollBarRearRange[1] - 1]
-      : [0, 9];
-    normalized.arbRear = clamp(normalized.arbRear, arbRRange[0], arbRRange[1], "Rear ARB");
+const arbRRange = car.antirollBarRearRange || [1, 10];
+normalized.arbRear = clamp(normalized.arbRear, arbRRange[0], arbRRange[1], "Rear ARB");
 
     // Bumpstops
     const bsFRateRange = car.bumpStopFrontRateRange || car.bumpStopRateRange || [300, 2500];
