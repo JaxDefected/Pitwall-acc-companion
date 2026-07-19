@@ -4362,7 +4362,7 @@ export default function App() {
                         <div className="border-r border-zinc-200 last:border-0 px-2">
                           <span className="text-zinc-500 font-mono text-[10px] uppercase block tracking-wider font-bold">Brake Bias</span>
                           <span className="text-2xl font-mono font-extrabold text-blue-600">{parsedActiveSetup.brakeBias}%</span>
-                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Front Offset Balance</span>
+                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Towards the front of the car</span>
                         </div>
                         <div className="px-2 flex flex-col items-center justify-center">
                           <span className="text-zinc-500 font-mono text-[10px] uppercase block tracking-wider font-bold">Steer Ratio</span>
@@ -4385,7 +4385,8 @@ export default function App() {
                               </button>
                             )}
                           </div>
-                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Lock-to-Lock ratio</span>
+                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Low = Faster & Sharper</span>
+                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">High = Smoother & Slower</span>
                         </div>
                       </div>
 
