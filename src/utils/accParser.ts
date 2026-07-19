@@ -326,7 +326,12 @@ if (alignmentSection) {
     ? getNestedVal(basic, ["fuel"]) 
     : (tyresSection && getNestedVal(tyresSection, ["fuel"]) !== undefined ? getNestedVal(tyresSection, ["fuel"]) : 20);
   normalized.fuel = fuelVal;
-
+  
+    // 3. MECHANICAL GRIP (advancedSetup.mechanicalGrip)
+const mechanicalGripSection = advanced.mechanicalGrip 
+  || advanced.mechanicalBalance 
+  || getNestedVal(advanced, ["mechanicalGrip", "mechanicalBalance"]);
+  
   // Parse Brake Bias (basicSetup.electronics.brakeBias or advancedSetup.mechanicalGrip.brakeBias)
   const brakeBiasVal = elecSection ? getNestedVal(elecSection, ["brakeBias", "brakeBias"]) : undefined;
   const mechBrakeBias = mechanicalGripSection ? getNestedVal(mechanicalGripSection, ["brakeBias"]) : undefined;
@@ -338,16 +343,11 @@ if (targetBB !== undefined) {
   } else {
     // Dynamically look up the car bounds or fall back safely
     const bbMin = car?.brakeBiasRange?.[0] || 50.0;
-    const bbStep = car?.brakeBiasStep || 0.2; 
-    
+    const bbStep = car?.brakeBiasStep || 0.2;     
     normalized.brakeBias = Math.round((bbMin + targetBB * bbStep) * 10) / 10;
   }
 }
 
-  // 3. MECHANICAL GRIP (advancedSetup.mechanicalGrip)
-const mechanicalGripSection = advanced.mechanicalGrip 
-  || advanced.mechanicalBalance 
-  || getNestedVal(advanced, ["mechanicalGrip", "mechanicalBalance"]);
   if (mechanicalGripSection) {
     const arbFrontVal = getNestedVal(mechanicalGripSection, ["antirollBarFront", "antirollbarFront", "arbFront"]);
     const arbRearVal = getNestedVal(mechanicalGripSection, ["antirollBarRear", "antirollbarRear", "arbRear"]);
