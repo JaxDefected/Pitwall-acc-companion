@@ -263,36 +263,45 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
   let rawCaster: any = null;
 
 // ALIGNMENT (basicSetup.alignment)
-  const alignmentSection = basic.alignment || getNestedVal(basic, ["alignment"]);
-  if (alignmentSection) {
-    rawCamber = getNestedVal(alignmentSection, ["camber", "cambers"]);
-    rawToe = getNestedVal(alignmentSection, ["toe", "toes"]);
-    rawCaster = getNestedVal(alignmentSection, ["caster", "casters"]);
-    
-    if (rawCamber && Array.isArray(rawCamber)) {
-      normalized.cambers = rawCamber;
-    }
+const alignmentSection = basic.alignment || getNestedVal(basic, ["alignment"]);
+if (alignmentSection) {
+  rawCamber = getNestedVal(alignmentSection, ["camber", "cambers"]);
+  rawToe = getNestedVal(alignmentSection, ["toe", "toes"]);
+  rawCaster = getNestedVal(alignmentSection, ["caster", "casters"]);
 
-    if (rawToe && Array.isArray(rawToe)) {
-      normalized.toes = rawToe;
-    }
-    
-    // Map casters immediately while we have direct access to alignmentSection data
-    if (rawCaster && Array.isArray(rawCaster) && rawCaster.length >= 2) {
-      const rawLF = rawCaster[0];
-      const rawRF = rawCaster[1];
-      
-      if (car?.casterArr && car.casterArr.length > 0) {
-        normalized.casters[0] = rawLF < car.casterArr.length ? car.casterArr[rawLF] : rawLF;
-        normalized.casters[1] = rawRF < car.casterArr.length ? car.casterArr[rawRF] : rawRF;
-      } else {
-        const minVal = car?.casterRange?.[0] || 4.0;
-        const step = car?.casterStep || 0.1;
-        normalized.casters[0] = typeof rawLF === 'number' && rawLF < 45 ? Math.round((minVal + rawLF * step) * 100) / 100 : rawLF;
-        normalized.casters[1] = typeof rawRF === 'number' && rawRF < 45 ? Math.round((minVal + rawRF * step) * 100) / 100 : rawRF;
-      }
+  if (rawCamber && Array.isArray(rawCamber)) {
+    normalized.cambers = rawCamber;
+  }
+  if (rawToe && Array.isArray(rawToe)) {
+    normalized.toes = rawToe;
+  }
+
+  // ACC stores caster as two separate fields, not an array
+  const rawCasterLF = getNestedVal(alignmentSection, ["casterLF", "caster_lf"]);
+  const rawCasterRF = getNestedVal(alignmentSection, ["casterRF", "caster_rf"]);
+
+  // Support legacy array format as fallback
+  const rawLF = rawCasterLF !== undefined ? rawCasterLF : (Array.isArray(rawCaster) ? rawCaster[0] : undefined);
+  const rawRF = rawCasterRF !== undefined ? rawCasterRF : (Array.isArray(rawCaster) ? rawCaster[1] : undefined);
+
+  if (rawLF !== undefined && rawRF !== undefined) {
+    if (car?.casterArr && car.casterArr.length > 0) {
+      // Index lookup — e.g. casterArr[10] = 9.1
+      normalized.casters[0] = rawLF < car.casterArr.length ? car.casterArr[rawLF] : rawLF;
+      normalized.casters[1] = rawRF < car.casterArr.length ? car.casterArr[rawRF] : rawRF;
+    } else {
+      // Range + step fallback for cars using casterRange instead of casterArr
+      const minVal = car?.casterRange?.[0] || 4.0;
+      const step = car?.casterStep || 0.1;
+      normalized.casters[0] = typeof rawLF === 'number' && rawLF < 45
+        ? Math.round((minVal + rawLF * step) * 100) / 100
+        : rawLF;
+      normalized.casters[1] = typeof rawRF === 'number' && rawRF < 45
+        ? Math.round((minVal + rawRF * step) * 100) / 100
+        : rawRF;
     }
   }
+}
 
   // 2. ELECTRONICS (basicSetup.electronics)
   const elecSection = basic.electronics || getNestedVal(basic, ["electronics"]);
