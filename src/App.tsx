@@ -4357,7 +4357,7 @@ export default function App() {
                         <div className="border-r border-zinc-200 last:border-0 px-2">
                           <span className="text-zinc-500 font-mono text-[10px] uppercase block tracking-wider font-bold">Brake Power</span>
                           <span className="text-2xl font-mono font-extrabold text-emerald-600">{parsedActiveSetup.brakePower}%</span>
-                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Max Decel Torque</span>
+                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Typically 100% but can try above figure if running no ABS</span>
                         </div>
                         <div className="border-r border-zinc-200 last:border-0 px-2">
                           <span className="text-zinc-500 font-mono text-[10px] uppercase block tracking-wider font-bold">Brake Bias</span>
