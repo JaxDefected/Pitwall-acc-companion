@@ -84,8 +84,14 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to fetch stream from race engineer.");
+        let errorText = "Failed to fetch stream from race engineer.";
+        try {
+          const errorData = await response.json();
+          errorText = errorData.error || errorText;
+        } catch {
+          errorText = `Server error (${response.status}): ${response.statusText || "HTML/Text Response"}`;
+        }
+        throw new Error(errorText);
       }
 
       const reader = response.body?.getReader();
