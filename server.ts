@@ -200,7 +200,13 @@ const DEFAULT_ACC_GUIDE = `
 
 async function startServer() {
   const app = express();
-  app.use(express.json({ limit: "5mb" }));
+  app.use((req, res, next) => {
+    if (req.body && typeof req.body === "object") {
+      next();
+    } else {
+      express.json({ limit: "5mb" })(req, res, next);
+    }
+  });
 
   const PORT = 3000;
 
@@ -397,6 +403,7 @@ ${setupContext}
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
       res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
 
       const responseStream = await ai.models.generateContentStream({
         model: "gemini-3.5-flash",
