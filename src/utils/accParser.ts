@@ -412,7 +412,7 @@ if (steerRatioVal !== undefined) {
       });
     }
 
-    const bumpStopRangeVal = getNestedVal(mechanicalGripSection, ["bumpStopRange", "bumpstopRange", "bumpStopRanges", "bumpstopRanges"]);
+    const bumpStopRangeVal = getNestedVal(mechanicalGripSection, ["bumpStopRange", "bumpstopRange", "bumpStopRanges", "bumpstopRanges", "bumpStopWindow", "bumpStopWindows", "bumpstopWindow", "bumpstopWindows"]);
     if (Array.isArray(bumpStopRangeVal) && bumpStopRangeVal.length === 4) {
       normalized.bumpstopRanges = bumpStopRangeVal.map((v, i) => {
         if (v < 100) {

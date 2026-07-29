@@ -818,8 +818,24 @@ export default function App() {
     if (!cloned.advancedSetup) cloned.advancedSetup = {};
     if (!cloned.basicSetup.tyres) cloned.basicSetup.tyres = { tyrePressure: [50, 50, 50, 50] };
     if (!cloned.basicSetup.electronics) cloned.basicSetup.electronics = { tc1: 3, tc2: 2, abs: 3, ecuMap: 1, fuelMap: 1 };
+    if (!cloned.basicSetup.alignment) {
+      cloned.basicSetup.alignment = {
+        camber: [32, 32, 26, 26],
+        toe: [20, 20, 30, 30],
+        casterLF: 30,
+        casterRF: 30
+      };
+    }
     if (!cloned.advancedSetup.mechanicalGrip) cloned.advancedSetup.mechanicalGrip = { antirollBarFront: 5, antirollBarRear: 3, preloadDifferential: 120 };
     if (!cloned.advancedSetup.aerodynamics) cloned.advancedSetup.aerodynamics = { rearWingSetting: 4, rearWing: 4 };
+    if (!cloned.advancedSetup.dampers) {
+      cloned.advancedSetup.dampers = {
+        bumpSlow: [8, 8, 8, 8],
+        bumpFast: [10, 10, 10, 10],
+        reboundSlow: [12, 12, 12, 12],
+        reboundFast: [14, 14, 14, 14]
+      };
+    }
 
     if (field === "tyrePressure" && typeof index === "number") {
       cloned.basicSetup.tyres.tyrePressure[index] = Math.max(0, Math.min(100, (cloned.basicSetup.tyres.tyrePressure[index] || 50) + delta));
@@ -891,6 +907,109 @@ export default function App() {
       const maxVal = carConfig?.brakeDuctRange ? carConfig.brakeDuctRange[1] : 6;
       arr[1] = Math.max(minVal, Math.min(maxVal, arr[1] + delta));
       cloned.advancedSetup[aeroKey][dbKey] = arr;
+    } else if (field === "camber" && typeof index === "number") {
+      const arr = cloned.basicSetup.alignment.camber;
+      const current = arr[index] !== undefined ? arr[index] : (index < 2 ? 32 : 26);
+      if (current < 0) {
+        const step = carConfig?.camberStep || 0.1;
+        arr[index] = Math.round((current + delta * step) * 100) / 100;
+      } else {
+        arr[index] = Math.max(0, Math.min(100, current + delta));
+      }
+      cloned.basicSetup.alignment.camber = arr;
+    } else if (field === "toe" && typeof index === "number") {
+      const arr = cloned.basicSetup.alignment.toe;
+      const current = arr[index] !== undefined ? arr[index] : (index < 2 ? 20 : 30);
+      if (!Number.isInteger(current)) {
+        const step = carConfig?.toeStep || 0.01;
+        arr[index] = Math.round((current + delta * step) * 100) / 100;
+      } else {
+        arr[index] = Math.max(0, Math.min(100, current + delta));
+      }
+      cloned.basicSetup.alignment.toe = arr;
+    } else if (field === "caster" && typeof index === "number") {
+      const isLF = index === 0;
+      const casterKey = isLF ? "casterLF" : "casterRF";
+      const current = cloned.basicSetup.alignment[casterKey] !== undefined
+        ? cloned.basicSetup.alignment[casterKey]
+        : (Array.isArray(cloned.basicSetup.alignment.caster) ? cloned.basicSetup.alignment.caster[index] : 30);
+      
+      let nextVal = current;
+      if (typeof current === "number" && current < 45) {
+        nextVal = Math.max(0, Math.min(100, current + delta));
+      } else if (typeof current === "number") {
+        const step = carConfig?.casterStep || 0.1;
+        nextVal = Math.round((current + delta * step) * 100) / 100;
+      }
+      cloned.basicSetup.alignment[casterKey] = nextVal;
+      if (Array.isArray(cloned.basicSetup.alignment.caster)) {
+        cloned.basicSetup.alignment.caster[index] = nextVal;
+      }
+    } else if (field === "steerRatio") {
+      const currentSR = cloned.advancedSetup.mechanicalGrip.steerRatio !== undefined
+        ? cloned.advancedSetup.mechanicalGrip.steerRatio
+        : 3;
+      cloned.advancedSetup.mechanicalGrip.steerRatio = Math.max(0, Math.min(30, currentSR + delta));
+    } else if (field === "brakePower") {
+      const currentTorque = cloned.advancedSetup.mechanicalGrip.brakeTorque !== undefined
+        ? cloned.advancedSetup.mechanicalGrip.brakeTorque
+        : 0;
+      cloned.advancedSetup.mechanicalGrip.brakeTorque = Math.max(0, Math.min(20, currentTorque - delta));
+    } else if (field === "brakeBias") {
+      if (!cloned.basicSetup.electronics) cloned.basicSetup.electronics = {};
+      const currentBB = cloned.basicSetup.electronics.brakeBias !== undefined
+        ? cloned.basicSetup.electronics.brakeBias
+        : 10;
+      const minVal = carConfig?.brakeBiasRange ? carConfig.brakeBiasRange[0] : 40;
+      const maxVal = carConfig?.brakeBiasRange ? carConfig.brakeBiasRange[1] : 75;
+      const step = carConfig?.brakeBiasStep || 0.2;
+      const maxSteps = Math.round((maxVal - minVal) / step);
+      cloned.basicSetup.electronics.brakeBias = Math.max(0, Math.min(maxSteps > 0 ? maxSteps : 150, currentBB + delta));
+    } else if (field === "wheelRate" && typeof index === "number") {
+      if (!cloned.advancedSetup.mechanicalGrip.wheelRate) {
+        cloned.advancedSetup.mechanicalGrip.wheelRate = [0, 0, 0, 0];
+      }
+      const arr = cloned.advancedSetup.mechanicalGrip.wheelRate;
+      arr[index] = Math.max(0, Math.min(80, (arr[index] !== undefined ? arr[index] : 0) + delta));
+      cloned.advancedSetup.mechanicalGrip.wheelRate = arr;
+    } else if (field === "bumpStopRate" && typeof index === "number") {
+      if (!cloned.advancedSetup.mechanicalGrip.bumpStopRate) {
+        cloned.advancedSetup.mechanicalGrip.bumpStopRate = [0, 0, 0, 0];
+      }
+      const arr = cloned.advancedSetup.mechanicalGrip.bumpStopRate;
+      arr[index] = Math.max(0, Math.min(100, (arr[index] !== undefined ? arr[index] : 0) + delta));
+      cloned.advancedSetup.mechanicalGrip.bumpStopRate = arr;
+    } else if (field === "bumpStopRange" && typeof index === "number") {
+      if (!cloned.advancedSetup.mechanicalGrip.bumpStopRange) {
+        cloned.advancedSetup.mechanicalGrip.bumpStopRange = [0, 0, 0, 0];
+      }
+      if (!cloned.advancedSetup.mechanicalGrip.bumpStopWindow) {
+        cloned.advancedSetup.mechanicalGrip.bumpStopWindow = [0, 0, 0, 0];
+      }
+      const arr1 = cloned.advancedSetup.mechanicalGrip.bumpStopRange;
+      const arr2 = cloned.advancedSetup.mechanicalGrip.bumpStopWindow;
+      const currentVal = arr1[index] !== undefined ? arr1[index] : (arr2[index] !== undefined ? arr2[index] : 0);
+      const newVal = Math.max(0, Math.min(100, currentVal + delta));
+      arr1[index] = newVal;
+      arr2[index] = newVal;
+      cloned.advancedSetup.mechanicalGrip.bumpStopRange = arr1;
+      cloned.advancedSetup.mechanicalGrip.bumpStopWindow = arr2;
+    } else if (field === "bumpSlow" && typeof index === "number") {
+      const arr = cloned.advancedSetup.dampers.bumpSlow;
+      arr[index] = Math.max(0, Math.min(40, (arr[index] !== undefined ? arr[index] : 8) + delta));
+      cloned.advancedSetup.dampers.bumpSlow = arr;
+    } else if (field === "bumpFast" && typeof index === "number") {
+      const arr = cloned.advancedSetup.dampers.bumpFast;
+      arr[index] = Math.max(0, Math.min(49, (arr[index] !== undefined ? arr[index] : 10) + delta));
+      cloned.advancedSetup.dampers.bumpFast = arr;
+    } else if (field === "reboundSlow" && typeof index === "number") {
+      const arr = cloned.advancedSetup.dampers.reboundSlow;
+      arr[index] = Math.max(0, Math.min(40, (arr[index] !== undefined ? arr[index] : 12) + delta));
+      cloned.advancedSetup.dampers.reboundSlow = arr;
+    } else if (field === "reboundFast" && typeof index === "number") {
+      const arr = cloned.advancedSetup.dampers.reboundFast;
+      arr[index] = Math.max(0, Math.min(49, (arr[index] !== undefined ? arr[index] : 14) + delta));
+      cloned.advancedSetup.dampers.reboundFast = arr;
     }
 
     setTunedRawData(cloned);
@@ -3284,17 +3403,71 @@ export default function App() {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="flex flex-col sm:flex-row justify-between gap-1 text-xs">
+                                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1 text-xs">
                                     <span className="text-zinc-500">Toe:</span>
-                                    <strong className="text-zinc-950 font-extrabold">{parsedActiveSetup.toes[0]}°</strong>
+                                    <div className="flex items-center gap-1">
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("toe", -1, 0)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          -
+                                        </button>
+                                      )}
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[0]}°</strong>
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("toe", 1, 0)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          +
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="flex flex-col sm:flex-row justify-between gap-1 text-xs">
+                                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1 text-xs">
                                     <span className="text-zinc-500">Camber:</span>
-                                    <strong className="text-zinc-950 font-extrabold">{parsedActiveSetup.cambers[0]}°</strong>
+                                    <div className="flex items-center gap-1">
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("camber", -1, 0)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          -
+                                        </button>
+                                      )}
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[0]}°</strong>
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("camber", 1, 0)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          +
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="flex flex-col sm:flex-row justify-between gap-1 text-xs">
+                                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1 text-xs">
                                     <span className="text-zinc-550">Caster:</span>
-                                    <strong className="text-zinc-950 font-extrabold">{parsedActiveSetup.casters[0]}°</strong>
+                                    <div className="flex items-center gap-1">
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("caster", -1, 0)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          -
+                                        </button>
+                                      )}
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[0]}°</strong>
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("caster", 1, 0)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          +
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -3333,17 +3506,71 @@ export default function App() {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="flex flex-col sm:flex-row justify-between gap-1 text-xs">
+                                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1 text-xs">
                                     <span className="text-zinc-500">Toe:</span>
-                                    <strong className="text-zinc-950 font-extrabold">{parsedActiveSetup.toes[1]}°</strong>
+                                    <div className="flex items-center gap-1">
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("toe", -1, 1)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          -
+                                        </button>
+                                      )}
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[1]}°</strong>
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("toe", 1, 1)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          +
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="flex flex-col sm:flex-row justify-between gap-1 text-xs">
+                                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1 text-xs">
                                     <span className="text-zinc-500">Camber:</span>
-                                    <strong className="text-zinc-950 font-extrabold">{parsedActiveSetup.cambers[1]}°</strong>
+                                    <div className="flex items-center gap-1">
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("camber", -1, 1)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          -
+                                        </button>
+                                      )}
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[1]}°</strong>
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("camber", 1, 1)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          +
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="flex flex-col sm:flex-row justify-between gap-1 text-xs">
+                                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1 text-xs">
                                     <span className="text-zinc-555">Caster:</span>
-                                    <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[1]}°</strong>
+                                    <div className="flex items-center gap-1">
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("caster", -1, 1)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          -
+                                        </button>
+                                      )}
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[1]}°</strong>
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("caster", 1, 1)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          +
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -3392,13 +3619,49 @@ export default function App() {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="flex flex-col sm:flex-row justify-between gap-1 text-xs">
+                                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1 text-xs">
                                     <span className="text-zinc-500">Toe:</span>
-                                    <strong className="text-zinc-950 font-extrabold">{parsedActiveSetup.toes[2]}°</strong>
+                                    <div className="flex items-center gap-1">
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("toe", -1, 2)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          -
+                                        </button>
+                                      )}
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[2]}°</strong>
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("toe", 1, 2)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          +
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="flex flex-col sm:flex-row justify-between gap-1 text-xs">
+                                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1 text-xs">
                                     <span className="text-zinc-500">Camber:</span>
-                                    <strong className="text-zinc-950 font-extrabold">{parsedActiveSetup.cambers[2]}°</strong>
+                                    <div className="flex items-center gap-1">
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("camber", -1, 2)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          -
+                                        </button>
+                                      )}
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[2]}°</strong>
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("camber", 1, 2)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          +
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -3437,13 +3700,49 @@ export default function App() {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="flex flex-col sm:flex-row justify-between gap-1 text-xs">
+                                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1 text-xs">
                                     <span className="text-zinc-500">Toe:</span>
-                                    <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[3]}°</strong>
+                                    <div className="flex items-center gap-1">
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("toe", -1, 3)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          -
+                                        </button>
+                                      )}
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[3]}°</strong>
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("toe", 1, 3)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          +
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="flex flex-col sm:flex-row justify-between gap-1 text-xs">
+                                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1 text-xs">
                                     <span className="text-zinc-500">Camber:</span>
-                                    <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[3]}°</strong>
+                                    <div className="flex items-center gap-1">
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("camber", -1, 3)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          -
+                                        </button>
+                                      )}
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[3]}°</strong>
+                                      {isTuneMode && (
+                                        <button
+                                          onClick={() => handleAdjustSetupValue("camber", 1, 3)}
+                                          className="w-5 h-5 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-[10px] font-black cursor-pointer active:scale-95 text-zinc-800 select-none"
+                                        >
+                                          +
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -4376,14 +4675,50 @@ export default function App() {
                           </div>
                           <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Anti-Roll Bar Steps</span>
                         </div>
-                        <div className="border-r border-zinc-200 last:border-0 px-2">
+                        <div className="border-r border-zinc-200 last:border-0 px-2 flex flex-col items-center justify-center">
                           <span className="text-zinc-500 font-mono text-[10px] uppercase block tracking-wider font-bold">Brake Power</span>
-                          <span className="text-2xl font-mono font-extrabold text-emerald-600">{parsedActiveSetup.brakePower}%</span>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            {isTuneMode && (
+                              <button
+                                onClick={() => handleAdjustSetupValue("brakePower", -1)}
+                                className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none text-center"
+                              >
+                                -
+                              </button>
+                            )}
+                            <span className="text-2xl font-mono font-extrabold text-emerald-600">{parsedActiveSetup.brakePower}%</span>
+                            {isTuneMode && (
+                              <button
+                                onClick={() => handleAdjustSetupValue("brakePower", 1)}
+                                className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none text-center"
+                              >
+                                +
+                              </button>
+                            )}
+                          </div>
                           <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Typically 100% but can try above figure if running no ABS</span>
                         </div>
-                        <div className="border-r border-zinc-200 last:border-0 px-2">
+                        <div className="border-r border-zinc-200 last:border-0 px-2 flex flex-col items-center justify-center">
                           <span className="text-zinc-500 font-mono text-[10px] uppercase block tracking-wider font-bold">Brake Bias</span>
-                          <span className="text-2xl font-mono font-extrabold text-blue-600">{parsedActiveSetup.brakeBias}%</span>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            {isTuneMode && (
+                              <button
+                                onClick={() => handleAdjustSetupValue("brakeBias", -1)}
+                                className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none text-center"
+                              >
+                                -
+                              </button>
+                            )}
+                            <span className="text-2xl font-mono font-extrabold text-blue-600">{parsedActiveSetup.brakeBias}%</span>
+                            {isTuneMode && (
+                              <button
+                                onClick={() => handleAdjustSetupValue("brakeBias", 1)}
+                                className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none text-center"
+                              >
+                                +
+                              </button>
+                            )}
+                          </div>
                           <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Towards the front of the car</span>
                         </div>
                         <div className="px-2 flex flex-col items-center justify-center">
@@ -4423,18 +4758,144 @@ export default function App() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div className="bg-zinc-50 p-3 rounded border border-zinc-200">
                               <span className="text-[10px] text-zinc-500 block uppercase font-mono font-bold">LF Wheel</span>
-                              <div className="mt-1.5 space-y-1 font-mono text-xs font-semibold">
-                                <div className="flex justify-between"><span className="text-zinc-600 font-normal">Wheel Rate:</span><strong className="text-zinc-950 font-extrabold">{parsedActiveSetup.wheelRates[0]} N/m</strong></div>
-                                <div className="flex justify-between"><span className="text-zinc-600 font-normal">Bumpstop Rate:</span><strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpstopRates[0]} N/mm</strong></div>
-                                <div className="flex justify-between"><span className="text-zinc-650 font-normal">Bumpstop Range:</span><strong className="text-amber-700 font-bold">{parsedActiveSetup.bumpstopRanges[0]} mm</strong></div>
+                              <div className="mt-1.5 space-y-1.5 font-mono text-xs font-semibold">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-zinc-600 font-normal">Wheel Rate:</span>
+                                  <div className="flex items-center gap-1">
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("wheelRate", -1, 0)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        -
+                                      </button>
+                                    )}
+                                    <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.wheelRates[0]} N/m</strong>
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("wheelRate", 1, 0)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        +
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-zinc-600 font-normal">Bumpstop Rate:</span>
+                                  <div className="flex items-center gap-1">
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRate", -1, 0)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        -
+                                      </button>
+                                    )}
+                                    <strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpstopRates[0]} N/mm</strong>
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRate", 1, 0)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        +
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-zinc-650 font-normal">Bumpstop Range:</span>
+                                  <div className="flex items-center gap-1">
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRange", -1, 0)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        -
+                                      </button>
+                                    )}
+                                    <strong className="text-amber-700 font-bold">{parsedActiveSetup.bumpstopRanges[0]} mm</strong>
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRange", 1, 0)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        +
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                             <div className="bg-zinc-50 p-3 rounded border border-zinc-200">
                               <span className="text-[10px] text-zinc-500 block uppercase font-mono font-bold">RF Wheel</span>
-                              <div className="mt-1.5 space-y-1 font-mono text-xs font-semibold">
-                                <div className="flex justify-between"><span className="text-zinc-600 font-normal">Wheel Rate:</span><strong className="text-zinc-950 font-extrabold">{parsedActiveSetup.wheelRates[1]} N/m</strong></div>
-                                <div className="flex justify-between"><span className="text-zinc-600 font-normal">Bumpstop Rate:</span><strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpstopRates[1]} N/mm</strong></div>
-                                <div className="flex justify-between"><span className="text-zinc-650 font-normal">Bumpstop Range:</span><strong className="text-amber-700 font-bold">{parsedActiveSetup.bumpstopRanges[1]} mm</strong></div>
+                              <div className="mt-1.5 space-y-1.5 font-mono text-xs font-semibold">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-zinc-600 font-normal">Wheel Rate:</span>
+                                  <div className="flex items-center gap-1">
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("wheelRate", -1, 1)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        -
+                                      </button>
+                                    )}
+                                    <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.wheelRates[1]} N/m</strong>
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("wheelRate", 1, 1)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        +
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-zinc-600 font-normal">Bumpstop Rate:</span>
+                                  <div className="flex items-center gap-1">
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRate", -1, 1)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        -
+                                      </button>
+                                    )}
+                                    <strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpstopRates[1]} N/mm</strong>
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRate", 1, 1)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        +
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-zinc-650 font-normal">Bumpstop Range:</span>
+                                  <div className="flex items-center gap-1">
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRange", -1, 1)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        -
+                                      </button>
+                                    )}
+                                    <strong className="text-amber-700 font-bold">{parsedActiveSetup.bumpstopRanges[1]} mm</strong>
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRange", 1, 1)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        +
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -4449,18 +4910,144 @@ export default function App() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div className="bg-zinc-50 p-3 rounded border border-zinc-200">
                               <span className="text-[10px] text-zinc-500 block uppercase font-mono font-bold">LR Wheel</span>
-                              <div className="mt-1.5 space-y-1 font-mono text-xs font-semibold">
-                                <div className="flex justify-between"><span className="text-zinc-655 font-normal">Wheel Rate:</span><strong className="text-zinc-950 font-extrabold">{parsedActiveSetup.wheelRates[2]} N/m</strong></div>
-                                <div className="flex justify-between"><span className="text-zinc-655 font-normal">Bumpstop Rate:</span><strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpstopRates[2]} N/mm</strong></div>
-                                <div className="flex justify-between"><span className="text-zinc-655 font-normal text-amber-700">Bumpstop Range:</span><strong className="text-amber-700 font-bold">{parsedActiveSetup.bumpstopRanges[2]} mm</strong></div>
+                              <div className="mt-1.5 space-y-1.5 font-mono text-xs font-semibold">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-zinc-655 font-normal">Wheel Rate:</span>
+                                  <div className="flex items-center gap-1">
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("wheelRate", -1, 2)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        -
+                                      </button>
+                                    )}
+                                    <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.wheelRates[2]} N/m</strong>
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("wheelRate", 1, 2)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        +
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-zinc-655 font-normal">Bumpstop Rate:</span>
+                                  <div className="flex items-center gap-1">
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRate", -1, 2)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        -
+                                      </button>
+                                    )}
+                                    <strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpstopRates[2]} N/mm</strong>
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRate", 1, 2)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        +
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-zinc-655 font-normal text-amber-700">Bumpstop Range:</span>
+                                  <div className="flex items-center gap-1">
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRange", -1, 2)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        -
+                                      </button>
+                                    )}
+                                    <strong className="text-amber-700 font-bold">{parsedActiveSetup.bumpstopRanges[2]} mm</strong>
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRange", 1, 2)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        +
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                             <div className="bg-zinc-50 p-3 rounded border border-zinc-200">
                               <span className="text-[10px] text-zinc-500 block uppercase font-mono font-bold">RR Wheel</span>
-                              <div className="mt-1.5 space-y-1 font-mono text-xs font-semibold">
-                                <div className="flex justify-between"><span className="text-zinc-650 font-normal">Wheel Rate:</span><strong className="text-zinc-950 font-extrabold">{parsedActiveSetup.wheelRates[3]} N/m</strong></div>
-                                <div className="flex justify-between"><span className="text-zinc-650 font-normal">Bumpstop Rate:</span><strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpstopRates[3]} N/mm</strong></div>
-                                <div className="flex justify-between"><span className="text-zinc-650 font-normal text-amber-700">Bumpstop Range:</span><strong className="text-amber-700 font-bold">{parsedActiveSetup.bumpstopRanges[3]} mm</strong></div>
+                              <div className="mt-1.5 space-y-1.5 font-mono text-xs font-semibold">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-zinc-650 font-normal">Wheel Rate:</span>
+                                  <div className="flex items-center gap-1">
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("wheelRate", -1, 3)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        -
+                                      </button>
+                                    )}
+                                    <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.wheelRates[3]} N/m</strong>
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("wheelRate", 1, 3)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        +
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-zinc-650 font-normal">Bumpstop Rate:</span>
+                                  <div className="flex items-center gap-1">
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRate", -1, 3)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        -
+                                      </button>
+                                    )}
+                                    <strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpstopRates[3]} N/mm</strong>
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRate", 1, 3)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        +
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-zinc-650 font-normal text-amber-700">Bumpstop Range:</span>
+                                  <div className="flex items-center gap-1">
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRange", -1, 3)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        -
+                                      </button>
+                                    )}
+                                    <strong className="text-amber-700 font-bold">{parsedActiveSetup.bumpstopRanges[3]} mm</strong>
+                                    {isTuneMode && (
+                                      <button
+                                        onClick={() => handleAdjustSetupValue("bumpStopRange", 1, 3)}
+                                        className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                      >
+                                        +
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -4662,17 +5249,185 @@ export default function App() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">
                             <div className="bg-zinc-50 p-3 rounded border border-zinc-200 space-y-2">
                               <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1 font-bold">LF WHEEL</div>
-                              <div className="flex justify-between"><span className="text-zinc-500">Bump (Slow):</span><strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpSlow[0]}</strong></div>
-                              <div className="flex justify-between"><span className="text-orange-600 font-semibold">Fast Bump:</span><strong className="text-orange-600 font-bold">{parsedActiveSetup.bumpFast[0]}</strong></div>
-                              <div className="flex justify-between"><span className="text-zinc-550 font-semibold">Rebound:</span><strong className="text-zinc-900 font-bold">{parsedActiveSetup.reboundSlow[0]}</strong></div>
-                              <div className="flex justify-between"><span className="text-teal-600 font-semibold">Fast Rebound:</span><strong className="text-teal-600 font-bold">{parsedActiveSetup.reboundFast[0]}</strong></div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-500">Bump (Slow):</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpSlow", -1, 0)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpSlow[0]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpSlow", 1, 0)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-orange-600 font-semibold">Fast Bump:</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpFast", -1, 0)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-orange-600 font-bold">{parsedActiveSetup.bumpFast[0]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpFast", 1, 0)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-555 font-semibold">Rebound:</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundSlow", -1, 0)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-zinc-900 font-bold">{parsedActiveSetup.reboundSlow[0]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundSlow", 1, 0)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-teal-600 font-semibold">Fast Rebound:</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundFast", -1, 0)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-teal-600 font-bold">{parsedActiveSetup.reboundFast[0]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundFast", 1, 0)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                             <div className="bg-zinc-50 p-3 rounded border border-zinc-200 space-y-2">
                               <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1 font-bold">RF WHEEL</div>
-                              <div className="flex justify-between"><span className="text-zinc-500">Bump (Slow):</span><strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpSlow[1]}</strong></div>
-                              <div className="flex justify-between"><span className="text-orange-600 font-semibold">Fast Bump:</span><strong className="text-orange-600 font-bold">{parsedActiveSetup.bumpFast[1]}</strong></div>
-                              <div className="flex justify-between"><span className="text-zinc-550 font-semibold">Rebound:</span><strong className="text-zinc-900 font-bold">{parsedActiveSetup.reboundSlow[1]}</strong></div>
-                              <div className="flex justify-between"><span className="text-teal-600 font-semibold">Fast Rebound:</span><strong className="text-teal-600 font-bold">{parsedActiveSetup.reboundFast[1]}</strong></div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-500">Bump (Slow):</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpSlow", -1, 1)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpSlow[1]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpSlow", 1, 1)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-orange-600 font-semibold">Fast Bump:</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpFast", -1, 1)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-orange-600 font-bold">{parsedActiveSetup.bumpFast[1]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpFast", 1, 1)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-550 font-semibold">Rebound:</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundSlow", -1, 1)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-zinc-900 font-bold">{parsedActiveSetup.reboundSlow[1]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundSlow", 1, 1)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-teal-600 font-semibold">Fast Rebound:</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundFast", -1, 1)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-teal-600 font-bold">{parsedActiveSetup.reboundFast[1]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundFast", 1, 1)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -4687,17 +5442,185 @@ export default function App() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">
                             <div className="bg-zinc-50 p-3 rounded border border-zinc-200 space-y-2">
                               <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1 font-bold">LR WHEEL</div>
-                              <div className="flex justify-between"><span className="text-zinc-500">Bump (Slow):</span><strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpSlow[2]}</strong></div>
-                              <div className="flex justify-between"><span className="text-orange-600 font-semibold">Fast Bump:</span><strong className="text-orange-600 font-bold">{parsedActiveSetup.bumpFast[2]}</strong></div>
-                              <div className="flex justify-between"><span className="text-zinc-550 font-semibold">Rebound:</span><strong className="text-zinc-900 font-bold">{parsedActiveSetup.reboundSlow[2]}</strong></div>
-                              <div className="flex justify-between"><span className="text-teal-600 font-semibold">Fast Rebound:</span><strong className="text-teal-600 font-bold">{parsedActiveSetup.reboundFast[2]}</strong></div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-500">Bump (Slow):</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpSlow", -1, 2)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpSlow[2]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpSlow", 1, 2)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-orange-600 font-semibold">Fast Bump:</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpFast", -1, 2)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-orange-600 font-bold">{parsedActiveSetup.bumpFast[2]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpFast", 1, 2)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-550 font-semibold">Rebound:</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundSlow", -1, 2)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-zinc-900 font-bold">{parsedActiveSetup.reboundSlow[2]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundSlow", 1, 2)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-teal-600 font-semibold">Fast Rebound:</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundFast", -1, 2)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-teal-600 font-bold">{parsedActiveSetup.reboundFast[2]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundFast", 1, 2)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                             <div className="bg-zinc-50 p-3 rounded border border-zinc-200 space-y-2">
                               <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1 font-bold">RR WHEEL</div>
-                              <div className="flex justify-between"><span className="text-zinc-505">Bump (Slow):</span><strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpSlow[3]}</strong></div>
-                              <div className="flex justify-between"><span className="text-orange-600 font-semibold">Fast Bump:</span><strong className="text-orange-600 font-bold">{parsedActiveSetup.bumpFast[3]}</strong></div>
-                              <div className="flex justify-between"><span className="text-zinc-505 font-semibold">Rebound:</span><strong className="text-zinc-900 font-bold">{parsedActiveSetup.reboundSlow[3]}</strong></div>
-                              <div className="flex justify-between"><span className="text-teal-600 font-semibold">Fast Rebound:</span><strong className="text-teal-600 font-bold">{parsedActiveSetup.reboundFast[3]}</strong></div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-505">Bump (Slow):</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpSlow", -1, 3)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-zinc-900 font-bold">{parsedActiveSetup.bumpSlow[3]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpSlow", 1, 3)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-orange-600 font-semibold">Fast Bump:</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpFast", -1, 3)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-orange-600 font-bold">{parsedActiveSetup.bumpFast[3]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("bumpFast", 1, 3)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-zinc-550 font-semibold">Rebound:</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundSlow", -1, 3)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-zinc-900 font-bold">{parsedActiveSetup.reboundSlow[3]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundSlow", 1, 3)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-teal-600 font-semibold">Fast Rebound:</span>
+                                <div className="flex items-center gap-1">
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundFast", -1, 3)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      -
+                                    </button>
+                                  )}
+                                  <strong className="text-teal-600 font-bold">{parsedActiveSetup.reboundFast[3]}</strong>
+                                  {isTuneMode && (
+                                    <button
+                                      onClick={() => handleAdjustSetupValue("reboundFast", 1, 3)}
+                                      className="w-4 h-4 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-[10px] font-black cursor-pointer text-zinc-800 select-none"
+                                    >
+                                      +
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -4716,7 +5639,7 @@ export default function App() {
                         <div>
                           <p className="text-xs font-black text-zinc-900 font-sans tracking-wider uppercase">Active Tuning Sandbox Modded</p>
                           <p className="text-[10.5px] text-zinc-600 leading-normal mt-1 font-medium max-w-xl">
-                            Parameters edited in Tyre pressures, Electronics, or Mechanical. Save variant to preserve changes.
+                            Parameters edited in Tyre pressures, Alignment, Electronics, Mechanical, or Dampers. Save variant to preserve changes.
                           </p>
                         </div>
                       </div>
