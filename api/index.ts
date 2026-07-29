@@ -249,7 +249,7 @@ app.use((req, res, next) => {
   }) {
     let lastError: any = null;
     for (const modelName of MODELS_TO_TRY) {
-      let retries = 2;
+      let retries = 3;
       while (retries > 0) {
         try {
           return await ai.models.generateContent({
@@ -264,7 +264,9 @@ app.use((req, res, next) => {
           }
           if (error.status === 503 || error.status === 429) {
             retries--;
-            await new Promise((resolve) => setTimeout(resolve, 800));
+            const backoff = 1500 * Math.pow(2, 2 - retries); // 1.5s, 3s, 6s
+            console.warn(`Model ${modelName} returned ${error.status}, retrying in ${backoff}ms (${retries} left)`);
+            await new Promise((resolve) => setTimeout(resolve, backoff));
             continue;
           }
           break; // Try next model for other errors
@@ -280,7 +282,7 @@ app.use((req, res, next) => {
   }) {
     let lastError: any = null;
     for (const modelName of MODELS_TO_TRY) {
-      let retries = 2;
+      let retries = 3;
       while (retries > 0) {
         try {
           return await ai.models.generateContentStream({
@@ -295,7 +297,9 @@ app.use((req, res, next) => {
           }
           if (error.status === 503 || error.status === 429) {
             retries--;
-            await new Promise((resolve) => setTimeout(resolve, 800));
+            const backoff = 1500 * Math.pow(2, 2 - retries); // 1.5s, 3s, 6s
+            console.warn(`Model ${modelName} returned ${error.status}, retrying in ${backoff}ms (${retries} left)`);
+            await new Promise((resolve) => setTimeout(resolve, backoff));
             continue;
           }
           break; // Try next model for other errors
@@ -506,7 +510,12 @@ ${setupContext}
     } catch (error: any) {
       console.error("Chat stream error:", error);
       if (!res.headersSent) {
-        res.status(500).json({ error: "Engineer unavailable. Please try again." });
+        const isRateLimit = error.status === 429;
+        const statusCode = isRateLimit ? 429 : 500;
+        const message = isRateLimit
+          ? "The AI Race Engineer is experiencing high demand. Please wait a moment and try again."
+          : "Engineer unavailable. Please try again.";
+        res.status(statusCode).json({ error: message });
       } else {
         res.write(`data: ${JSON.stringify({ error: "Stream interrupted" })}\n\n`);
         res.end();
