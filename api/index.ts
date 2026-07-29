@@ -1,4 +1,6 @@
-import { appPromise } from "../server.js";
+// @ts-ignore
+import pkg from "../dist/server.cjs";
+const { appPromise } = pkg;
 
 export default async (req: any, res: any) => {
   const app = await appPromise;
