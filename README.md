@@ -1,6 +1,3 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-
 # PitWall - ACC Setup Lab
 
 **An advanced, AI-powered companion application for Assetto Corsa Competizione (ACC).**
@@ -25,32 +22,6 @@ PitWall is a comprehensive sim-racing telemetry and setup management tool design
 *   **Backend / Cloud:** Firebase (Firestore DB, Authentication)
 *   **AI Integration:** Google GenAI SDK (`@google/genai`), Express server for secure API routing
 *   **Language:** TypeScript
-
-## 📋 Prerequisites
-
-To run PitWall locally, you will need:
-*   [Node.js](https://nodejs.org/) (v18 or higher recommended)
-*   A **Gemini API Key** from [Google AI Studio](https://aistudio.google.com/)
-*   (Optional) A [Firebase](https://firebase.google.com/) project configured for Firestore and Authentication if you want to use cloud-synced features instead of local demos.
-
-## ⚙️ Getting Started
-
-1.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-
-2.  **Environment Setup:**
-    Create a `.env.local` file in the root directory (you can copy from `.env.example` if it exists) and add your Gemini API Key:
-    ```env
-    GEMINI_API_KEY=your_actual_api_key_here
-    ```
-
-3.  **Run the Development Server:**
-    ```bash
-    npm run dev
-    ```
-    This will start both the Vite frontend and the Express backend (which handles the AI requests securely). The application will typically be available at `http://localhost:5173`.
 
 ## 📖 Usage Instructions
 
