@@ -3061,6 +3061,7 @@ export default function App() {
                           setTunedRawData(cloned);
                           setTuneVersionNote("");
                           setTuneIsTeamWorkspace(false);
+                          setSaveModalTargetTrack(activeSetup.track);
                           setIsTuneMode(true);
                           showToast("Tuning session active! Tweak parameters inside the dashboard panels below.", "info");
                         } else {
@@ -3113,8 +3114,22 @@ export default function App() {
                           placeholder="Version note (e.g. Sunset cooling adjustment)"
                           value={tuneVersionNote}
                           onChange={(e) => setTuneVersionNote(e.target.value)}
-                          className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-1.5 rounded text-base md:text-[11.5px] min-h-[44px] md:min-h-0 placeholder-zinc-400 outline-none focus:border-amber-500 animate-pulse"
+                          className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-1.5 rounded text-base md:text-[11.5px] min-h-[44px] md:min-h-0 placeholder-zinc-400 outline-none focus:border-amber-500"
                         />
+                      </div>
+
+                      <div className="flex flex-col gap-1 shrink-0 min-w-[150px]">
+                        <select
+                          value={saveModalTargetTrack || activeSetup?.track || "monza"}
+                          onChange={(e) => setSaveModalTargetTrack(e.target.value)}
+                          className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-1.5 rounded text-base md:text-[11.5px] min-h-[44px] md:min-h-0 outline-none focus:border-amber-500 cursor-pointer font-sans"
+                        >
+                          {Object.entries(ACC_TRACKS).map(([key, name]) => (
+                            <option key={key} value={key}>
+                              {key === activeSetup?.track ? `${name} (Current Track)` : name}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       
                       <label className="flex items-center gap-1.5 text-[10.5px] text-zinc-650 cursor-pointer select-none font-bold">
@@ -3129,7 +3144,10 @@ export default function App() {
                       
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
-                          onClick={() => handleSaveCustomTunedSetup()}
+                          onClick={async () => {
+                            const finalNotes = tuneVersionNote.trim() || "Tweaked custom parameters.";
+                            await handleSaveCustomTunedSetup(finalNotes, saveModalTargetTrack || activeSetup?.track);
+                          }}
                           className="bg-amber-600 hover:bg-amber-750 text-white font-extrabold px-3 py-1.5 rounded cursor-pointer transition-colors text-[10.5px] uppercase tracking-wider shadow-md active:scale-95 text-center"
                         >
                           Save Variant
@@ -5669,7 +5687,29 @@ export default function App() {
                       </div>
 
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto lg:justify-end">
-                        <label className="flex items-center justify-center sm:justify-start gap-2.5 text-[11px] text-zinc-700 bg-white/60 hover:bg-white border border-zinc-200 hover:border-zinc-300 px-3.5 py-2 rounded-lg cursor-pointer select-none font-bold shadow-3xs transition-all active:scale-[0.98] h-11 shrink-0">
+                        <div className="w-full sm:w-64">
+                          <input
+                            type="text"
+                            placeholder="Version note (e.g. Sunset cooling adjustment)"
+                            value={tuneVersionNote}
+                            onChange={(e) => setTuneVersionNote(e.target.value)}
+                            className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-2.5 rounded-lg text-[11px] placeholder-zinc-400 outline-none focus:border-amber-500 h-11"
+                          />
+                        </div>
+
+                        <select
+                          value={saveModalTargetTrack || activeSetup?.track || "monza"}
+                          onChange={(e) => setSaveModalTargetTrack(e.target.value)}
+                          className="bg-white border border-zinc-200 text-zinc-900 text-[11px] px-3 py-2 rounded-lg cursor-pointer font-sans focus:outline-none focus:border-amber-500 h-11 shrink-0 w-full sm:w-auto font-mono text-zinc-800"
+                        >
+                          {Object.entries(ACC_TRACKS).map(([key, name]) => (
+                            <option key={key} value={key}>
+                              {key === activeSetup?.track ? `${name} (Current Track)` : name}
+                            </option>
+                          ))}
+                        </select>
+
+                        <label className="flex items-center justify-center sm:justify-start gap-2.5 text-[11px] text-zinc-700 bg-white/60 hover:bg-white border border-zinc-200 hover:border-zinc-300 px-3.5 py-2 rounded-lg cursor-pointer select-none font-bold shadow-3xs transition-all active:scale-[0.98] h-11 shrink-0 w-full sm:w-auto">
                           <input
                             type="checkbox"
                             checked={tuneIsTeamWorkspace}
@@ -5680,10 +5720,9 @@ export default function App() {
                         </label>
 
                         <button
-                          onClick={() => {
-                            setSaveModalNote("");
-                            setSaveModalTargetTrack(activeSetup?.track || "monza");
-                            setIsSaveModalOpen(true);
+                          onClick={async () => {
+                            const finalNotes = tuneVersionNote.trim() || "Tweaked custom parameters.";
+                            await handleSaveCustomTunedSetup(finalNotes, saveModalTargetTrack || activeSetup?.track);
                           }}
                           className="bg-amber-600 hover:bg-amber-700 text-white font-black px-5 py-2.5 rounded-lg text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer shrink-0 h-11 w-full sm:w-auto"
                         >
