@@ -241,7 +241,7 @@ app.use((req, res, next) => {
   }
 
   // Resilient AI invocation helpers with fallback models and retry backoff
-  const MODELS_TO_TRY = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+  const MODELS_TO_TRY = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-2.5-pro"];
 
   async function generateContentWithFallback(ai: GoogleGenAI, params: {
     contents: any;
@@ -259,6 +259,9 @@ app.use((req, res, next) => {
           });
         } catch (error: any) {
           lastError = error;
+          if (error.status === 404) {
+            break; // Model not found, skip to next model immediately
+          }
           if (error.status === 503 || error.status === 429) {
             retries--;
             await new Promise((resolve) => setTimeout(resolve, 800));
@@ -287,6 +290,9 @@ app.use((req, res, next) => {
           });
         } catch (error: any) {
           lastError = error;
+          if (error.status === 404) {
+            break; // Model not found, skip to next model immediately
+          }
           if (error.status === 503 || error.status === 429) {
             retries--;
             await new Promise((resolve) => setTimeout(resolve, 800));
