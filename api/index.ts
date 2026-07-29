@@ -240,6 +240,65 @@ app.use((req, res, next) => {
     });
   }
 
+  // Resilient AI invocation helpers with fallback models and retry backoff
+  const MODELS_TO_TRY = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+
+  async function generateContentWithFallback(ai: GoogleGenAI, params: {
+    contents: any;
+    config: any;
+  }) {
+    let lastError: any = null;
+    for (const modelName of MODELS_TO_TRY) {
+      let retries = 2;
+      while (retries > 0) {
+        try {
+          return await ai.models.generateContent({
+            model: modelName,
+            contents: params.contents,
+            config: params.config,
+          });
+        } catch (error: any) {
+          lastError = error;
+          if (error.status === 503 || error.status === 429) {
+            retries--;
+            await new Promise((resolve) => setTimeout(resolve, 800));
+            continue;
+          }
+          break; // Try next model for other errors
+        }
+      }
+    }
+    throw lastError || new Error("All fallback models are currently unavailable.");
+  }
+
+  async function generateContentStreamWithFallback(ai: GoogleGenAI, params: {
+    contents: any;
+    config: any;
+  }) {
+    let lastError: any = null;
+    for (const modelName of MODELS_TO_TRY) {
+      let retries = 2;
+      while (retries > 0) {
+        try {
+          return await ai.models.generateContentStream({
+            model: modelName,
+            contents: params.contents,
+            config: params.config,
+          });
+        } catch (error: any) {
+          lastError = error;
+          if (error.status === 503 || error.status === 429) {
+            retries--;
+            await new Promise((resolve) => setTimeout(resolve, 800));
+            continue;
+          }
+          break; // Try next model for other errors
+        }
+      }
+    }
+    throw lastError || new Error("All fallback models are currently unavailable.");
+  }
+
   // AI Setup Assistant Chat Handler
   app.post("/api/chat", async (req, res) => {
     try {
@@ -372,8 +431,7 @@ ${setupContext}
         parts: [{ text: message }]
       });
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+      const response = await generateContentWithFallback(ai, {
         contents: contentsParts,
         config: {
           systemInstruction: systemInstruction,
@@ -422,8 +480,7 @@ ${setupContext}
       res.setHeader("Connection", "keep-alive");
       res.setHeader("X-Accel-Buffering", "no");
 
-      const responseStream = await ai.models.generateContentStream({
-        model: "gemini-3.5-flash",
+      const responseStream = await generateContentStreamWithFallback(ai, {
         contents: contentsParts,
         config: {
           systemInstruction: systemInstruction,
@@ -515,8 +572,7 @@ ${setupSnippet}
 Engineer, please analyze this data and give me your setup adjustments.
 `;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+      const response = await generateContentWithFallback(ai, {
         contents: prompt,
         config: {
           systemInstruction,
