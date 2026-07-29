@@ -130,24 +130,24 @@ export default function LapTimesPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs sticky top-[48px] md:relative md:top-auto z-30 bg-white py-3 px-3 md:p-0 border border-zinc-200 md:border-none rounded-lg shadow-sm md:shadow-none">
         
         {/* Class selector */}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5" role="group" aria-label="Category Selection">
           <span className="text-zinc-600 font-bold uppercase tracking-wide text-[10px]">1. Select Category</span>
           <div className="flex bg-zinc-100 p-1 rounded border border-zinc-200 gap-1">
             <button
               onClick={() => handleClassChange("GT2")}
-              className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center ${selectedClass === "GT2" ? "bg-white text-red-655 shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
+              className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655 ${selectedClass === "GT2" ? "bg-white text-red-655 shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
             >
               GT2
             </button>
             <button
               onClick={() => handleClassChange("GT3")}
-              className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center ${selectedClass === "GT3" ? "bg-white text-red-655 shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
+              className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655 ${selectedClass === "GT3" ? "bg-white text-red-655 shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
             >
               GT3
             </button>
             <button
               onClick={() => handleClassChange("GT4")}
-              className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center ${selectedClass === "GT4" ? "bg-white text-red-655 shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
+              className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655 ${selectedClass === "GT4" ? "bg-white text-red-655 shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
             >
               GT4
             </button>
@@ -156,9 +156,10 @@ export default function LapTimesPage() {
 
         {/* Car selector */}
         <div className="flex flex-col gap-1.5">
-          <span className="text-zinc-600 font-bold uppercase tracking-wide text-[10px]">2. Vehicle Selector</span>
+          <label htmlFor="laptimes-car-select" className="text-zinc-600 font-bold uppercase tracking-wide text-[10px]">2. Vehicle Selector</label>
           <select
-            className="w-full bg-white border border-zinc-250 hover:border-zinc-350 px-3 py-3 md:py-2 rounded text-zinc-850 font-mono text-base md:text-xs outline-none focus:ring-1 focus:ring-red-500 shadow-3xs min-h-[44px] md:min-h-0"
+            id="laptimes-car-select"
+            className="w-full bg-white border border-zinc-250 hover:border-zinc-350 px-3 py-3 md:py-2 rounded text-zinc-850 font-mono text-base md:text-xs outline-none focus:ring-1 focus:ring-red-505 focus-visible:ring-2 focus-visible:ring-red-655 shadow-3xs min-h-[44px] md:min-h-0 cursor-pointer"
             value={selectedCar}
             onChange={(e) => {
               const newCar = e.target.value;
@@ -183,9 +184,10 @@ export default function LapTimesPage() {
 
         {/* Track selector */}
         <div className="flex flex-col gap-1.5">
-          <span className="text-zinc-600 font-bold uppercase tracking-wide text-[10px]">3. Circuit Selector</span>
+          <label htmlFor="laptimes-track-select" className="text-zinc-600 font-bold uppercase tracking-wide text-[10px]">3. Circuit Selector</label>
           <select
-            className="w-full bg-white border border-zinc-250 hover:border-zinc-350 px-3 py-3 md:py-2 rounded text-zinc-850 font-mono text-base md:text-xs outline-none focus:ring-1 focus:ring-red-500 shadow-3xs min-h-[44px] md:min-h-0"
+            id="laptimes-track-select"
+            className="w-full bg-white border border-zinc-250 hover:border-zinc-350 px-3 py-3 md:py-2 rounded text-zinc-850 font-mono text-base md:text-xs outline-none focus:ring-1 focus:ring-red-505 focus-visible:ring-2 focus-visible:ring-red-655 shadow-3xs min-h-[44px] md:min-h-0 cursor-pointer"
             value={selectedTrack}
             onChange={(e) => setSelectedTrack(e.target.value)}
           >
@@ -646,7 +648,8 @@ export default function LapTimesPage() {
                       <div className="bg-zinc-50/50 border border-zinc-200 rounded-lg overflow-hidden flex flex-col">
                         <button
                           onClick={() => setIsBriefingOpen(!isBriefingOpen)}
-                          className="w-full flex items-center justify-between p-4 md:p-5 bg-zinc-100 hover:bg-zinc-150/80 border-b border-zinc-200 transition-colors text-left outline-none cursor-pointer select-none border-t-0"
+                          aria-expanded={isBriefingOpen}
+                          className="w-full flex items-center justify-between p-4 md:p-5 bg-zinc-100 hover:bg-zinc-150/80 border-b border-zinc-200 transition-colors text-left outline-none cursor-pointer select-none border-t-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <Compass className="w-5 h-5 text-red-655 shrink-0" />

@@ -125,7 +125,7 @@ export default function GaragePage({
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 rounded-lg text-xs font-mono font-bold tracking-wider transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 rounded-lg text-xs font-mono font-bold tracking-wider transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-red-500" : ""}`} />
               <span>SYNC CLOUD</span>
@@ -159,26 +159,28 @@ export default function GaragePage({
 
               {/* Search Bar */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-mono font-extrabold text-zinc-450 uppercase uppercase">Keyword Search</label>
+                <label htmlFor="garage-search-input" className="text-[10px] font-mono font-extrabold text-zinc-450 uppercase">Keyword Search</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
                   <input
+                    id="garage-search-input"
                     type="text"
                     placeholder="Search custom variants..."
                     value={internalSearch}
                     onChange={(e) => setInternalSearch(e.target.value)}
-                    className="w-full bg-zinc-50 text-zinc-900 pl-9 pr-4 py-2 border border-zinc-250 rounded-lg text-xs placeholder-zinc-400 font-semibold focus:outline-none focus:border-red-650 focus:bg-white transition-all"
+                    className="w-full bg-zinc-50 text-zinc-900 pl-9 pr-4 py-2 border border-zinc-250 rounded-lg text-xs placeholder-zinc-400 font-semibold focus:outline-none focus:border-red-650 focus:bg-white focus-visible:ring-2 focus-visible:ring-red-650/40 transition-all"
                   />
                 </div>
               </div>
 
               {/* Car Lookup Selector */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-mono font-extrabold text-zinc-450 uppercase">Car Model</label>
+                <label htmlFor="garage-car-filter" className="text-[10px] font-mono font-extrabold text-zinc-450 uppercase">Car Model</label>
                 <select
+                  id="garage-car-filter"
                   value={internalCarFilter}
                   onChange={(e) => setInternalCarFilter(e.target.value)}
-                  className="w-full bg-zinc-50 text-zinc-900 border border-zinc-250 rounded-lg py-2 px-2.5 text-xs font-semibold focus:outline-none focus:border-red-650 focus:bg-white transition-all cursor-pointer"
+                  className="w-full bg-zinc-50 text-zinc-900 border border-zinc-250 rounded-lg py-2 px-2.5 text-xs font-semibold focus:outline-none focus:border-red-650 focus:bg-white focus-visible:ring-2 focus-visible:ring-red-650/40 transition-all cursor-pointer"
                 >
                   <option value="all">🔍 All Cars ({getUniqueCarsInGarage().length})</option>
                   {(() => {
@@ -247,11 +249,12 @@ export default function GaragePage({
 
               {/* Track Lookup Selector */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-mono font-extrabold text-zinc-450 uppercase">Track Variant</label>
+                <label htmlFor="garage-track-filter" className="text-[10px] font-mono font-extrabold text-zinc-450 uppercase">Track Variant</label>
                 <select
+                  id="garage-track-filter"
                   value={internalTrackFilter}
                   onChange={(e) => setInternalTrackFilter(e.target.value)}
-                  className="w-full bg-zinc-50 text-zinc-900 border border-zinc-250 rounded-lg py-2 px-2.5 text-xs font-semibold focus:outline-none focus:border-red-650 focus:bg-white transition-all cursor-pointer"
+                  className="w-full bg-zinc-50 text-zinc-900 border border-zinc-250 rounded-lg py-2 px-2.5 text-xs font-semibold focus:outline-none focus:border-red-650 focus:bg-white focus-visible:ring-2 focus-visible:ring-red-650/40 transition-all cursor-pointer"
                 >
                   <option value="all">🔍 All Tracks ({getUniqueTracksInGarage().length})</option>
                   {getUniqueTracksInGarage().map((trackKey) => (
@@ -344,24 +347,23 @@ export default function GaragePage({
 
                         <div className="flex items-center gap-1.5">
                           {confirmDeleteId === setup.id ? (
-                            <div className="flex items-center gap-1.5 h-11 px-2">
+                            <div className="flex items-center gap-2 h-11 px-1">
                               <button
                                 onClick={async (e) => {
                                   e.stopPropagation();
                                   await onDelete(setup.id);
                                   setConfirmDeleteId(null);
                                 }}
-                                className="text-red-600 hover:text-red-800 font-extrabold uppercase text-[9px] cursor-pointer py-2 px-1"
+                                className="text-red-700 hover:text-red-900 bg-red-50 hover:bg-red-100 font-extrabold uppercase text-[10px] cursor-pointer py-1.5 px-2.5 rounded border border-red-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650 active:scale-95 transition-all"
                               >
                                 Confirm
                               </button>
-                              <span className="text-zinc-300">|</span>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setConfirmDeleteId(null);
                                 }}
-                                className="text-zinc-500 hover:text-zinc-700 font-bold text-[9px] cursor-pointer py-2 px-1"
+                                className="text-zinc-700 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 font-bold text-[10px] cursor-pointer py-1.5 px-2.5 rounded border border-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 active:scale-95 transition-all"
                               >
                                 Cancel
                               </button>
@@ -372,8 +374,9 @@ export default function GaragePage({
                                 e.stopPropagation();
                                 setConfirmDeleteId(setup.id);
                               }}
-                              className="text-zinc-400 hover:text-red-505 transition-colors w-11 h-11 flex items-center justify-center rounded-lg hover:bg-zinc-100 cursor-pointer shrink-0"
+                              className="text-zinc-400 hover:text-red-505 transition-colors w-11 h-11 flex items-center justify-center rounded-lg hover:bg-zinc-100 cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
                               title="Delete variant"
+                              aria-label={`Delete custom setup variant for ${displayCar}`}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -381,7 +384,7 @@ export default function GaragePage({
 
                           <button
                             onClick={() => handleInspectClick(setup)}
-                            className="bg-zinc-950 hover:bg-red-655 text-white hover:text-white font-mono font-bold px-4 py-2.5 sm:px-3 sm:py-1.5 rounded transition-all flex items-center gap-1.5 h-11 sm:h-auto cursor-pointer active:scale-95 text-[10px] uppercase tracking-wider shadow-sm shrink-0"
+                            className="bg-zinc-950 hover:bg-red-655 text-white hover:text-white font-mono font-bold px-4 py-2.5 sm:px-3 sm:py-1.5 rounded transition-all flex items-center gap-1.5 h-11 sm:h-auto cursor-pointer active:scale-95 text-[10px] uppercase tracking-wider shadow-sm shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
                           >
                             <Gauge className="w-3.5 h-3.5 text-red-500 group-hover:text-white shrink-0" />
                             <span>INSPECT</span>

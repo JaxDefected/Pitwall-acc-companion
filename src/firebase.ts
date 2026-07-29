@@ -111,6 +111,7 @@ export interface SetupItem {
   updatedAt: string; // ISO string
   uploadedBy: string;
   uploadedByName: string;
+  versionNote?: string;
 }
 
 export interface GuideItem {

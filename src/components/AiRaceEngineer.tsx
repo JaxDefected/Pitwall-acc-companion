@@ -253,7 +253,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                     <button
                       key={cIdx}
                       onClick={() => handleSend(chipText)}
-                      className="bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800/80 text-zinc-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.98]"
+                      className="bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800/80 text-zinc-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                     >
                       {chipText}
                     </button>
@@ -337,7 +337,8 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
           <button
             type="submit"
             disabled={!input.trim() || isStreaming}
-            className="p-2 bg-emerald-450 hover:bg-emerald-400 text-zinc-950 rounded-lg hover:scale-[1.03] transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center justify-center self-end mb-1 shrink-0"
+            className="p-2 bg-emerald-450 hover:bg-emerald-400 text-zinc-950 rounded-lg hover:scale-[1.03] transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center justify-center self-end mb-1 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+            aria-label="Send message to AI Race Engineer"
           >
             <Send className="w-3.5 h-3.5" />
           </button>
