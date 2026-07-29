@@ -1,4 +1,4 @@
-import dataset from '../data/dataset.json';
+import dataset from '../data/dataset.json' with { type: "json" };
 import { NormalizedAccSetup } from '../utils/accParser';
 
 interface DriverProfile {
