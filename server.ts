@@ -3,6 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import { buildSystemInstruction } from "./src/services/chatService";
 
 dotenv.config();
 
@@ -363,6 +364,67 @@ ${setupContext}
     } catch (err: any) {
       console.error("AI Engineer Error:", err);
       res.status(500).json({ error: err.message || "An unexpected error occurred during engineering diagnosis." });
+    }
+  });
+
+  // AI Setup Assistant Streaming Chat Handler
+  app.post("/api/chat/stream", async (req, res) => {
+    try {
+      const { messages, activeSetup, driverProfile } = req.body;
+
+      if (!messages || !Array.isArray(messages) || messages.length === 0) {
+        return res.status(400).json({ error: "No messages provided" });
+      }
+
+      if (!ai) {
+        return res.status(503).json({
+          error: "Gemini API Key is missing. Please add it to Secrets in the Settings menu.",
+        });
+      }
+
+      // Truncate history to last 10 turns to prevent unbounded growth
+      const MAX_TURNS = 10;
+      const history = messages.slice(-MAX_TURNS);
+      const latestMessage = history[history.length - 1]?.content || "";
+
+      const systemInstruction = buildSystemInstruction(latestMessage, activeSetup, driverProfile);
+
+      const contentsParts = history.map((m: any) => ({
+        role: m.role,
+        parts: [{ text: m.content }],
+      }));
+
+      // Stream response via Server-Sent Events
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+
+      const responseStream = await ai.models.generateContentStream({
+        model: "gemini-3.5-flash",
+        contents: contentsParts,
+        config: {
+          systemInstruction: systemInstruction,
+          temperature: 0.3,
+        },
+      });
+
+      for await (const chunk of responseStream) {
+        const text = chunk.text;
+        if (text) {
+          res.write(`data: ${JSON.stringify({ text })}\n\n`);
+        }
+      }
+
+      res.write("data: [DONE]\n\n");
+      res.end();
+    } catch (error: any) {
+      console.error("Chat stream error:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Engineer unavailable. Please try again." });
+      } else {
+        res.write(`data: ${JSON.stringify({ error: "Stream interrupted" })}\n\n`);
+        res.end();
+      }
     }
   });
 

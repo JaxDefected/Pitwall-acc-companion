@@ -1,0 +1,65 @@
+{
+  "categories": {
+    "tyre_pressure": {
+      "trigger_keywords": ["pressure", "PSI", "overheating", "graining", "blistering", "cold", "hot"],
+      "examples": [
+        {
+          "user": "FL pressure is 25.8 PSI hot on Imola. Ambient is 25°C, setup was built for 21°C. FL cold start is 24.0 PSI. How do I adjust?",
+          "model": "Your FL is running 1.7 PSI below target. Add 1.7 PSI to your cold starting pressure: set FL cold to 25.7 PSI. The 4°C ambient rise adds approximately 0.4-0.5 PSI of additional hot pressure — reduce this from your cold adjustment, giving a final cold starting pressure of approximately 25.2-25.3 PSI. Monitor after one out lap and compare hot readings to target before making further changes."
+        }
+      ]
+    },
+    "oversteer_exit": {
+      "trigger_keywords": ["exit oversteer", "rear stepping out", "spinning on throttle", "throttle oversteer", "loose on exit"],
+      "examples": [
+        {
+          "user": "I'm oversteering on slow corner exit under throttle.",
+          "model": "First check your throttle application — are you applying power before the car is fully rotated toward the exit? Jumping on throttle early while the rear is still loaded causes this in most GT3 cars. If the technique is clean: 1) Increase TC1 by 1 click as a diagnostic step. 2) If still present, stiffen Rear ARB by 1 click. 3) If still present, soften Front ARB by 1 click. Do not adjust more than two mechanical parameters per session — isolate each change before adding the next."
+        }
+      ]
+    },
+    "oversteer_entry": {
+      "trigger_keywords": ["entry oversteer", "turn in oversteer", "rotating too much on entry", "snapping on entry", "trail-brake oversteer"],
+      "examples": [
+        {
+          "user": "The car snaps to oversteer under braking on corner entry — especially at fast corners.",
+          "model": "This is trail-brake oversteer — the rear is stepping out as the weight transfers forward under braking. First check your brake release point: are you releasing the brakes too aggressively mid-corner? A sharp release unloads the rear suddenly and causes the snap. Smooth, progressive brake release through the entry phase should reduce this significantly. If the technique is clean: 1) Increase rear bumpstop rate by one click to add stability under braking load. 2) If still present, soften front ARB by one click to reduce weight transfer speed to the front axle."
+        }
+      ]
+    },
+    "understeer_entry": {
+      "trigger_keywords": ["understeer on entry", "pushing on turn in", "front won't rotate", "front end pushing"],
+      "examples": []
+    },
+    "understeer_mid": {
+      "trigger_keywords": ["mid corner understeer", "pushing through the middle", "washing out mid corner", "push through the middle"],
+      "examples": [
+        {
+          "user": "I'm getting a push through the middle of the corner — the front washes out when I'm coasting.",
+          "model": "Mid-corner understeer while coasting typically means the front axle is losing grip due to insufficient load or the rear ARB is too stiff, transferring load away from the front. First check your entry speed — carrying too much speed compresses the front suspension and reduces front grip mid-corner. If entry speed is appropriate: 1) Soften rear ARB by one click to shift balance weight toward the front axle in the middle of the corner. 2) If still present, reduce front ride height by 1mm to increase front downforce and mechanical grip."
+        }
+      ]
+    },
+    "brake_bias": {
+      "trigger_keywords": ["locking front", "locking rear", "brake balance", "bias", "ABS triggering"],
+      "examples": [
+        {
+          "user": "I'm locking the front wheels under heavy braking — ABS is triggering aggressively on the fronts.",
+          "model": "Front locking under braking means the brake bias is too far forward for current conditions. Move brake bias rearward by one click (0.2% on most GT3 cars) and test. Check your current setting — your loaded setup shows [brake_bias]%. If ambient temperatures are cooler than your setup baseline, front tyre grip will be lower and the same bias will lock earlier than expected. If adjusting bias by one click does not resolve it, check brake duct settings — insufficient front cooling causes brake fade which also triggers front lock under threshold braking."
+        }
+      ]
+    },
+    "tyre_degradation": {
+      "trigger_keywords": ["dropping off", "degradation", "falling away", "tyre life", "rear left", "front left"],
+      "examples": []
+    },
+    "dampers": {
+      "trigger_keywords": ["bump slow", "rebound", "damper", "bouncing", "kerb", "unsettled"],
+      "examples": []
+    },
+    "strategy": {
+      "trigger_keywords": ["pit window", "fuel", "stint", "stop", "safety car", "mandatory"],
+      "examples": []
+    }
+  }
+}
