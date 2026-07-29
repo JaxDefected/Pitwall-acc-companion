@@ -64,6 +64,7 @@ import {
 } from "./firebase";
 import { useAuth } from "./hooks/useAuth";
 import { parseAccSetup, NormalizedAccSetup, ACC_CARS, ACC_TRACKS } from "./utils/accParser";
+import { CIRCUIT_NOTES } from "./data/circuitNotes";
 import { cars } from "./data/cars";
 import { getLapTimesText } from "./data/carNameMap";
 import LapTimesPage from "./components/LapTimesPage";
@@ -531,6 +532,7 @@ export default function App() {
   const [tuneIsTeamWorkspace, setTuneIsTeamWorkspace] = useState<boolean>(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
   const [saveModalNote, setSaveModalNote] = useState<string>("");
+  const [saveModalTargetTrack, setSaveModalTargetTrack] = useState<string>("");
   const [tunedSetupsList, setTunedSetupsList] = useState<SavedSetupItem[]>([]);
 
   // Setup quality star ratings & handling tags
@@ -894,7 +896,7 @@ export default function App() {
     setTunedRawData(cloned);
   };
 
-  const handleSaveCustomTunedSetup = async (customNote?: string) => {
+  const handleSaveCustomTunedSetup = async (customNote?: string, targetTrack?: string) => {
     if (!profile) {
       showToast("Whoops! Connect Driver Profile first to claim ownership of tuned setups.", "error");
       return;
@@ -902,19 +904,32 @@ export default function App() {
     if (!activeSetup || !tunedRawData) return;
     
     try {
-      const trimmedNote = (customNote || tuneVersionNote).trim() || "Tweaked custom parameters.";
-      const revisionName = `${activeSetup.name} - Tuned by ${profile.username}`;
+      const destinationTrack = targetTrack || activeSetup.track;
+      const isAdapted = destinationTrack !== activeSetup.track;
+      
+      const sourceTrackLabel = ACC_TRACKS[activeSetup.track] || activeSetup.track;
+      const targetTrackLabel = ACC_TRACKS[destinationTrack] || destinationTrack;
+      
+      let finalNote = (customNote || tuneVersionNote).trim() || "Tweaked custom parameters.";
+      if (isAdapted) {
+        finalNote = `[Adapted from ${sourceTrackLabel}] ${finalNote}`;
+      }
+      
+      const revisionName = isAdapted 
+        ? `${activeSetup.name} (Adapted to ${targetTrackLabel}) - Tuned by ${profile.username}`
+        : `${activeSetup.name} - Tuned by ${profile.username}`;
+        
       const tunedItemId = `${activeSetup.id}_tune_${Date.now()}`;
       
       const payload: SavedSetupItem = {
         id: tunedItemId,
         parentSetupId: activeSetup.id,
         authorUsername: profile.username,
-        versionNote: trimmedNote,
+        versionNote: finalNote,
         isTeamWorkspace: tuneIsTeamWorkspace,
         car: activeSetup.car,
-        track: activeSetup.track,
-        notes: trimmedNote,
+        track: destinationTrack,
+        notes: finalNote,
         rawData: tunedRawData,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -928,8 +943,8 @@ export default function App() {
           id: tunedItemId,
           name: revisionName,
           car: activeSetup.car,
-          track: activeSetup.track,
-          notes: `[Tuned Variant] ${trimmedNote}`,
+          track: destinationTrack,
+          notes: `[Tuned Variant] ${finalNote}`,
           rawData: tunedRawData,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -2592,6 +2607,13 @@ export default function App() {
                           <div className={`text-[9px] font-mono truncate max-w-[280px] mt-0.5 ${isActive ? "text-zinc-500" : "text-zinc-400"}`}>
                             Setup: {setup.name}
                           </div>
+                          {(setup.notes?.includes('[Adapted from') || setup.versionNote?.includes('[Adapted from')) && (
+                            <div className="mt-1 flex">
+                              <span className="font-mono text-[8px] uppercase tracking-wider text-amber-650 bg-amber-100/60 font-black px-1.5 py-0.5 rounded border border-amber-250/30">
+                                Adapted
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-1.5 shrink-0">
@@ -4713,6 +4735,7 @@ export default function App() {
                         <button
                           onClick={() => {
                             setSaveModalNote("");
+                            setSaveModalTargetTrack(activeSetup?.track || "monza");
                             setIsSaveModalOpen(true);
                           }}
                           className="bg-amber-600 hover:bg-amber-700 text-white font-black px-5 py-2.5 rounded-lg text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer shrink-0 h-11 w-full sm:w-auto"
@@ -5305,6 +5328,68 @@ export default function App() {
                 />
               </div>
 
+              {/* Target Track Mapping Selector */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase">Target Circuit / Track Mapping</label>
+                <select
+                  value={saveModalTargetTrack}
+                  onChange={(e) => setSaveModalTargetTrack(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-xs text-white placeholder-zinc-550 font-medium focus:outline-none focus:border-amber-550 focus:ring-1 focus:ring-amber-550 min-h-[44px] md:min-h-0 cursor-pointer"
+                >
+                  {Object.entries(ACC_TRACKS).map(([key, name]) => (
+                    <option key={key} value={key} className="bg-zinc-900 text-white">
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Target Circuit Note Preview Pane (Enhancement 1) */}
+              {(() => {
+                const mapping: Record<string, string> = {
+                  barcelona: "Barcelona",
+                  brands_hatch: "Brands Hatch",
+                  cota: "COTA",
+                  donington: "Donington Park",
+                  hungaroring: "Hungaroring",
+                  imola: "Imola",
+                  indianapolis: "Indianapolis",
+                  kyalami: "Kyalami",
+                  laguna_seca: "Laguna Seca",
+                  misano: "Misano",
+                  monza: "Monza",
+                  mount_panorama: "Mount Panorama",
+                  nurburgring: "Nürburgring",
+                  nurburgring_24h: "Nordschleife",
+                  oulton_park: "Oulton Park",
+                  paul_ricard: "Paul Ricard",
+                  red_bull_ring: "Red Bull Ring",
+                  silverstone: "Silverstone",
+                  snetterton: "Snetterton",
+                  spa: "Spa",
+                  suzuka: "Suzuka",
+                  valencia: "Valencia",
+                  watkins_glen: "Watkins Glen",
+                  zandvoort: "Zandvoort",
+                  zolder: "Zolder",
+                };
+                const matchedKey = mapping[saveModalTargetTrack] || saveModalTargetTrack;
+                const note = CIRCUIT_NOTES[matchedKey];
+                if (!note) return null;
+                return (
+                  <div className="bg-amber-500/5 border border-amber-500/10 p-3 rounded-lg text-xs leading-relaxed font-sans text-zinc-300 space-y-1">
+                    <div className="font-extrabold text-amber-400 font-mono uppercase tracking-wider text-[10px] flex items-center gap-1">
+                      <span>🏁 Target Notes: {ACC_TRACKS[saveModalTargetTrack] || saveModalTargetTrack}</span>
+                    </div>
+                    <p className="text-[11px] text-zinc-200">{note.circuit_notes.length > 120 ? note.circuit_notes.substring(0, 120) + "..." : note.circuit_notes}</p>
+                    <div className="text-[10px] font-mono text-zinc-400 pt-0.5 space-y-0.5">
+                      <div><span className="font-extrabold text-zinc-300">Aero Config:</span> {note.setup_notes?.downforce}</div>
+                      <div><span className="font-extrabold text-zinc-300">Tyre Load:</span> {note.setup_notes?.tyres}</div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Redundant workspace info label */}
               <div className="bg-zinc-900/65 border border-zinc-850 p-3 rounded-lg text-[10.5px] font-mono text-zinc-400 leading-normal flex gap-2">
                 <Wrench className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
@@ -5322,7 +5407,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsSaveModalOpen(false)}
-                  className="px-4 py-2 bg-zinc-90 w bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-mono font-bold tracking-wider cursor-pointer transition-colors"
+                  className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-mono font-bold tracking-wider cursor-pointer transition-colors"
                 >
                   CANCEL
                 </button>
@@ -5330,7 +5415,7 @@ export default function App() {
                   type="button"
                   onClick={async () => {
                     const finalNotes = saveModalNote.trim() || "Tweaked custom parameters.";
-                    await handleSaveCustomTunedSetup(finalNotes);
+                    await handleSaveCustomTunedSetup(finalNotes, saveModalTargetTrack);
                     setIsSaveModalOpen(false);
                   }}
                   className="px-4.5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-mono font-bold tracking-wider cursor-pointer transition-all active:scale-95 shadow-md uppercase"

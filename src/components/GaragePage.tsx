@@ -307,9 +307,16 @@ export default function GaragePage({
                       {/* Top banner summary */}
                       <div className="flex items-start justify-between gap-2.5 mb-2.5">
                         <div className="min-w-0 flex-1">
-                          <span className="font-mono text-[9px] uppercase tracking-wider text-red-650 bg-red-100/50 font-extrabold px-1.5 py-0.5 rounded whitespace-normal break-words block w-fit">
-                            {displayTrack}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="font-mono text-[9px] uppercase tracking-wider text-red-650 bg-red-100/50 font-extrabold px-1.5 py-0.5 rounded whitespace-normal break-words block w-fit">
+                              {displayTrack}
+                            </span>
+                            {(setup.notes?.includes('[Adapted from') || setup.versionNote?.includes('[Adapted from')) && (
+                              <span className="font-mono text-[8px] uppercase tracking-wider text-amber-650 bg-amber-100 font-extrabold px-1.5 py-0.5 rounded border border-amber-200">
+                                Adapted
+                              </span>
+                            )}
+                          </div>
                           <h3 className="text-[13.5px] font-bold text-zinc-950 font-sans tracking-tight mt-1 leading-snug whitespace-normal break-words">
                             {displayCar}
                           </h3>
