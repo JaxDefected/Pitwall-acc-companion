@@ -18,12 +18,18 @@ import {
 // Import the config (our placeholder guarantees this compiles successfully)
 import firebaseConfig from "../firebase-applet-config.json";
 
+// Construct the final config with env vars
+const finalFirebaseConfig = {
+  ...firebaseConfig,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || (firebaseConfig as any).apiKey
+};
+
 // Check if firebaseConfig is valid and populated
 export const isCloudEnabled =
-  firebaseConfig &&
-  typeof firebaseConfig === "object" &&
-  "apiKey" in firebaseConfig &&
-  Boolean((firebaseConfig as any).apiKey);
+  finalFirebaseConfig &&
+  typeof finalFirebaseConfig === "object" &&
+  "apiKey" in finalFirebaseConfig &&
+  Boolean((finalFirebaseConfig as any).apiKey);
 
 let app: any = null;
 let db: any = null;
@@ -32,8 +38,8 @@ let googleProvider: any = null;
 
 if (isCloudEnabled) {
   try {
-    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-    const dbId = (firebaseConfig as any).firestoreDatabaseId;
+    app = getApps().length === 0 ? initializeApp(finalFirebaseConfig) : getApp();
+    const dbId = (finalFirebaseConfig as any).firestoreDatabaseId;
     db = dbId ? getFirestore(app, dbId) : getFirestore(app);
     auth = getAuth(app);
     googleProvider = new GoogleAuthProvider();
