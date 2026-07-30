@@ -81,11 +81,13 @@ export default function LapTimesPage() {
     }
     if (!availableCars) return [];
     const allTracksSet = new Set<string>();
-    availableCars.forEach((c: any) => {
+    for (const c of availableCars) {
       if (c?.tracks) {
-        Object.keys(c.tracks).forEach((t) => allTracksSet.add(t));
+        for (const t in c.tracks) {
+          allTracksSet.add(t);
+        }
       }
-    });
+    }
     return Array.from(allTracksSet).sort();
   }, [activeCarObj, availableCars]);
 
