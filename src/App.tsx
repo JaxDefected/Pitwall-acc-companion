@@ -2903,7 +2903,7 @@ export default function App() {
                                 ) : (
                                   <Activity className="w-2.5 h-2.5 text-emerald-500" />
                                 )}
-                                INSPECT
+                                LOAD SETUP
                               </button>
 
                               {/* Secure Import Setup */}
