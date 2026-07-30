@@ -386,7 +386,7 @@ export async function loginWithGoogle(): Promise<any> {
     const mockUser = {
       uid: "mock_driver_lead_1",
       displayName: "Driver Lead",
-      email: "lowther.jack@gmail.com",
+      email: "test@example.com",
     };
     return mockUser;
   }
