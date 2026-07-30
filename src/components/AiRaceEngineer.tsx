@@ -192,7 +192,9 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
             if (parsed.text) {
               fullContent += parsed.text;
             }
-          } catch {}
+          } catch (e) {
+            console.error("Error parsing remaining buffer:", e);
+          }
         }
       }
 
