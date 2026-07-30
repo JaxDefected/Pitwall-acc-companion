@@ -477,7 +477,7 @@ export default function App() {
     saveProfileData 
   } = useAuth();
   
-  const isAdmin = user && user.email && user.email.toLowerCase() === "lowther.jack@gmail.com";
+  const isAdmin = user && user.email && user.email.toLowerCase() === import.meta.env.VITE_ADMIN_EMAIL?.toLowerCase();
   const [setupsList, setSetupsList] = useState<SetupItem[]>([]);
   const [customGuideText, setCustomGuideText] = useState<string>("");
   const [activeSetup, setActiveSetup] = useState<SetupItem | null>(null);
