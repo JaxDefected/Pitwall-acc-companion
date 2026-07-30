@@ -1,22 +1,22 @@
 import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-import { 
-  Send, 
-  Wrench, 
-  Cpu, 
-  Sparkles, 
-  AlertTriangle, 
-  Info, 
-  User, 
+import {
+  Send,
+  Wrench,
+  Cpu,
+  Sparkles,
+  AlertTriangle,
+  Info,
+  User,
   RefreshCw,
-  ChevronDown,
-  Zap,
-  MessageSquare,
-  Search
 } from "lucide-react";
 import { ACC_CARS, ACC_TRACKS, NormalizedAccSetup } from "../utils/accParser";
 import { ChatMessage } from "../types/chat";
-import { DIAGNOSTIC_CATEGORIES, getLocalFallbackResponse, classifyFreeText } from "../services/localFallback";
+import {
+  ISSUE_TYPES, CORNER_PHASES, SPEED_TYPES,
+  TYRE_ISSUES, BRAKE_ISSUES, OTHER_ISSUES,
+  resolveScenario, getLocalResponse
+} from "../services/localFallback";
 
 interface AiRaceEngineerProps {
   activeSetup: {
@@ -28,7 +28,7 @@ interface AiRaceEngineerProps {
   parsedSetupData: NormalizedAccSetup | null;
 }
 
-// Shared ReactMarkdown component config for consistent rendering
+// Shared ReactMarkdown component config
 const markdownComponents = {
   h3: ({ node, ...props }: any) => <h3 className="text-xs font-extrabold uppercase font-mono tracking-wide text-white border-l-2 border-red-500 pl-2 mt-4 mb-2" {...props} />,
   p: ({ node, ...props }: any) => <p className="mb-2 text-zinc-300 font-medium" {...props} />,
@@ -37,83 +37,86 @@ const markdownComponents = {
   li: ({ node, ...props }: any) => <li className="pl-0.5" {...props} />,
   strong: ({ node, ...props }: any) => <strong className="text-white font-extrabold" {...props} />,
   code: ({ node, ...props }: any) => <code className="bg-zinc-950 px-1 py-0.5 rounded text-xs text-red-400 font-mono" {...props} />,
-  blockquote: ({ node, ...props }: any) => <blockquote className="border-l-2 border-amber-500/50 pl-3 my-2 text-amber-300/80 italic" {...props} />,
 };
 
 export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceEngineerProps) {
-  // ─── Mode State ───
-  const [engineerMode, setEngineerMode] = useState<"local" | "ai">("local");
+  // ─── Mode Toggle ───
+  const [mode, setMode] = useState<"local" | "chat">("local");
 
   // ─── Local Diagnostic State ───
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
-  const [selectedSpeed, setSelectedSpeed] = useState<"high" | "low">("low");
-  const [localResponse, setLocalResponse] = useState<string | null>(null);
+  const [issueType, setIssueType] = useState<string>("");
+  const [cornerPhase, setCornerPhase] = useState<string>("");
+  const [speedType, setSpeedType] = useState<string>("high");
+  const [localResult, setLocalResult] = useState<ReturnType<typeof getLocalResponse> | null>(null);
+  const [hasQueried, setHasQueried] = useState<boolean>(false);
 
   // ─── AI Chat State ───
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>("");
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [streamingContent, setStreamingContent] = useState<string>("");
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const responseRef = useRef<HTMLDivElement>(null);
 
-  // Prepopulate AI chat with greeting
+  // ─── Derived Dropdown Logic ───
+  const showPhaseAndSpeed = issueType === "oversteer" || issueType === "understeer";
+  const showTyreOptions = issueType === "tyre";
+  const showBrakeOptions = issueType === "brakes";
+  const showOtherOptions = issueType === "other";
+
+  const canQuery = issueType && (
+    (showPhaseAndSpeed && cornerPhase) ||
+    (showTyreOptions && cornerPhase) ||
+    (showBrakeOptions && cornerPhase) ||
+    (showOtherOptions && cornerPhase)
+  );
+
+  // ─── Local Handlers ───
+  const handleIssueTypeChange = (val: string) => {
+    setIssueType(val);
+    setCornerPhase("");
+    setSpeedType("high");
+    setLocalResult(null);
+    setHasQueried(false);
+  };
+
+  const handleLocalQuery = () => {
+    if (!canQuery) return;
+    const scenario = resolveScenario(issueType, cornerPhase, showPhaseAndSpeed ? speedType : undefined);
+    const result = getLocalResponse(scenario, parsedSetupData);
+    setLocalResult(result);
+    setHasQueried(true);
+  };
+
+  const handleReset = () => {
+    setIssueType("");
+    setCornerPhase("");
+    setSpeedType("high");
+    setLocalResult(null);
+    setHasQueried(false);
+  };
+
+  // ─── Reset chat messages on mode change so greeting regenerates ───
   useEffect(() => {
-    if (messages.length === 0) {
+    setMessages([]);
+  }, [mode]);
+
+  // ─── Prepopulate AI chat with greeting ───
+  useEffect(() => {
+    if (mode === "chat" && messages.length === 0) {
       const greeting = activeSetup
         ? `Hello! I am your AI Race Engineer. I've loaded your setup **${activeSetup.name}** for the **${ACC_CARS[activeSetup.car] || activeSetup.car}** at **${ACC_TRACKS[activeSetup.track] || activeSetup.track}**. How is the car handling out on track?`
         : `Hello! I am your AI Race Engineer. No active setup is currently loaded. Please load a setup from the garage tab, or tell me what vehicle and track you are driving so we can diagnose your handling issues.`;
       setMessages([{ role: "model", content: greeting }]);
     }
-  }, [activeSetup, messages.length]);
+  }, [activeSetup, messages.length, mode]);
 
-  // Scroll to bottom on new messages/stream
+  // ─── Scroll to bottom on new messages/stream ───
   useEffect(() => {
-    if (engineerMode === "ai") {
+    if (mode === "chat") {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, streamingContent, engineerMode]);
-
-  // Scroll to response when local diagnosis completes
-  useEffect(() => {
-    if (localResponse && engineerMode === "local") {
-      responseRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [localResponse, engineerMode]);
-
-  // Reset subcategory when category changes
-  useEffect(() => {
-    setSelectedSubcategory("");
-    setSelectedSpeed("low");
-    setLocalResponse(null);
-  }, [selectedCategory]);
-
-  // Reset speed when subcategory changes
-  useEffect(() => {
-    setLocalResponse(null);
-  }, [selectedSubcategory, selectedSpeed]);
-
-  // ─── Derived Data ───
-  const currentCategory = selectedCategory ? DIAGNOSTIC_CATEGORIES[selectedCategory] : null;
-  const currentSubcategory = currentCategory && selectedSubcategory
-    ? currentCategory.subcategories[selectedSubcategory]
-    : null;
-  const showSpeedSelector = currentSubcategory?.hasSpeedVariant ?? false;
-
-  // ─── Local Diagnosis Handler ───
-  const handleDiagnose = () => {
-    if (!selectedCategory || !selectedSubcategory) return;
-    const response = getLocalFallbackResponse(
-      selectedCategory,
-      selectedSubcategory,
-      selectedSpeed,
-      parsedSetupData
-    );
-    setLocalResponse(response);
-  };
+  }, [messages, streamingContent, mode]);
 
   // ─── AI Chat Handler ───
   const handleSend = async (content: string) => {
@@ -125,7 +128,6 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
     setInput("");
     setIsStreaming(true);
     setStreamingContent("");
-    setErrorMsg(null);
 
     try {
       const response = await fetch("/api/chat/stream", {
@@ -179,7 +181,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
               throw new Error(parsed.error);
             }
           } catch (e) {
-            // Ignore syntax errors for incomplete lines
+            // Ignore JSON parse errors for partial chunks
           }
         }
       }
@@ -192,32 +194,17 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
             if (parsed.text) {
               fullContent += parsed.text;
             }
-          } catch (e) {
-            console.error("Error parsing remaining buffer:", e);
-          }
+          } catch {}
         }
       }
 
       setMessages(prev => [...prev, { role: "model", content: fullContent || "No response received from the engineer." }]);
     } catch (err: any) {
-      console.warn("Gemini API unavailable, switching to local fallback:", err.message);
-
-      // Attempt to classify the failed message and provide a local fallback
-      const classified = classifyFreeText(content);
-      if (classified) {
-        const fallbackResponse = getLocalFallbackResponse(
-          classified.category,
-          classified.subcategory,
-          classified.speed,
-          parsedSetupData
-        );
-        setMessages(prev => [...prev, { role: "model", content: fallbackResponse }]);
-      } else {
-        setMessages(prev => [
-          ...prev,
-          { role: "model", content: `⚠️ **The engineer is currently unavailable.** ${err.message || "Check your connection and try again."}\n\n*Switch to Setup Diagnostics mode for offline rule-based assistance.*` }
-        ]);
-      }
+      console.error("AI Race Engineer Stream Error:", err);
+      setMessages(prev => [
+        ...prev,
+        { role: "model", content: `⚠️ **The engineer is currently unavailable.** ${err.message || "Check your connection and try again."}\n\n*Switch to Diagnosis Tool mode for offline engineering advice.*` }
+      ]);
     } finally {
       setStreamingContent("");
       setIsStreaming(false);
@@ -238,214 +225,306 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
     ];
   };
 
+  // ─── Segmented button style helper ───
+  const segBtn = (isActive: boolean) =>
+    `flex-1 min-w-[80px] py-2.5 rounded text-xs font-mono font-bold uppercase tracking-wide transition-all cursor-pointer flex items-center justify-center min-h-[44px] md:min-h-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+      isActive
+        ? "bg-zinc-800 text-emerald-400 border border-zinc-700 shadow-sm font-extrabold"
+        : "text-zinc-500 hover:text-zinc-300"
+    }`;
+
+  // ─── Full-width list button style helper ───
+  const listBtn = (isActive: boolean) =>
+    `w-full py-2.5 px-3 rounded text-xs font-mono font-bold text-left transition-all cursor-pointer min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+      isActive
+        ? "bg-zinc-800 text-emerald-400 border border-zinc-700"
+        : "text-zinc-500 hover:text-zinc-300"
+    }`;
+
   return (
     <div className="bg-zinc-950 border border-zinc-800 shadow-xl rounded-xl overflow-hidden font-sans flex flex-col h-[650px] max-h-[80vh]">
-      {/* ─── Sticky Header ─── */}
-      <div className="bg-zinc-900/90 border-b border-zinc-850/80 backdrop-blur px-5 py-4 flex items-center justify-between z-10 shrink-0">
+
+      {/* ── Sticky Header ── */}
+      <div className="bg-zinc-900/90 border-b border-zinc-800/80 backdrop-blur px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between z-10 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-red-650/10 rounded-lg border border-red-500/20 text-red-500">
+          <div className="p-2 bg-red-500/10 rounded-lg border border-red-500/20 text-red-500">
             <Cpu className="w-5 h-5 animate-pulse" />
           </div>
           <div>
-            <h3 className="text-sm font-extrabold uppercase font-mono tracking-wider text-white">
-              🔧 Virtual Race Engineer
+            <h3 className="text-xs sm:text-sm font-extrabold uppercase font-mono tracking-wider text-white">
+              🔧 Virtual AI Race Engineer
             </h3>
-            <p className="text-zinc-400 text-xs font-mono uppercase tracking-widest mt-0.5">
-              {engineerMode === "local" ? "Setup Diagnostics" : "AI Chat Diagnostics"}
+            <p className="text-zinc-400 text-[10px] sm:text-xs font-mono uppercase tracking-widest mt-0.5">
+              Setup Diagnostics & Handling Advice
             </p>
           </div>
         </div>
 
         {/* Status Indicator */}
-        {engineerMode === "local" ? (
-          <div className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 px-3 py-1.5 rounded-full">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-            <span className="text-[10px] font-mono text-emerald-400 uppercase font-black tracking-widest">
-              Local Mode
-            </span>
-          </div>
-        ) : activeSetup ? (
-          <div className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 px-3 py-1.5 rounded-full">
+        {activeSetup ? (
+          <div className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 px-2 sm:px-3 py-1.5 rounded-full">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-[10px] font-mono text-emerald-400 uppercase font-black tracking-widest max-w-[150px] truncate sm:max-w-none">
-              {ACC_CARS[activeSetup.car]?.split(' ')[0] || activeSetup.car} — {ACC_TRACKS[activeSetup.track] || activeSetup.track}
+            <span className="text-[9px] sm:text-[10px] font-mono text-emerald-400 uppercase font-black tracking-widest max-w-[100px] sm:max-w-[150px] truncate">
+              {ACC_CARS[activeSetup.car]?.split(" ")[0] || activeSetup.car} — {ACC_TRACKS[activeSetup.track] || activeSetup.track}
             </span>
             <span className="hidden sm:inline text-[9px] font-mono text-zinc-500 px-1 border border-zinc-800 rounded">SETUP LOADED</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2 bg-amber-500/5 border border-amber-500/20 px-3 py-1.5 rounded-full">
-            <div className="w-2 h-2 bg-amber-550 rounded-full animate-pulse" />
-            <span className="text-[10px] font-mono text-amber-400 uppercase font-black tracking-widest">
-              No setup loaded
-            </span>
+          <div className="flex items-center gap-2 bg-amber-500/5 border border-amber-500/20 px-2 sm:px-3 py-1.5 rounded-full">
+            <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+            <span className="text-[9px] sm:text-[10px] font-mono text-amber-400 uppercase font-black tracking-widest">No setup loaded</span>
           </div>
         )}
       </div>
 
-      {/* ─── Mode Toggle ─── */}
-      <div className="bg-zinc-900/60 border-b border-zinc-850/80 px-4 py-2.5 shrink-0">
-        <div className="flex items-center bg-zinc-950 rounded-lg border border-zinc-800 p-0.5">
+      {/* ── No setup warning banner ── */}
+      {!activeSetup && (
+        <div className="bg-amber-500/5 border-b border-amber-500/10 px-4 py-2 text-xs font-medium text-amber-300 flex items-center gap-2 shrink-0">
+          <Info className="w-4 h-4 text-amber-400 shrink-0" />
+          <span>No setup loaded — load a setup from the Garage tab for contextual engineering advice.</span>
+        </div>
+      )}
+
+      {/* ── Mode Toggle Bar ── */}
+      <div className="bg-zinc-900/60 border-b border-zinc-800/60 px-4 sm:px-5 py-3 shrink-0">
+        <div className="flex bg-zinc-900 border border-zinc-800 p-1 rounded-lg gap-1 max-w-sm">
           <button
-            onClick={() => setEngineerMode("local")}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-[10px] font-mono uppercase font-black tracking-widest transition-all cursor-pointer ${
-              engineerMode === "local"
-                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm"
-                : "text-zinc-500 hover:text-zinc-300 border border-transparent"
+            onClick={() => setMode("local")}
+            className={`flex-1 py-2 rounded text-[10px] sm:text-xs font-mono font-bold uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 min-h-[36px] ${
+              mode === "local"
+                ? "bg-zinc-800 text-emerald-400 border border-zinc-700 shadow-sm font-extrabold"
+                : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <Zap className="w-3 h-3" />
-            Setup Diagnostics
+            <Wrench className="w-3 h-3" />
+            Diagnosis Tool
           </button>
           <button
-            onClick={() => setEngineerMode("ai")}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-[10px] font-mono uppercase font-black tracking-widest transition-all cursor-pointer ${
-              engineerMode === "ai"
-                ? "bg-red-500/10 text-red-400 border border-red-500/20 shadow-sm"
-                : "text-zinc-500 hover:text-zinc-300 border border-transparent"
+            onClick={() => setMode("chat")}
+            className={`flex-1 py-2 rounded text-[10px] sm:text-xs font-mono font-bold uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 min-h-[36px] ${
+              mode === "chat"
+                ? "bg-zinc-800 text-emerald-400 border border-zinc-700 shadow-sm font-extrabold"
+                : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            <MessageSquare className="w-3 h-3" />
+            <Sparkles className="w-3 h-3" />
             AI Chat
-            <span className="text-[8px] bg-zinc-800 text-zinc-400 px-1 py-0.5 rounded font-mono">BETA</span>
           </button>
         </div>
       </div>
 
-      {/* ─── Amber Warning Banner ─── */}
-      {!activeSetup && (
-        <div className="bg-amber-500/5 border-b border-amber-500/10 px-4 py-2 text-xs font-medium text-amber-300 flex items-center gap-2 shrink-0">
-          <Info className="w-4 h-4 text-amber-400 shrink-0" />
-          <span>Load a setup from the garage tab for automated setup value references in diagnostics.</span>
-        </div>
-      )}
+      {/* ═══════ LOCAL DIAGNOSIS MODE ═══════ */}
+      {mode === "local" && (
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5 custom-scrollbar">
 
-      {/* ═══════════ LOCAL DIAGNOSTICS MODE ═══════════ */}
-      {engineerMode === "local" && (
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
-          <div className="p-5 space-y-4">
-            {/* Category Selector */}
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 font-bold">
-                What's the issue?
-              </label>
-              <div className="relative">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs font-medium rounded-lg px-3 py-2.5 pr-8 appearance-none cursor-pointer focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+          {/* Step 1 — Issue Type */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest">
+              1. What is the issue?
+            </label>
+            <div className="flex bg-zinc-900 border border-zinc-800 p-1 rounded-lg gap-1 flex-wrap">
+              {ISSUE_TYPES.map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => handleIssueTypeChange(value)}
+                  className={segBtn(issueType === value)}
                 >
-                  <option value="">Select a handling category...</option>
-                  {Object.entries(DIAGNOSTIC_CATEGORIES).map(([key, cat]) => (
-                    <option key={key} value={key}>{cat.icon} {cat.label}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Step 2 — Corner Phase (Oversteer / Understeer only) */}
+          {showPhaseAndSpeed && (
+            <div className="space-y-2 animate-fade-in">
+              <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest">
+                2. When does it happen?
+              </label>
+              <div className="flex bg-zinc-900 border border-zinc-800 p-1 rounded-lg gap-1 flex-wrap">
+                {CORNER_PHASES.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => setCornerPhase(value)}
+                    className={`${segBtn(cornerPhase === value)} min-w-[100px]`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
+          )}
 
-            {/* Subcategory Selector */}
-            {currentCategory && (
-              <div className="space-y-1.5 animate-fade-in">
-                <label className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 font-bold">
-                  When does it happen?
-                </label>
-                <div className="relative">
-                  <select
-                    value={selectedSubcategory}
-                    onChange={(e) => setSelectedSubcategory(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs font-medium rounded-lg px-3 py-2.5 pr-8 appearance-none cursor-pointer focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+          {/* Step 3 — Speed (Oversteer / Understeer only, after phase selected) */}
+          {showPhaseAndSpeed && cornerPhase && (
+            <div className="space-y-2 animate-fade-in">
+              <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest">
+                3. Corner speed?
+              </label>
+              <div className="flex bg-zinc-900 border border-zinc-800 p-1 rounded-lg gap-1">
+                {SPEED_TYPES.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => setSpeedType(value)}
+                    className={segBtn(speedType === value)}
                   >
-                    <option value="">Select phase / scenario...</option>
-                    {Object.entries(currentCategory.subcategories).map(([key, sub]) => (
-                      <option key={key} value={key}>{sub.label}</option>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 2 — Tyre specific */}
+          {showTyreOptions && (
+            <div className="space-y-2 animate-fade-in">
+              <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest">
+                2. Select tyre issue
+              </label>
+              <div className="flex flex-col bg-zinc-900 border border-zinc-800 p-1 rounded-lg gap-1">
+                {TYRE_ISSUES.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => setCornerPhase(value)}
+                    className={listBtn(cornerPhase === value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 2 — Brake specific */}
+          {showBrakeOptions && (
+            <div className="space-y-2 animate-fade-in">
+              <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest">
+                2. Select brake issue
+              </label>
+              <div className="flex bg-zinc-900 border border-zinc-800 p-1 rounded-lg gap-1">
+                {BRAKE_ISSUES.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => setCornerPhase(value)}
+                    className={segBtn(cornerPhase === value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 2 — Other specific */}
+          {showOtherOptions && (
+            <div className="space-y-2 animate-fade-in">
+              <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest">
+                2. Select issue
+              </label>
+              <div className="flex flex-col bg-zinc-900 border border-zinc-800 p-1 rounded-lg gap-1">
+                {OTHER_ISSUES.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => setCornerPhase(value)}
+                    className={listBtn(cornerPhase === value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Query CTA Button */}
+          {canQuery && !hasQueried && (
+            <button
+              onClick={handleLocalQuery}
+              className="w-full py-3 bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-mono font-extrabold uppercase tracking-widest rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 active:scale-[0.98] shadow-sm"
+            >
+              <Wrench className="w-3.5 h-3.5" />
+              Get Engineering Advice
+            </button>
+          )}
+
+          {/* ── Result Card ── */}
+          {localResult && (
+            <div className="space-y-4 animate-fade-in">
+              {/* Title */}
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <h4 className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-emerald-400 flex items-center gap-2">
+                  <Wrench className="w-3 h-3" />
+                  {localResult.title}
+                </h4>
+                <button
+                  onClick={handleReset}
+                  className="text-[9px] font-mono text-zinc-500 hover:text-white uppercase tracking-widest flex items-center gap-1 cursor-pointer focus-visible:outline-none transition-colors"
+                >
+                  <RefreshCw className="w-2.5 h-2.5" />
+                  New Query
+                </button>
+              </div>
+
+              {/* Active Setup Reference */}
+              {localResult.setupSummary && (
+                <div className="bg-zinc-900/60 border border-zinc-800/60 rounded-lg p-3 text-[10px] text-zinc-400 leading-relaxed font-mono flex gap-2">
+                  <Info className="w-3 h-3 text-zinc-500 shrink-0 mt-0.5" />
+                  <span className="break-all">{localResult.setupSummary}</span>
+                </div>
+              )}
+
+              {/* Technique Card */}
+              <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl rounded-tl-none px-4 py-3 text-xs font-sans leading-relaxed shadow-md">
+                <p className="text-[9px] font-mono font-extrabold uppercase tracking-widest text-emerald-400 mb-2 flex items-center gap-1.5">
+                  <Wrench className="w-2.5 h-2.5" /> Technique First
+                </p>
+                <p className="text-zinc-200 font-medium leading-relaxed">{localResult.technique}</p>
+              </div>
+
+              {/* Mechanical Adjustments Card */}
+              {localResult.mechanical.length > 0 && (
+                <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl rounded-tl-none px-4 py-3 text-xs font-sans leading-relaxed shadow-md">
+                  <p className="text-[9px] font-mono font-extrabold uppercase tracking-widest text-amber-400 mb-2 flex items-center gap-1.5">
+                    <AlertTriangle className="w-2.5 h-2.5" /> If Technique Is Already Clean — Mechanical Adjustments
+                  </p>
+                  <ol className="list-decimal pl-4 space-y-1.5">
+                    {localResult.mechanical.map((step, i) => (
+                      <li key={i} className="text-zinc-300 font-medium pl-0.5">{step}</li>
                     ))}
-                  </select>
-                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
+                  </ol>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Speed Variant Selector */}
-            {showSpeedSelector && selectedSubcategory && (
-              <div className="space-y-1.5 animate-fade-in">
-                <label className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 font-bold">
-                  Corner speed?
-                </label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setSelectedSpeed("low")}
-                    className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-mono font-bold uppercase tracking-wider border transition-all cursor-pointer ${
-                      selectedSpeed === "low"
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                        : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700"
-                    }`}
-                  >
-                    🐢 Low Speed
-                  </button>
-                  <button
-                    onClick={() => setSelectedSpeed("high")}
-                    className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-mono font-bold uppercase tracking-wider border transition-all cursor-pointer ${
-                      selectedSpeed === "high"
-                        ? "bg-red-500/10 border-red-500/30 text-red-400"
-                        : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700"
-                    }`}
-                  >
-                    🏎️ High Speed
-                  </button>
+              {/* Note */}
+              {localResult.note && (
+                <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg px-4 py-2.5 text-[10px] text-amber-300 font-medium flex gap-2">
+                  <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0 mt-0.5" />
+                  <span>{localResult.note}</span>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Diagnose Button */}
-            {selectedCategory && selectedSubcategory && (
-              <button
-                onClick={handleDiagnose}
-                className="w-full flex items-center justify-center gap-2 bg-emerald-450 hover:bg-emerald-400 text-zinc-950 font-mono font-black text-xs uppercase tracking-widest py-3 rounded-lg transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer shadow-lg shadow-emerald-500/10"
-              >
-                <Search className="w-3.5 h-3.5" />
-                Diagnose Issue
-              </button>
-            )}
+              {/* Footer disclaimer */}
+              <p className="text-[9px] font-mono text-zinc-600 text-center">
+                Always adjust in small increments (1–2 clicks) and run 3 consistent laps before evaluating.
+              </p>
+            </div>
+          )}
 
-            {/* ─── Response Panel ─── */}
-            {localResponse && (
-              <div ref={responseRef} className="animate-fade-in">
-                {/* Engineer Header */}
-                <div className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-widest font-bold text-emerald-400 mb-2">
-                  <Wrench className="w-2.5 h-2.5" />
-                  <span>Engineer Diagnosis</span>
-                </div>
-
-                {/* Response Card */}
-                <div className="bg-zinc-900/50 border border-zinc-850/80 rounded-2xl px-5 py-4 text-xs font-sans leading-relaxed shadow-md">
-                  <ReactMarkdown components={markdownComponents}>
-                    {localResponse}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            )}
-
-            {/* ─── Empty State / Welcome ─── */}
-            {!localResponse && !selectedCategory && (
-              <div className="flex flex-col items-center justify-center text-center py-8 space-y-3 opacity-60">
-                <Wrench className="w-8 h-8 text-zinc-600" />
-                <p className="text-xs font-mono text-zinc-500 uppercase tracking-widest font-bold">
-                  Select a handling issue above
-                </p>
-                <p className="text-[10px] text-zinc-600 max-w-[280px]">
-                  Choose your category, phase, and corner speed to receive rule-based engineering guidance with your current setup values.
-                </p>
-              </div>
-            )}
-          </div>
+          {/* Empty state */}
+          {!issueType && (
+            <div className="flex flex-col items-center justify-center h-40 gap-3 text-center">
+              <Cpu className="w-8 h-8 text-zinc-700" />
+              <p className="text-xs text-zinc-500 font-mono">Select a handling issue above to get engineering advice.</p>
+              <p className="text-[10px] text-zinc-600 font-mono">No API required — all responses are local.</p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* ═══════════ AI CHAT MODE ═══════════ */}
-      {engineerMode === "ai" && (
+      {/* ═══════ AI CHAT MODE ═══════ */}
+      {mode === "chat" && (
         <>
           {/* Messages Feed */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar bg-zinc-950/40">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5 custom-scrollbar bg-zinc-950/40">
             {messages.map((msg, idx) => (
               <div
                 key={idx}
@@ -471,14 +550,14 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                   className={`text-xs font-sans leading-relaxed px-4 py-3 rounded-2xl max-w-[85%] shadow-md border ${
                     msg.role === "user"
                       ? "bg-zinc-900 border-zinc-800 text-white rounded-tr-none"
-                      : "bg-zinc-900/50 border-zinc-850/80 text-zinc-200 rounded-tl-none"
+                      : "bg-zinc-900/50 border-zinc-800/80 text-zinc-200 rounded-tl-none"
                   }`}
                 >
                   <ReactMarkdown components={markdownComponents}>
                     {msg.content}
                   </ReactMarkdown>
                 </div>
-                
+
                 {/* Suggestion Chips on initial greeting */}
                 {idx === 0 && messages.length <= 1 && (
                   <div className="mt-4 flex flex-col gap-2 w-full animate-fade-in">
@@ -490,7 +569,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                         <button
                           key={cIdx}
                           onClick={() => handleSend(chipText)}
-                          className="bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800/80 text-zinc-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                          className="bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800/80 text-zinc-300 hover:text-white px-3 py-2 rounded-lg text-xs font-medium cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 min-h-[44px] md:min-h-0"
                         >
                           {chipText}
                         </button>
@@ -508,7 +587,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                   <Wrench className="w-2.5 h-2.5" />
                   <span>Engineer (Streaming)</span>
                 </div>
-                <div className="bg-zinc-900/50 border border-zinc-850/80 text-zinc-200 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%] text-xs font-sans leading-relaxed shadow-md">
+                <div className="bg-zinc-900/50 border border-zinc-800/80 text-zinc-200 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%] text-xs font-sans leading-relaxed shadow-md">
                   <ReactMarkdown components={markdownComponents}>
                     {streamingContent}
                   </ReactMarkdown>
@@ -524,7 +603,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                   <Wrench className="w-2.5 h-2.5" />
                   <span>Engineer</span>
                 </div>
-                <div className="bg-zinc-900/50 border border-zinc-850/80 rounded-2xl rounded-tl-none px-4 py-3 text-zinc-500 text-xs font-mono flex items-center gap-2">
+                <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl rounded-tl-none px-4 py-3 text-zinc-500 text-xs font-mono flex items-center gap-2">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-450" />
                   <span>Analyzing telemetry logs...</span>
                 </div>
@@ -534,14 +613,14 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Sticky Bottom Composer */}
-          <div className="bg-zinc-900/40 border-t border-zinc-850/80 p-4 shrink-0 flex flex-col gap-2">
+          {/* Composer Bar */}
+          <div className="bg-zinc-900/40 border-t border-zinc-800/80 p-3 sm:p-4 shrink-0 flex flex-col gap-2">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSend(input);
               }}
-              className="flex items-center gap-2 bg-zinc-950 border border-zinc-850/80 rounded-xl px-3 py-1.5 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/30 transition-all"
+              className="flex items-center gap-2 bg-zinc-950 border border-zinc-800/80 rounded-xl px-3 py-1.5 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/30 transition-all"
             >
               <textarea
                 value={input}
@@ -558,35 +637,25 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                 }}
                 placeholder="Describe setup issues, pressures, understeer, or oversteer..."
                 aria-label="Describe setup issues, pressures, understeer, or oversteer..."
-                className="flex-1 bg-transparent text-xs text-zinc-100 placeholder-zinc-400 focus:outline-none resize-none max-h-16 min-h-[36px] py-2 leading-relaxed font-medium"
+                className="flex-1 bg-transparent text-base md:text-xs text-zinc-100 placeholder-zinc-400 focus:outline-none resize-none max-h-16 min-h-[36px] py-2 leading-relaxed font-medium"
                 disabled={isStreaming}
               />
               <button
                 type="submit"
                 disabled={!input.trim() || isStreaming}
-                className="p-2 bg-emerald-450 hover:bg-emerald-400 text-zinc-950 rounded-lg hover:scale-[1.03] transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center justify-center self-end mb-1 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                className="p-2 bg-white hover:bg-zinc-200 text-zinc-950 rounded-lg hover:scale-[1.03] transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center justify-center self-end mb-1 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 active:scale-[0.98]"
                 aria-label="Send message to AI Race Engineer"
               >
                 <Send className="w-3.5 h-3.5" />
               </button>
             </form>
-            
+
             <div className="flex justify-between items-center text-[9px] font-mono text-zinc-600 px-1">
               <span>Always adjust in small increments (1-2 clicks) and test for 3 laps.</span>
               <span>{input.length} / 1000</span>
             </div>
           </div>
         </>
-      )}
-
-      {/* ─── Local Mode Footer ─── */}
-      {engineerMode === "local" && (
-        <div className="bg-zinc-900/40 border-t border-zinc-850/80 px-4 py-3 shrink-0">
-          <div className="flex justify-between items-center text-[9px] font-mono text-zinc-600 px-1">
-            <span>Always adjust in small increments (1-2 clicks) and test for 3 laps.</span>
-            <span className="text-zinc-700">Offline • No API calls</span>
-          </div>
-        </div>
       )}
     </div>
   );
