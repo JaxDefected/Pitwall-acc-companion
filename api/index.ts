@@ -240,7 +240,183 @@ app.use((req, res, next) => {
     });
   }
 
-  // Resilient AI invocation helpers with fallback models and retry backoff
+  // ─── Offline Fallback Response Engine ───
+  // When the AI API is unavailable (429/503), match user queries against known
+  // ACC setup categories and return pre-built expert responses.
+  const FALLBACK_RESPONSES: Record<string, { keywords: string[]; response: string }> = {
+    tyre_pressure: {
+      keywords: ["pressure", "psi", "overheating", "graining", "blistering", "cold pressure", "hot pressure", "tyre temp"],
+      response: `🏁 **Offline Engineer — Tyre Pressure Guide**
+
+**Target Hot Pressures:**
+- **Dry:** 26.0–27.0 PSI (aim for 26.8 PSI hot)
+- **Wet:** 29.5–30.5 PSI (aim for 30.0 PSI hot)
+
+**Cold Starting Pressures** typically range 23.0–24.5 PSI depending on ambient/track temps.
+
+**Adjustment Rules:**
+- If hot pressures are **below target**, increase cold starting pressure by the difference.
+- For every **+3°C ambient rise**, expect roughly +0.4–0.5 PSI additional hot pressure — reduce cold starting pressures accordingly.
+- Always check pressures after **one full flying lap**, not the out lap.
+
+⚠️ *This is a cached offline response. The AI Race Engineer will provide personalised analysis when available.*`
+    },
+    oversteer_exit: {
+      keywords: ["exit oversteer", "rear stepping out", "spinning on throttle", "throttle oversteer", "loose on exit", "oversteer on exit", "power oversteer"],
+      response: `🏁 **Offline Engineer — Exit Oversteer**
+
+**Diagnosis:** The rear axle is losing grip under throttle application on corner exit.
+
+**Step-by-step fix (in order):**
+1. **Check your throttle technique** — are you applying power before the car has fully rotated? This is the #1 cause.
+2. **Increase TC1 by 1 click** as a diagnostic step.
+3. **Stiffen Rear ARB by 1 click** to reduce rear roll on exit.
+4. **Soften Front ARB by 1 click** if the issue persists.
+5. As a last resort, **increase rear bumpstop range by 1mm**.
+
+**Rule:** Never adjust more than two mechanical parameters per session — isolate each change before adding the next.
+
+⚠️ *This is a cached offline response. The AI Race Engineer will provide personalised analysis when available.*`
+    },
+    oversteer_entry: {
+      keywords: ["entry oversteer", "turn in oversteer", "snapping on entry", "trail-brake oversteer", "rotating too much on entry", "snap oversteer"],
+      response: `🏁 **Offline Engineer — Entry Oversteer**
+
+**Diagnosis:** The rear is stepping out under braking / trail-braking on corner entry.
+
+**Step-by-step fix:**
+1. **Check brake release technique** — are you releasing brakes too aggressively mid-corner? A sharp release unloads the rear suddenly.
+2. **Smooth, progressive brake release** through the entry phase should reduce this significantly.
+3. **Increase rear bumpstop rate by 1 click** to add stability under braking load.
+4. **Soften front ARB by 1 click** to reduce weight transfer speed to the front axle.
+5. **Move brake bias forward by 0.2%** to reduce rear braking force.
+
+⚠️ *This is a cached offline response. The AI Race Engineer will provide personalised analysis when available.*`
+    },
+    understeer_entry: {
+      keywords: ["understeer on entry", "pushing on turn in", "front won't rotate", "front end pushing", "turn in understeer", "won't turn in"],
+      response: `🏁 **Offline Engineer — Entry Understeer**
+
+**Diagnosis:** The front axle lacks grip on initial turn-in.
+
+**Step-by-step fix:**
+1. **Check entry speed** — carrying too much speed into the corner compresses the front suspension.
+2. **Increase front ARB stiffness by 1 click** to sharpen initial turn-in response.
+3. **Reduce front ride height by 1mm** to increase front mechanical grip.
+4. **Move brake bias slightly forward (0.2%)** to load the front axle more under braking.
+5. **Increase front bumpstop range** if the car bottoms out on entry.
+
+⚠️ *This is a cached offline response. The AI Race Engineer will provide personalised analysis when available.*`
+    },
+    understeer_mid: {
+      keywords: ["mid corner understeer", "pushing through the middle", "washing out", "push through the middle", "mid-corner push", "understeer mid"],
+      response: `🏁 **Offline Engineer — Mid-Corner Understeer**
+
+**Diagnosis:** Front axle losing grip while coasting through the middle of the corner.
+
+**Step-by-step fix:**
+1. **Soften rear ARB by 1 click** to shift lateral weight toward the front axle mid-corner.
+2. **Reduce front ride height by 1mm** to increase front downforce and mechanical grip.
+3. **Increase front camber by 0.1°** to improve mid-corner contact patch.
+4. Check that your **coasting technique** isn't unloading the front — maintain slight trailing throttle if needed.
+
+⚠️ *This is a cached offline response. The AI Race Engineer will provide personalised analysis when available.*`
+    },
+    brake_bias: {
+      keywords: ["locking front", "locking rear", "brake balance", "bias", "abs triggering", "brake lock", "braking stability"],
+      response: `🏁 **Offline Engineer — Brake Bias & Locking**
+
+**Front locking:** Move brake bias rearward by 0.2% per adjustment. Check front brake duct cooling — insufficient cooling causes brake fade which also triggers front lock.
+
+**Rear locking:** Move brake bias forward by 0.2%. Check rear brake duct — too much rear cooling can cause cold rear brakes and reduced rear braking grip.
+
+**ABS triggering aggressively:** This is a symptom, not the cause. Adjust bias first, then consider increasing ABS by 1 step if lock-ups persist.
+
+**Temperature note:** In cooler conditions, front tyre grip drops — the same bias setting will lock fronts earlier than expected.
+
+⚠️ *This is a cached offline response. The AI Race Engineer will provide personalised analysis when available.*`
+    },
+    dampers: {
+      keywords: ["bump slow", "rebound", "damper", "bouncing", "kerb", "unsettled", "bump", "damping"],
+      response: `🏁 **Offline Engineer — Damper Setup**
+
+**Bouncing / unsettled over bumps:**
+- **Increase bump slow by 1 click** on the affected axle to resist compression speed.
+- **Reduce rebound by 1 click** to allow the suspension to recover faster.
+
+**Car feels too stiff over kerbs:**
+- **Reduce bump fast by 1 click** to allow the suspension to absorb high-speed impacts.
+- Consider increasing **bumpstop range** to prevent bottoming out.
+
+**General rule:** Bump controls compression (car going down), Rebound controls extension (car coming back up). Adjust in small increments and isolate front/rear changes.
+
+⚠️ *This is a cached offline response. The AI Race Engineer will provide personalised analysis when available.*`
+    },
+    strategy: {
+      keywords: ["pit window", "fuel", "stint", "stop", "safety car", "mandatory", "pit strategy", "fuel load"],
+      response: `🏁 **Offline Engineer — Race Strategy**
+
+**Fuel calculation:** ACC uses approximately 2.5–3.5 L/lap depending on the car and circuit. Always add 1–2 extra laps of fuel as a safety margin.
+
+**Pit window:** For a 60-minute sprint race, the mandatory pit stop window typically opens around lap 8–10 and closes 10 minutes before the end. Pitting early under a Safety Car is almost always optimal.
+
+**Tyre life:** Most GT3 cars on dry slicks can sustain competitive pace for 30–40 minutes before significant degradation. Monitor tyre temps and pressure trends across your stint.
+
+⚠️ *This is a cached offline response. The AI Race Engineer will provide personalised analysis when available.*`
+    },
+    tyre_degradation: {
+      keywords: ["dropping off", "degradation", "falling away", "tyre life", "rear left", "front left", "wear", "tyre wear"],
+      response: `🏁 **Offline Engineer — Tyre Degradation**
+
+**Symptoms:** Lap times falling off after 10–15 laps, sliding increases, grip feels inconsistent.
+
+**Common causes & fixes:**
+1. **Excessive camber** — too much negative camber overheats the inner edge. Reduce by 0.1° and monitor.
+2. **High tyre pressures** — overinflated tyres reduce contact patch and increase core temps. Lower cold starting pressure by 0.3 PSI.
+3. **Aggressive driving style** — excessive sliding heats the surface without building core temp. Focus on smooth inputs.
+4. **Toe settings** — excessive toe (in or out) scrubs the tyres laterally. Reduce toward neutral if degradation is severe.
+
+⚠️ *This is a cached offline response. The AI Race Engineer will provide personalised analysis when available.*`
+    }
+  };
+
+  function getFallbackResponse(userMessage: string): string | null {
+    const messageLower = userMessage.toLowerCase();
+    let bestMatch: { category: string; score: number } | null = null;
+
+    for (const [category, data] of Object.entries(FALLBACK_RESPONSES)) {
+      let score = 0;
+      for (const keyword of data.keywords) {
+        if (messageLower.includes(keyword.toLowerCase())) {
+          score += keyword.split(" ").length; // Multi-word keywords score higher
+        }
+      }
+      if (score > 0 && (!bestMatch || score > bestMatch.score)) {
+        bestMatch = { category, score };
+      }
+    }
+
+    if (bestMatch) {
+      return FALLBACK_RESPONSES[bestMatch.category].response;
+    }
+
+    // Generic fallback when no category matches
+    return `🏁 **Offline Engineer — General Advice**
+
+The AI Race Engineer is temporarily unavailable due to high demand. Here are some general ACC setup principles:
+
+**Quick Setup Checklist:**
+- **Tyre Pressures:** Target 26.8 PSI hot (dry). Start cold at 23.5–24.5 PSI depending on ambient temps.
+- **Brake Bias:** Start at the car's default, adjust ±0.2% per step based on locking behaviour.
+- **ARBs:** Stiffen the end you want MORE grip from (counter-intuitive — stiffer ARB = less roll = more grip on that axle).
+- **Ride Height:** Lower = more downforce but risk bottoming out. Raise if you hear scraping.
+
+**Golden Rule:** Change ONE parameter at a time, do 2–3 laps, then evaluate. Never stack multiple changes.
+
+⚠️ *The AI Race Engineer will provide personalised, context-aware analysis when service resumes. Please try again in a moment.*`;
+  }
+
+  // ─── Resilient AI invocation helpers with fallback models and retry backoff ───
   const MODELS_TO_TRY = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-2.5-pro"];
 
   async function generateContentWithFallback(ai: GoogleGenAI, params: {
@@ -459,6 +635,7 @@ ${setupContext}
 
   // AI Setup Assistant Streaming Chat Handler
   app.post("/api/chat/stream", async (req, res) => {
+    let latestMessage = "";
     try {
       const { messages, activeSetup, driverProfile } = req.body;
 
@@ -475,7 +652,7 @@ ${setupContext}
       // Truncate history to last 10 turns to prevent unbounded growth
       const MAX_TURNS = 10;
       const history = messages.slice(-MAX_TURNS);
-      const latestMessage = history[history.length - 1]?.content || "";
+      latestMessage = history[history.length - 1]?.content || "";
 
       const systemInstruction = buildSystemInstruction(latestMessage, activeSetup, driverProfile);
 
@@ -509,13 +686,27 @@ ${setupContext}
       res.end();
     } catch (error: any) {
       console.error("Chat stream error:", error);
-      if (!res.headersSent) {
-        const isRateLimit = error.status === 429;
-        const statusCode = isRateLimit ? 429 : 500;
-        const message = isRateLimit
-          ? "The AI Race Engineer is experiencing high demand. Please wait a moment and try again."
-          : "Engineer unavailable. Please try again.";
-        res.status(statusCode).json({ error: message });
+
+      // ─── Fallback: stream a pre-built offline response instead of an error ───
+      const fallbackText = getFallbackResponse(latestMessage);
+      if (fallbackText && !res.headersSent) {
+        console.warn("AI unavailable — serving offline fallback response");
+        res.setHeader("Content-Type", "text/event-stream");
+        res.setHeader("Cache-Control", "no-cache");
+        res.setHeader("Connection", "keep-alive");
+        res.setHeader("X-Accel-Buffering", "no");
+
+        // Stream the fallback in small chunks to simulate real-time typing
+        const words = fallbackText.split(" ");
+        const chunkSize = 5;
+        for (let i = 0; i < words.length; i += chunkSize) {
+          const chunk = words.slice(i, i + chunkSize).join(" ") + " ";
+          res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+        }
+        res.write("data: [DONE]\n\n");
+        res.end();
+      } else if (!res.headersSent) {
+        res.status(500).json({ error: "Engineer unavailable. Please try again." });
       } else {
         res.write(`data: ${JSON.stringify({ error: "Stream interrupted" })}\n\n`);
         res.end();
