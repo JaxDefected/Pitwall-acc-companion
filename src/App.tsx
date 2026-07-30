@@ -1585,6 +1585,7 @@ export default function App() {
         }
       }
     } catch (err: any) {
+      console.error(err);
       showToast(`GitHub Download Failed: ${err.message || err}`, "error");
     }
     setIsImportingFromGithub(null);
