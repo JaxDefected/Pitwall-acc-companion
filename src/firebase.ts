@@ -1,5 +1,5 @@
-import { initializeApp, getApp, getApps } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { initializeApp, getApp, getApps, FirebaseApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, Auth } from "firebase/auth";
 import {
   getFirestore,
   collection,
@@ -15,6 +15,7 @@ import {
   getDocFromServer,
   writeBatch,
   Timestamp,
+  Firestore,
 } from "firebase/firestore";
 // Import the config (our placeholder guarantees this compiles successfully)
 import firebaseConfig from "../firebase-applet-config.json";
@@ -32,10 +33,10 @@ export const isCloudEnabled =
   "apiKey" in finalFirebaseConfig &&
   Boolean((finalFirebaseConfig as any).apiKey);
 
-let app: any = null;
-let db: any = null;
-let auth: any = null;
-let googleProvider: any = null;
+let app: FirebaseApp | null = null;
+let db: Firestore | null = null;
+let auth: Auth | null = null;
+let googleProvider: GoogleAuthProvider | null = null;
 
 if (isCloudEnabled) {
   try {
