@@ -39,7 +39,8 @@ service cloud.firestore {
     // Guide validation schema
     function isValidGuide(data) {
       return data.id is string && data.id.size() <= 128
-          && data.content is string && data.content.size() <= 50000;
+          && data.content is string && data.content.size() <= 50000
+          && data.createdBy is string;
     }
 
     // Setup collection rules
@@ -72,17 +73,20 @@ service cloud.firestore {
       allow create: if isSignedIn()
                     && isValidId(guideId)
                     && isValidGuide(incoming())
+                    && incoming().createdBy == request.auth.uid
                     && incoming().createdAt == request.time
                     && incoming().updatedAt == request.time;
 
       allow update: if isSignedIn()
                     && isValidId(guideId)
                     && isValidGuide(incoming())
-                    && incoming().createdAt == existing().createdAt
+                    && incoming().createdBy == ('createdBy' in existing() ? existing().createdBy : incoming().createdBy)
+                    && incoming().createdAt == ('createdAt' in existing() ? existing().createdAt : request.time)
                     && incoming().updatedAt == request.time;
                             
       allow delete: if isSignedIn()
-                    && isValidId(guideId);
+                    && isValidId(guideId)
+                    && (('createdBy' in existing() && existing().createdBy == request.auth.uid) || (!('createdBy' in existing()) && existing().updatedBy == request.auth.uid) || (request.auth.token.email == 'lowther.jack@gmail.com' && request.auth.token.email_verified == true));
     }
 
     // Driver Users Profile Rules
