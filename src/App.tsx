@@ -374,6 +374,7 @@ function parseGithubPath(path: string): { carKey: string; trackKey: string; file
     if (trackKey === "unknown") {
       trackKey = detectTrackFromSegment(segment);
     }
+    if (carKey !== "unknown" && trackKey !== "unknown") break;
   }
   
   // If still unknown, scan filename (last segment)
@@ -1180,6 +1181,7 @@ export default function App() {
                 if (trackKey === "unknown") {
                   trackKey = detectTrackFromSegment(segment);
                 }
+                if (carKey !== "unknown" && trackKey !== "unknown") break;
               }
             }
 
