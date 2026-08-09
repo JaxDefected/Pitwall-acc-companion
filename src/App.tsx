@@ -44,6 +44,7 @@ import {
 import {
   dbFetchSetups,
   dbSaveSetup,
+  dbSaveSetupsBatch,
   dbDeleteSetup,
   dbFetchGuide,
   dbSaveGuide,
@@ -1271,8 +1272,9 @@ export default function App() {
     const uploaderName = user?.displayName || "Team Driver";
 
     try {
-      let lastSavedItem: SetupItem | null = null;
-      for (const item of pendingSetups) {
+      const newSetups: SetupItem[] = [];
+      for (let i = 0; i < pendingSetups.length; i++) {
+        const item = pendingSetups[i];
         const cleanName = item.customName.trim() || item.fileName.replace(".json", "");
         const newSetupItem: SetupItem = {
           id: "setup_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now().toString(36),
@@ -1286,9 +1288,13 @@ export default function App() {
           uploadedBy: uploaderUID,
           uploadedByName: uploaderName,
         };
-        await dbSaveSetup(newSetupItem);
-        lastSavedItem = newSetupItem;
+        newSetups.push(newSetupItem);
       }
+
+      if (newSetups.length > 0) {
+        await dbSaveSetupsBatch(newSetups);
+      }
+      const lastSavedItem = newSetups.length > 0 ? newSetups[newSetups.length - 1] : null;
 
       const list = await dbFetchSetups();
       setSetupsList(list);

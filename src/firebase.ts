@@ -13,6 +13,7 @@ import {
   orderBy,
   serverTimestamp,
   getDocFromServer,
+  writeBatch,
   Timestamp,
 } from "firebase/firestore";
 // Import the config (our placeholder guarantees this compiles successfully)
@@ -145,6 +146,19 @@ export function isOfflineError(err: any): boolean {
 async function fetchSetupsLocal(): Promise<SetupItem[]> {
   const raw = localStorage.getItem(LOCAL_SETUPS_KEY);
   return raw ? JSON.parse(raw) : [];
+}
+
+
+async function saveSetupsLocalBatch(newSetups: SetupItem[]): Promise<void> {
+  if (newSetups.length === 0) return;
+  const setups = await fetchSetupsLocal();
+  // We use standard maps, but for extreme memory constraints as required, a normal loop over setups can work or a map
+  const setupMap = new Map(setups.map((s) => [s.id, s]));
+  for (let i = 0; i < newSetups.length; i++) {
+    const setup = newSetups[i];
+    setupMap.set(setup.id, setup);
+  }
+  localStorage.setItem(LOCAL_SETUPS_KEY, JSON.stringify(Array.from(setupMap.values())));
 }
 
 async function saveSetupLocal(setup: SetupItem): Promise<void> {
@@ -290,6 +304,40 @@ export async function dbSaveSetup(setup: SetupItem): Promise<void> {
     }
   } else {
     await saveSetupLocal(setup);
+  }
+}
+
+
+export async function dbSaveSetupsBatch(setups: SetupItem[]): Promise<void> {
+  if (!setups || setups.length === 0) return;
+
+  if (isCloudEnabled && db) {
+    try {
+      const BATCH_SIZE = 500;
+      for (let i = 0; i < setups.length; i += BATCH_SIZE) {
+        const batchSetups = setups.slice(i, i + BATCH_SIZE);
+        const batch = writeBatch(db);
+        for (let j = 0; j < batchSetups.length; j++) {
+          const setup = batchSetups[j];
+          const docRef = doc(db, "setups", setup.id);
+          batch.set(docRef, {
+            ...setup,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        }
+        await batch.commit();
+      }
+    } catch (err) {
+      if (isOfflineError(err)) {
+        console.warn("Firestore is offline, saving setups locally:", err);
+        await saveSetupsLocalBatch(setups);
+      } else {
+        handleFirestoreError(err, OperationType.WRITE, "setups (batch)");
+      }
+    }
+  } else {
+    await saveSetupsLocalBatch(setups);
   }
 }
 
