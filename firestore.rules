@@ -85,12 +85,12 @@ service cloud.firestore {
                     && incoming().createdAt == ('createdAt' in existing() ? existing().createdAt : request.time)
                     && (!('authorId' in existing()) ? true : existing().authorId == request.auth.uid)
                     && incoming().authorId == (!('authorId' in existing()) ? request.auth.uid : existing().authorId)
-                    && incoming().createdAt == existing().createdAt
+                    && incoming().createdAt == ('createdAt' in existing() ? existing().createdAt : request.time)
                     && incoming().updatedAt == request.time;
                             
       allow delete: if isSignedIn()
                     && isValidId(guideId)
-                    && (('createdBy' in existing() && existing().createdBy == request.auth.uid) || (!('createdBy' in existing()) && existing().updatedBy == request.auth.uid) || (request.auth.token.email == 'lowther.jack@gmail.com' && request.auth.token.email_verified == true));
+                    && (('createdBy' in existing() && existing().createdBy == request.auth.uid) || (!('createdBy' in existing()) && existing().updatedBy == request.auth.uid) || (request.auth.token.email == 'lowther.jack@gmail.com' && request.auth.token.email_verified == true))
                     && (!('authorId' in existing()) ? true : existing().authorId == request.auth.uid);
     }
 
@@ -137,7 +137,7 @@ service cloud.firestore {
                     && incoming().id == ratingId
                     && incoming().rating >= 1
                     && incoming().rating <= 5
-                    && incoming().userId == request.auth.uid;
+                    && incoming().userId == request.auth.uid
                     && incoming().uid == request.auth.uid;
       allow update: if isSignedIn()
                     && isValidId(ratingId)
@@ -148,11 +148,7 @@ service cloud.firestore {
                     && existing().userId == request.auth.uid;
       allow delete: if isSignedIn()
                     && isValidId(ratingId)
-                    && existing().userId == request.auth.uid;
-                    && incoming().uid == request.auth.uid
-                    && existing().uid == request.auth.uid;
-      allow delete: if isSignedIn()
-                    && isValidId(ratingId)
+                    && existing().userId == request.auth.uid
                     && existing().uid == request.auth.uid;
     }
   }
