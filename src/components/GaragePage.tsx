@@ -90,15 +90,19 @@ export default function GaragePage({
   };
 
   const getUniqueCarsInGarage = () => {
-    const cars = new Set<string>();
-    mySetupsRaw.forEach((s) => s.car && cars.add(s.car));
-    return Array.from(cars);
+    return Array.from(
+      new Set(
+        mySetupsRaw.map((s) => s.car).filter((c): c is string => Boolean(c))
+      )
+    );
   };
 
   const getUniqueTracksInGarage = () => {
-    const tracks = new Set<string>();
-    mySetupsRaw.forEach((s) => s.track && tracks.add(s.track));
-    return Array.from(tracks);
+    return Array.from(
+      new Set(
+        mySetupsRaw.map((s) => s.track).filter((t): t is string => Boolean(t))
+      )
+    );
   };
 
   return (
