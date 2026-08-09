@@ -123,7 +123,9 @@ export interface SetupItem {
 export interface GuideItem {
   id: string;
   content: string;
-  updatedAt: string;
+  createdAt?: string | any;
+  createdBy?: string;
+  updatedAt: string | any;
   updatedBy: string;
   authorId?: string;
 }
@@ -163,9 +165,18 @@ async function deleteSetupLocal(id: string): Promise<void> {
 }
 
 async function saveGuideLocal(content: string, userId: string): Promise<void> {
+  const raw = localStorage.getItem(LOCAL_GUIDES_KEY);
+  let existingObj: GuideItem | null = null;
+  if (raw) {
+    try {
+      existingObj = JSON.parse(raw) as GuideItem;
+    } catch {}
+  }
   const payload: GuideItem = {
     id: "active_guide",
     content,
+    createdAt: existingObj?.createdAt || new Date().toISOString(),
+    createdBy: existingObj?.createdBy || userId,
     updatedAt: new Date().toISOString(),
     updatedBy: userId,
     authorId: userId,
@@ -334,6 +345,22 @@ export async function dbDeleteSetup(id: string): Promise<void> {
 
 export async function dbSaveGuide(content: string, userId: string = "anonymous"): Promise<void> {
   const path = "guides/active_guide";
+
+  if (isCloudEnabled && db) {
+    try {
+      const docRef = doc(db, "guides", "active_guide");
+      const docSnap = await getDoc(docRef);
+
+      const payload: GuideItem = {
+        id: "active_guide",
+        content,
+        createdAt: (docSnap.exists() && docSnap.data().createdAt) ? docSnap.data().createdAt : serverTimestamp(),
+        createdBy: (docSnap.exists() && docSnap.data().createdBy) ? docSnap.data().createdBy : userId,
+        updatedAt: serverTimestamp(),
+        updatedBy: userId,
+      };
+
+      await setDoc(docRef, payload);
   const payload: GuideItem = {
     id: "active_guide",
     content,
