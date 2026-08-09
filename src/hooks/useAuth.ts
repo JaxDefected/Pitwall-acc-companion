@@ -118,7 +118,7 @@ export function useAuth() {
       const mockUser = {
         uid: "mock_driver_lead_1",
         displayName: "Apex Lead",
-        email: "lowther.jack@gmail.com",
+        email: "test@example.com",
         photoURL: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=120&auto=format&fit=crop&q=80",
         emailVerified: true,
       } as unknown as User;
