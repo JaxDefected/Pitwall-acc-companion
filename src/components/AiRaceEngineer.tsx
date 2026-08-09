@@ -199,11 +199,12 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
       }
 
       setMessages(prev => [...prev, { role: "model", content: fullContent || "No response received from the engineer." }]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("AI Race Engineer Stream Error:", err);
+      const errorMessage = err instanceof Error && err.message ? err.message : "Check your connection and try again.";
       setMessages(prev => [
         ...prev,
-        { role: "model", content: `⚠️ **The engineer is currently unavailable.** ${err.message || "Check your connection and try again."}\n\n*Switch to Diagnosis Tool mode for offline engineering advice.*` }
+        { role: "model", content: `⚠️ **The engineer is currently unavailable.** ${errorMessage}\n\n*Switch to Diagnosis Tool mode for offline engineering advice.*` }
       ]);
     } finally {
       setStreamingContent("");

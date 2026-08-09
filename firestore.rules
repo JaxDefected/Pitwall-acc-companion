@@ -74,6 +74,7 @@ service cloud.firestore {
                     && isValidId(guideId)
                     && isValidGuide(incoming())
                     && incoming().createdBy == request.auth.uid
+                    && incoming().authorId == request.auth.uid
                     && incoming().createdAt == request.time
                     && incoming().updatedAt == request.time;
 
@@ -82,11 +83,15 @@ service cloud.firestore {
                     && isValidGuide(incoming())
                     && incoming().createdBy == ('createdBy' in existing() ? existing().createdBy : incoming().createdBy)
                     && incoming().createdAt == ('createdAt' in existing() ? existing().createdAt : request.time)
+                    && (!('authorId' in existing()) ? true : existing().authorId == request.auth.uid)
+                    && incoming().authorId == (!('authorId' in existing()) ? request.auth.uid : existing().authorId)
+                    && incoming().createdAt == existing().createdAt
                     && incoming().updatedAt == request.time;
                             
       allow delete: if isSignedIn()
                     && isValidId(guideId)
                     && (('createdBy' in existing() && existing().createdBy == request.auth.uid) || (!('createdBy' in existing()) && existing().updatedBy == request.auth.uid) || (request.auth.token.email == 'lowther.jack@gmail.com' && request.auth.token.email_verified == true));
+                    && (!('authorId' in existing()) ? true : existing().authorId == request.auth.uid);
     }
 
     // Driver Users Profile Rules
@@ -101,30 +106,48 @@ service cloud.firestore {
       allow delete: if false; // Profiles are locked down
     }
 
+    // Helper to get authenticated user's username
+    function authUsername() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.username;
+    }
+
     // Saved Custom Tweaked Setups Rules
     match /savedSetups/{savedSetupId} {
       allow read: if true;
       allow create: if isSignedIn()
                     && isValidId(savedSetupId)
                     && incoming().id == savedSetupId
-                    && incoming().authorUsername is string;
+                    && incoming().authorUsername is string
+                    && incoming().authorUsername == authUsername();
       allow update: if isSignedIn()
                     && isValidId(savedSetupId)
+                    && existing().authorUsername == authUsername()
+                    && incoming().authorUsername == existing().authorUsername
                     && incoming().createdAt == existing().createdAt;
       allow delete: if isSignedIn()
-                    && isValidId(savedSetupId);
+                    && isValidId(savedSetupId)
+                    && existing().authorUsername == authUsername();
     }
 
     // Setup Community Dynamic Ratings & Handling Tags Rules
     match /setupRatings/{ratingId} {
       allow read: if true;
-      allow create, update: if isSignedIn()
-                            && isValidId(ratingId)
-                            && incoming().id == ratingId
-                            && incoming().rating >= 1
-                            && incoming().rating <= 5;
+      allow create: if isSignedIn()
+                    && isValidId(ratingId)
+                    && incoming().id == ratingId
+                    && incoming().rating >= 1
+                    && incoming().rating <= 5
+                    && incoming().uid == request.auth.uid;
+      allow update: if isSignedIn()
+                    && isValidId(ratingId)
+                    && incoming().id == ratingId
+                    && incoming().rating >= 1
+                    && incoming().rating <= 5
+                    && incoming().uid == request.auth.uid
+                    && existing().uid == request.auth.uid;
       allow delete: if isSignedIn()
-                    && isValidId(ratingId);
+                    && isValidId(ratingId)
+                    && existing().uid == request.auth.uid;
     }
   }
 }
