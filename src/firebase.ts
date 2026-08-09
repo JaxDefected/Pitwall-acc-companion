@@ -426,6 +426,7 @@ export interface SetupRatingItem {
   rating: number;
   tags: string[];
   username: string;
+  uid?: string;
   createdAt: string;
 }
 
