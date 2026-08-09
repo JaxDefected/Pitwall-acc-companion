@@ -119,6 +119,7 @@ export interface GuideItem {
   content: string;
   updatedAt: string;
   updatedBy: string;
+  authorId?: string;
 }
 
 // Local storage keys
@@ -161,6 +162,7 @@ async function saveGuideLocal(content: string, userId: string): Promise<void> {
     content,
     updatedAt: new Date().toISOString(),
     updatedBy: userId,
+    authorId: userId,
   };
   localStorage.setItem(LOCAL_GUIDES_KEY, JSON.stringify(payload));
 }
@@ -331,11 +333,12 @@ export async function dbSaveGuide(content: string, userId: string = "anonymous")
     content,
     updatedAt: new Date().toISOString(),
     updatedBy: userId,
+    authorId: userId,
   };
 
   if (isCloudEnabled && db) {
     try {
-      await setDoc(doc(db, "guides", "active_guide"), payload);
+      await setDoc(doc(db, "guides", "active_guide"), payload, { merge: true });
     } catch (err) {
       if (isOfflineError(err)) {
         console.warn("Firestore is offline, saving guide locally:", err);

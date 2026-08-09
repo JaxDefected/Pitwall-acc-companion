@@ -72,17 +72,21 @@ service cloud.firestore {
       allow create: if isSignedIn()
                     && isValidId(guideId)
                     && isValidGuide(incoming())
+                    && incoming().authorId == request.auth.uid
                     && incoming().createdAt == request.time
                     && incoming().updatedAt == request.time;
 
       allow update: if isSignedIn()
                     && isValidId(guideId)
                     && isValidGuide(incoming())
+                    && (!('authorId' in existing()) ? true : existing().authorId == request.auth.uid)
+                    && incoming().authorId == (!('authorId' in existing()) ? request.auth.uid : existing().authorId)
                     && incoming().createdAt == existing().createdAt
                     && incoming().updatedAt == request.time;
                             
       allow delete: if isSignedIn()
-                    && isValidId(guideId);
+                    && isValidId(guideId)
+                    && (!('authorId' in existing()) ? true : existing().authorId == request.auth.uid);
     }
 
     // Driver Users Profile Rules
