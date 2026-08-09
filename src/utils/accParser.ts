@@ -364,6 +364,8 @@ if (Array.isArray(rhVal)) {
       const isNord = normalized.trackKey === 'nurburgring_24h';
       const fRange = (isNord ? car?.rideHeightFrontRange_n24h : null) ?? car?.rideHeightFrontRange ?? [50, 90];
       const rRange = (isNord ? car?.rideHeightRearRange_n24h : null) ?? car?.rideHeightRearRange ?? [50, 100];
+      const fBase = fRange[0];
+      const rBase = rRange[0];
       
       normalized.rideHeights = rhVal.map((v, i) => {
         // Handle 4-length array [LF, RF, LR, RR] or 2-length [F, R]
