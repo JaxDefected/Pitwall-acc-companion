@@ -197,7 +197,7 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
   
   if (rawCar) {
     normalized.carKey = String(rawCar);
-    normalized.carName = ACC_CARS[normalized.carKey] || normalized.carKey;
+    normalized.carName = ACC_CARS[normalized.carKey] || cars[normalized.carKey]?.fullName || normalized.carKey;
   }
   if (rawTrack) {
     normalized.trackKey = String(rawTrack);
@@ -253,7 +253,13 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
   if (tyresSection) {
     const rawPressures = tyresSection.tyrePressure || getNestedVal(tyresSection, ["tyrePressure", "tyrePressures"]);
     if (Array.isArray(rawPressures) && rawPressures.length === 4) {
-      normalized.tyrePressures = rawPressures.map(stepsToPsi);
+      // Use car-specific base PSI (GT3=20.3, GT4/GT2/Cup/TCX/CHL=17.0)
+      const basePsi = car?.tyrePressureRange?.[0] ?? 20.3;
+      const psiStep = car?.tyrePressureStep ?? 0.1;
+      normalized.tyrePressures = rawPressures.map(step => {
+        if (step > 100) return step; // Already an absolute float
+        return Math.round((basePsi + step * psiStep) * 10) / 10;
+      });
     }
   }
   
@@ -451,8 +457,10 @@ if (steerRatioVal !== undefined) {
     const brakeDuctVal = getNestedVal(aeroSection, ["brakeDuct", "brakeDucts"]);
 
 if (Array.isArray(rideHeightVal)) {
-      const fRange = car?.rideHeightFrontRange || [50, 90];
-      const rRange = car?.rideHeightRearRange || [50, 100];
+      // Use Nordschleife-specific ride height ranges when applicable
+      const isNord = normalized.trackKey === 'nurburgring_24h';
+      const fRange = (isNord ? car?.rideHeightFrontRange_n24h : null) ?? car?.rideHeightFrontRange ?? [50, 90];
+      const rRange = (isNord ? car?.rideHeightRearRange_n24h : null) ?? car?.rideHeightRearRange ?? [50, 100];
       
       // Enforce a strict 1mm step value across all cars and axles
       const currentStep = 1;
@@ -659,10 +667,11 @@ normalized.arbRear = clamp(normalized.arbRear, arbRRange[0], arbRRange[1], "Rear
     normalized.bumpstopRanges[3] = clamp(normalized.bumpstopRanges[3], bsRWinRange[0], bsRWinRange[1], "Bumpstop Range RR");
 
     // 7. Aero
-    const rhFRange = car.rideHeightFrontRange || [50, 90];
+    const isNordschleife = normalized.trackKey === 'nurburgring_24h';
+    const rhFRange = (isNordschleife ? car.rideHeightFrontRange_n24h : null) ?? car.rideHeightFrontRange ?? [50, 90];
     normalized.rideHeights[0] = clamp(normalized.rideHeights[0], rhFRange[0], rhFRange[1], "Ride Height Front");
 
-    const rhRRange = car.rideHeightRearRange || [50, 100];
+    const rhRRange = (isNordschleife ? car.rideHeightRearRange_n24h : null) ?? car.rideHeightRearRange ?? [50, 100];
     normalized.rideHeights[1] = clamp(normalized.rideHeights[1], rhRRange[0], rhRRange[1], "Ride Height Rear");
 
     const rwRange = car.rearWingRange || [0, 15];

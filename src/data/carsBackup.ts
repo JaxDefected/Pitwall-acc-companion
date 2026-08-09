@@ -526,7 +526,7 @@ export const cars: Record<string, CarSetupConfig> = {
     tyrePressureRange: [20.3, 35],
     toeFrontRange: [-0.2, 0.2],
     toeRearRange: [0.0, 0.31],
-    camberFrontRange: [-3.5, -1.5],
+    camberFrontRange: [-4.0, -1.5],
     camberRearRange: [-3.5, -1.0],
     casterArr: [
       6.7, 6.9, 7.1, 7.4, 7.6, 7.8, 8.0, 8.2, 8.4, 8.6, 8.8, 9.0, 9.2, 9.4, 9.7,
