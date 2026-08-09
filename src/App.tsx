@@ -793,6 +793,7 @@ export default function App() {
         rating: userRating,
         tags: selectedReviewTags,
         username: profile.username,
+        uid: profile.uid,
         createdAt: new Date().toISOString()
       };
       
