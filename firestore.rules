@@ -108,7 +108,8 @@ service cloud.firestore {
                     && isValidId(savedSetupId)
                     && incoming().createdAt == existing().createdAt;
       allow delete: if isSignedIn()
-                    && isValidId(savedSetupId);
+                    && isValidId(savedSetupId)
+                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.username == existing().authorUsername;
     }
 
     // Setup Community Dynamic Ratings & Handling Tags Rules
