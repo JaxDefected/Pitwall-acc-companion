@@ -374,6 +374,7 @@ function parseGithubPath(path: string): { carKey: string; trackKey: string; file
     if (trackKey === "unknown") {
       trackKey = detectTrackFromSegment(segment);
     }
+    if (carKey !== "unknown" && trackKey !== "unknown") break;
   }
   
   // If still unknown, scan filename (last segment)
@@ -477,7 +478,7 @@ export default function App() {
     saveProfileData 
   } = useAuth();
   
-  const isAdmin = user && user.email && user.email.toLowerCase() === "lowther.jack@gmail.com";
+  const isAdmin = user && user.email && user.email.toLowerCase() === import.meta.env.VITE_ADMIN_EMAIL?.toLowerCase();
   const [setupsList, setSetupsList] = useState<SetupItem[]>([]);
   const [customGuideText, setCustomGuideText] = useState<string>("");
   const [activeSetup, setActiveSetup] = useState<SetupItem | null>(null);
@@ -794,6 +795,7 @@ export default function App() {
         tags: selectedReviewTags,
         username: profile.username,
         userId: profile.uid,
+        uid: profile.uid,
         createdAt: new Date().toISOString()
       };
       
@@ -1180,6 +1182,7 @@ export default function App() {
                 if (trackKey === "unknown") {
                   trackKey = detectTrackFromSegment(segment);
                 }
+                if (carKey !== "unknown" && trackKey !== "unknown") break;
               }
             }
 
