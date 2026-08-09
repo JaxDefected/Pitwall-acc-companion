@@ -1,7 +1,8 @@
 // Assetto Corsa Competizione JSON Setup Parser Utility
+// Ensure your ../data/cars file exports the array formatted as a dictionary keyed by car_name
 import { cars } from "../data/cars";
 
-// Dictionary mapping for cars in ACC
+// Dictionary mapping for cars in ACC (Updated with GT2, TCX, and Evo 2 cars)
 export const ACC_CARS: Record<string, string> = {
   amr_v8_vantage_gt3: "Aston Martin Vantage V8 GT3",
   ferrari_296_gt3: "Ferrari 296 GT3",
@@ -26,25 +27,27 @@ export const ACC_CARS: Record<string, string> = {
   bentley_continental_gt3_2016: "Bentley Continental GT3 (2016)",
   ferrari_488_gt3: "Ferrari 488 GT3",
   honda_nsx_gt3: "Honda NSX GT3",
-  lamborghini_gallardo_rex: "Reiter Engineering R-EX GT3 (Gallardo)",
+  lamborghini_gallardo_rex: "Reiter Engineering R-EX GT3",
   lamborghini_huracan_gt3: "Lamborghini Huracán GT3",
   mclaren_650s_gt3: "McLaren 650S GT3",
   mercedes_amg_gt3: "Mercedes-AMG GT3",
   nissan_gt_r_gt3_2017: "Nissan GT-R Nismo GT3 (2017)",
   porsche_991_gt3_r: "Porsche 911 GT3 R (991)",
+  
+  // GT4
   chevrolet_camaro_gt4r: "Chevrolet Camaro GT4.R",
   mclaren_570s_gt4: "McLaren 570S GT4",
   bmw_m4_gt4: "BMW M4 GT4",
   audi_r8_lms_gt4: "Audi R8 LMS GT4",
   mercedes_amg_gt4: "Mercedes-AMG GT4",
-  porsche_718_cayman_gt4_cs: "Porsche 718 Cayman GT4",
+  porsche_718_cayman_gt4_mr: "Porsche 718 Cayman GT4 CS",
   alpine_a110_gt4: "Alpine A110 GT4",
-  aston_martin_vantage_gt4: "Aston Martin Vantage GT4",
+  amr_v8_vantage_gt4: "Aston Martin Vantage GT4",
   ginetta_g55_gt4: "Ginetta G55 GT4",
   ktm_xbow_gt4: "KTM X-Bow GT4",
   maserati_mc_gt4: "Maserati GranTurismo MC GT4",
 
-  // GT2, Cup, ST, CHL, TCX Classes (including M2 TCX)
+  // GT2, Cup, ST, CHL, TCX Classes
   bmw_m2_cs_racing: "BMW M2 CS Racing (TCX)",
   audi_r8_lms_gt2: "Audi R8 LMS GT2",
   ktm_xbow_gt2: "KTM X-BOW GT2",
@@ -57,7 +60,7 @@ export const ACC_CARS: Record<string, string> = {
   lamborghini_huracan_st_evo2: "Lamborghini Huracan ST Evo II",
   ferrari_488_challenge_evo: "Ferrari 488 Challenge Evo",
   bmw_m6_gt3: "BMW M6 GT3",
-  ford_mustang_gt3: "Ford Mustang GT3",
+  ford_mustang_gt3: "Ford Mustang GT3 (2024)",
 };
 
 // Dictionary mapping for tracks in ACC
@@ -98,58 +101,42 @@ export interface NormalizedAccSetup {
   isUnsupportedCar?: boolean;
   validationWarnings?: string[];
   
-  // Tyres HUD (LF, RF, LR, RR)
-  tyrePressures: number[]; // e.g. [26.5, 26.8, 26.2, 26.5]
-  cambers: number[];       // Camber values
-  toes: number[];          // Toe values
-  casters: number[];       // Front casters (only 2 usually)
+  tyrePressures: number[];
+  cambers: number[];
+  toes: number[];
+  casters: number[];
   
-  // Electronics
   tc1: number;
   tc2: number;
   abs: number;
   ecuMap: number;
   fuelMap: number;
   telemetryLaps: number;
-  fuel: number;         // Fuel in litres (typically in basicSetup.fuel)
+  fuel: number;
   
-  // Mechanical Grid
   arbFront: number;
   arbRear: number;
-  wheelRates: number[];     // LF, RF, LR, RR
-  bumpstopRates: number[];  // LF, RF, LR, RR
-  bumpstopRanges: number[]; // LF, RF, LR, RR
+  wheelRates: number[];
+  bumpstopRates: number[];
+  bumpstopRanges: number[];
   preloadDifferential: number;
-  brakePower: number;       // Brake torque / power %
-  brakeBias: number;        // Brake bias %
-  steerRatio: number;       // Steer ratio value
+  brakePower: number;
+  brakeBias: number;
+  steerRatio: number;
   
-  // Aero
-  rideHeights: number[];    // Front, Rear
+  rideHeights: number[];
   rearWing: number;
   splitter: number;
-  brakeDucts: number[];     // Front, Rear
+  brakeDucts: number[];
   
-  // Dampers
-  bumpSlow: number[];       // LF, RF, LR, RR
+  bumpSlow: number[];
   bumpFast: number[];
   reboundSlow: number[];
   reboundFast: number[];
 }
 
 /**
- * Formula to convert ACC Tyre raw step values to estimated PSI values.
- * In ACC, most cars raw tyre pressures start around 0 to 80 steps.
- * 0 steps corresponds to ~20.0 PSI, and each step increases pressure by 0.1 PSI.
- */
-function stepsToPsi(step: number): number {
-  if (step > 100) return step; // Already parsed as absolute float
-  return Math.round((20.3 + step * 0.1) * 10) / 10;
-}
-
-/**
  * Parses raw ACC setup JSON object into normalized structured data.
- * Supports highly forgiving recovery if the JSON is custom, altered, or partially complete.
  */
 export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.json"): NormalizedAccSetup {
   const normalized: NormalizedAccSetup = {
@@ -161,37 +148,20 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
     cambers: [-3.5, -3.5, -3.0, -3.0],
     toes: [-0.1, -0.1, 0.15, 0.15],
     casters: [8.5, 8.5],
-    tc1: 3,
-    tc2: 2,
-    abs: 3,
-    ecuMap: 1,
-    fuelMap: 1,
-    telemetryLaps: 0,
-    fuel: 20,
-    arbFront: 5,
-    arbRear: 3,
+    tc1: 3, tc2: 2, abs: 3, ecuMap: 1, fuelMap: 1, telemetryLaps: 0, fuel: 20,
+    arbFront: 5, arbRear: 3,
     wheelRates: [150000, 150000, 110000, 110000],
     bumpstopRates: [1000, 1000, 800, 800],
     bumpstopRanges: [10, 10, 15, 15],
-    preloadDifferential: 120,
-    brakePower: 100,
-    brakeBias: 58.0,
-    steerRatio: 13,
-    rideHeights: [55, 68],
-    rearWing: 4,
-    splitter: 1,
-    brakeDucts: [3, 3],
-    bumpSlow: [8, 8, 8, 8],
-    bumpFast: [10, 10, 10, 10],
-    reboundSlow: [12, 12, 12, 12],
-    reboundFast: [14, 14, 14, 14]
+    preloadDifferential: 120, brakePower: 100, brakeBias: 58.0, steerRatio: 13,
+    rideHeights: [55, 68], rearWing: 4, splitter: 1, brakeDucts: [3, 3],
+    bumpSlow: [8, 8, 8, 8], bumpFast: [10, 10, 10, 10],
+    reboundSlow: [12, 12, 12, 12], reboundFast: [14, 14, 14, 14]
   };
 
-  if (!rawJson || typeof rawJson !== "object") {
-    return normalized;
-  }
+  if (!rawJson || typeof rawJson !== "object") return normalized;
 
-  // Detect Car and Track name
+  // 1. Detect Car and Track name
   const rawCar = rawJson.carName || rawJson.car || "";
   const rawTrack = rawJson.trackName || rawJson.track || "";
   
@@ -204,294 +174,213 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
     normalized.trackName = ACC_TRACKS[normalized.trackKey] || normalized.trackKey;
   }
 
-  // Attempt to parse out track/car keys directly from filename if raw data is missing
+  // Fallback to filename matching if JSON doesn't provide them
   if (normalized.carKey === "unknown" || normalized.trackKey === "unknown") {
     const fnLower = defaultFilename.toLowerCase();
-    
-    // Scan tracks in filename
     for (const key of Object.keys(ACC_TRACKS)) {
-      if (fnLower.includes(key)) {
-        normalized.trackKey = key;
-        normalized.trackName = ACC_TRACKS[key];
-        break;
-      }
+      if (fnLower.includes(key)) { normalized.trackKey = key; normalized.trackName = ACC_TRACKS[key]; break; }
     }
-    // Scan cars in filename
     for (const key of Object.keys(ACC_CARS)) {
-      if (fnLower.includes(key)) {
-        normalized.carKey = key;
-        normalized.carName = ACC_CARS[key];
-        break;
-      }
+      if (fnLower.includes(key)) { normalized.carKey = key; normalized.carName = ACC_CARS[key]; break; }
     }
   }
 
-  // Dynamic Car properties lookup
-  const car = cars[normalized.carKey];
+  // Dynamic Car properties lookup based on the exact Webpack Schema
+  const car = (cars as any)[normalized.carKey];
+  const warnings: string[] = [];
+  normalized.validationWarnings = warnings;
 
-  // Grab sections
-  const basic = rawJson.basicSetup || rawJson;
-  const advanced = rawJson.advancedSetup || rawJson;
+  if (!car) {
+    normalized.isUnsupportedCar = true;
+    warnings.push(`Car bounds not found for "${normalized.carKey}". Applying raw steps.`);
+  }
 
-  // Helper to safely get nested or flat keys under case-insensitive/variant check
+  // Helper to safely get nested keys
   const getNestedVal = (obj: any, keys: string[]): any => {
     if (!obj || typeof obj !== "object") return undefined;
     for (const k of keys) {
       if (obj[k] !== undefined) return obj[k];
-      // Check lowercase matches
       for (const actualKey of Object.keys(obj)) {
-        if (actualKey.toLowerCase() === k.toLowerCase()) {
-          return obj[actualKey];
-        }
+        if (actualKey.toLowerCase() === k.toLowerCase()) return obj[actualKey];
       }
     }
     return undefined;
   };
 
-  // 1. TYRES (basicSetup.tyres or basicSetup.tyres.tyrePressure etc.)
+  const basic = rawJson.basicSetup || rawJson;
+  const advanced = rawJson.advancedSetup || rawJson;
+
+  // -- TYRES & FUEL --
   const tyresSection = basic.tyres || getNestedVal(basic, ["tyres"]);
   if (tyresSection) {
     const rawPressures = tyresSection.tyrePressure || getNestedVal(tyresSection, ["tyrePressure", "tyrePressures"]);
     if (Array.isArray(rawPressures) && rawPressures.length === 4) {
-      // Use car-specific base PSI (GT3=20.3, GT4/GT2/Cup/TCX/CHL=17.0)
-      const basePsi = car?.tyrePressureRange?.[0] ?? 20.3;
-      const psiStep = car?.tyrePressureStep ?? 0.1;
+// Use car-specific base PSI (GT3=20.3, GT4/GT2/Cup/TCX/CHL=17.0)
+      const basePsi = car?.tyrePressureRange?.[0] ?? car?.tyrePressure_base ?? 20.3;
+      const psiStep = car?.tyrePressureStep ?? car?.tyrePressure_step ?? 0.1;
       normalized.tyrePressures = rawPressures.map(step => {
         if (step > 100) return step; // Already an absolute float
         return Math.round((basePsi + step * psiStep) * 10) / 10;
       });
     }
   }
-  
-// Declare raw variables at the top level of parseAccSetup so lower blocks can see them
-  let rawCamber: any = null;
-  let rawToe: any = null;
-  let rawCaster: any = null;
 
-// ALIGNMENT (basicSetup.alignment)
-const alignmentSection = basic.alignment || getNestedVal(basic, ["alignment"]);
-if (alignmentSection) {
-  rawCamber = getNestedVal(alignmentSection, ["camber", "cambers"]);
-  rawToe = getNestedVal(alignmentSection, ["toe", "toes"]);
-  rawCaster = getNestedVal(alignmentSection, ["caster", "casters"]);
+  normalized.fuel = getNestedVal(basic, ["fuel"]) ?? getNestedVal(tyresSection, ["fuel"]) ?? 20;
 
-  if (rawCamber && Array.isArray(rawCamber)) {
-    normalized.cambers = rawCamber;
-  }
-  if (rawToe && Array.isArray(rawToe)) {
-    normalized.toes = rawToe;
-  }
+  // -- ALIGNMENT --
+  const alignmentSection = basic.alignment || getNestedVal(basic, ["alignment"]);
+  if (alignmentSection) {
+    const rawCamber = getNestedVal(alignmentSection, ["camber", "cambers"]);
+    const rawToe = getNestedVal(alignmentSection, ["toe", "toes"]);
+    
+    if (Array.isArray(rawCamber)) {
+      normalized.cambers = rawCamber.map((c, idx) => {
+        if (c >= 0) {
+          const minVal = idx < 2 ? (car?.camberFront_base ?? -4.0) : (car?.camberRear_base ?? -3.5);
+          const step = idx < 2 ? (car?.camberFront_step ?? 0.1) : (car?.camberRear_step ?? 0.1);
+          return Math.round((minVal + c * step) * 100) / 100;
+        }
+        return c;
+      });
+    }
 
-  // ACC stores caster as two separate fields, not an array
-  const rawCasterLF = getNestedVal(alignmentSection, ["casterLF", "caster_lf"]);
-  const rawCasterRF = getNestedVal(alignmentSection, ["casterRF", "caster_rf"]);
+    if (Array.isArray(rawToe)) {
+      normalized.toes = rawToe.map((t, idx) => {
+        if (Number.isInteger(t)) {
+          const minVal = idx < 2 ? (car?.toeFront_base ?? -0.4) : (car?.toeRear_base ?? -0.4);
+          const step = idx < 2 ? (car?.toeFront_step ?? 0.01) : (car?.toeRear_step ?? 0.01);
+          return Math.round((minVal + t * step) * 100) / 100;
+        }
+        return t;
+      });
+    }
 
-  // Support legacy array format as fallback
-  const rawLF = rawCasterLF !== undefined ? rawCasterLF : (Array.isArray(rawCaster) ? rawCaster[0] : undefined);
-  const rawRF = rawCasterRF !== undefined ? rawCasterRF : (Array.isArray(rawCaster) ? rawCaster[1] : undefined);
+    // Casters mapping with strict discrete array checks
+    const rawCaster = getNestedVal(alignmentSection, ["caster", "casters"]);
+    const rawLF = getNestedVal(alignmentSection, ["casterLF"]) ?? (Array.isArray(rawCaster) ? rawCaster[0] : undefined);
+    const rawRF = getNestedVal(alignmentSection, ["casterRF"]) ?? (Array.isArray(rawCaster) ? rawCaster[1] : undefined);
 
-  if (rawLF !== undefined && rawRF !== undefined) {
-    if (car?.casterArr && car.casterArr.length > 0) {
-      // Index lookup — e.g. casterArr[10] = 9.1
-      normalized.casters[0] = rawLF < car.casterArr.length ? car.casterArr[rawLF] : rawLF;
-      normalized.casters[1] = rawRF < car.casterArr.length ? car.casterArr[rawRF] : rawRF;
-    } else {
-      // Range + step fallback for cars using casterRange instead of casterArr
-      const minVal = car?.casterRange?.[0] || 4.0;
-      const step = car?.casterStep || 0.1;
-      normalized.casters[0] = typeof rawLF === 'number' && rawLF < 45
-        ? Math.round((minVal + rawLF * step) * 100) / 100
-        : rawLF;
-      normalized.casters[1] = typeof rawRF === 'number' && rawRF < 45
-        ? Math.round((minVal + rawRF * step) * 100) / 100
-        : rawRF;
+    if (rawLF !== undefined && rawRF !== undefined) {
+      if (car?.caster_values && car.caster_values.length > 0) {
+        normalized.casters[0] = rawLF < car.caster_values.length ? car.caster_values[rawLF] : rawLF;
+        normalized.casters[1] = rawRF < car.caster_values.length ? car.caster_values[rawRF] : rawRF;
+      } else {
+        const cBase = car?.caster_base ?? 8.8;
+        const cStep = car?.caster_step ?? 0.1;
+        normalized.casters[0] = typeof rawLF === 'number' && rawLF < 45 ? Math.round((cBase + rawLF * cStep) * 10) / 10 : rawLF;
+        normalized.casters[1] = typeof rawRF === 'number' && rawRF < 45 ? Math.round((cBase + rawRF * cStep) * 10) / 10 : rawRF;
+      }
     }
   }
-}
 
-  // 2. ELECTRONICS (basicSetup.electronics)
+  // -- ELECTRONICS --
   const elecSection = basic.electronics || getNestedVal(basic, ["electronics"]);
   if (elecSection) {
-    const tc1Val = getNestedVal(elecSection, ["tc1", "tC1"]);
-    const tc2Val = getNestedVal(elecSection, ["tc2", "tC2"]);
-    const absVal = getNestedVal(elecSection, ["abs", "aBS"]);
-    const ecuMapVal = getNestedVal(elecSection, ["ecuMap", "eCUMap"]);
-    const fuelMapVal = getNestedVal(elecSection, ["fuelMap", "fuelMap"]);
-    const telemetryLapsVal = getNestedVal(elecSection, ["telemetryLaps", "telemetryLaps"]);
-
-    if (tc1Val !== undefined) normalized.tc1 = tc1Val;
-    if (tc2Val !== undefined) normalized.tc2 = tc2Val;
-    if (absVal !== undefined) normalized.abs = absVal;
-    if (ecuMapVal !== undefined) normalized.ecuMap = ecuMapVal;
-    if (fuelMapVal !== undefined) normalized.fuelMap = fuelMapVal;
-    if (telemetryLapsVal !== undefined) normalized.telemetryLaps = telemetryLapsVal;
+    normalized.tc1 = getNestedVal(elecSection, ["tc1", "tC1"]) ?? normalized.tc1;
+    normalized.tc2 = getNestedVal(elecSection, ["tc2", "tC2"]) ?? normalized.tc2;
+    normalized.abs = getNestedVal(elecSection, ["abs", "aBS"]) ?? normalized.abs;
+    normalized.ecuMap = getNestedVal(elecSection, ["ecuMap", "eCUMap"]) ?? normalized.ecuMap;
+    normalized.fuelMap = getNestedVal(elecSection, ["fuelMap"]) ?? normalized.fuelMap;
+    normalized.telemetryLaps = getNestedVal(elecSection, ["telemetryLaps"]) ?? normalized.telemetryLaps;
   }
 
-  // Parse fuel (basicSetup.fuel or tyresSection.fuel)
-  const fuelVal = getNestedVal(basic, ["fuel"]) !== undefined 
-    ? getNestedVal(basic, ["fuel"]) 
-    : (tyresSection && getNestedVal(tyresSection, ["fuel"]) !== undefined ? getNestedVal(tyresSection, ["fuel"]) : 20);
-  normalized.fuel = fuelVal;
+  // -- MECHANICAL GRIP & BALANCE --
+  const mechSection = advanced.mechanicalGrip || advanced.mechanicalBalance || getNestedVal(advanced, ["mechanicalGrip", "mechanicalBalance"]);
   
-    // 3. MECHANICAL GRIP (advancedSetup.mechanicalGrip)
-const mechanicalGripSection = advanced.mechanicalGrip 
-  || advanced.mechanicalBalance 
-  || getNestedVal(advanced, ["mechanicalGrip", "mechanicalBalance"]);
-  
-  // Parse Brake Bias (basicSetup.electronics.brakeBias or advancedSetup.mechanicalGrip.brakeBias)
-  const brakeBiasVal = elecSection ? getNestedVal(elecSection, ["brakeBias", "brakeBias"]) : undefined;
-  const mechBrakeBias = mechanicalGripSection ? getNestedVal(mechanicalGripSection, ["brakeBias"]) : undefined;
-  const targetBB = brakeBiasVal !== undefined ? brakeBiasVal : mechBrakeBias;
-if (targetBB !== undefined) {
-  if (targetBB > 30) {
-    // If it's already an absolute percentage value from a custom file
-    normalized.brakeBias = targetBB;
-  } else {
-    // Dynamically look up the car bounds or fall back safely
-    const bbMin = car?.brakeBiasRange?.[0] || 50.0;
-    const bbStep = car?.brakeBiasStep || 0.2;     
-    normalized.brakeBias = Math.round((bbMin + targetBB * bbStep) * 10) / 10;
-  }
-}
-
-  if (mechanicalGripSection) {
-    const arbFrontVal = getNestedVal(mechanicalGripSection, ["antirollBarFront", "antirollbarFront", "arbFront"]);
-    const arbRearVal = getNestedVal(mechanicalGripSection, ["antirollBarRear", "antirollbarRear", "arbRear"]);
-const steerRatioVal = getNestedVal(mechanicalGripSection, ["steerRatio"]);
-    const brakeTorqueVal = getNestedVal(mechanicalGripSection, ["brakeTorque", "brakeTorque"]);
-    
-if (arbFrontVal !== undefined) {
-  const arbFMin = car?.antirollBarFrontRange?.[0] ?? 1;
-  normalized.arbFront = arbFrontVal + arbFMin;
-}
-if (arbRearVal !== undefined) {
-  const arbRMin = car?.antirollBarRearRange?.[0] ?? 1;
-  normalized.arbRear = arbRearVal + arbRMin;
-}
-if (steerRatioVal !== undefined) {
-  const srMin = car?.steerRatioRange?.[0] || 10;
-  const srStep = car?.steerRatioStep || 1;
-  // 0-indexed: raw 1 + min 12 * step 1 = 13:1
-  normalized.steerRatio = typeof steerRatioVal === 'number' && steerRatioVal < 30
-    ? srMin + steerRatioVal * srStep
-    : steerRatioVal;
-}
-    
-    // Brake power (usually 100 - brakeTorque, where brakeTorque is step offset like 0 = 100%, 1=99%, etc)
-    if (brakeTorqueVal !== undefined) {
-      normalized.brakePower = 100 - brakeTorqueVal;
+  // Brake Bias mapping
+  const rawBB = elecSection ? getNestedVal(elecSection, ["brakeBias"]) : (mechSection ? getNestedVal(mechSection, ["brakeBias"]) : undefined);
+  if (rawBB !== undefined) {
+    if (rawBB > 30) {
+      normalized.brakeBias = rawBB;
+    } else {
+      const bbBase = car?.brakeBias_base ?? 50.0;
+      const bbStep = car?.brakeBias_step ?? 0.2;
+      normalized.brakeBias = Math.round((bbBase + rawBB * bbStep) * 10) / 10;
     }
+  }
+
+  if (mechSection) {
+    normalized.arbFront = getNestedVal(mechSection, ["aRBFront", "antirollBarFront", "arbFront"]) ?? normalized.arbFront;
+    normalized.arbRear = getNestedVal(mechSection, ["aRBRear", "antirollBarRear", "arbRear"]) ?? normalized.arbRear;
     
-    const wheelRateVal = getNestedVal(mechanicalGripSection, ["wheelRate", "wheelRates"]);
-    if (Array.isArray(wheelRateVal) && wheelRateVal.length === 4) {
-      normalized.wheelRates = wheelRateVal.map((v, i) => {
+    const srVal = getNestedVal(mechSection, ["steerRatio"]);
+    if (srVal !== undefined) {
+      const srBase = car?.steerRatio_base ?? 11;
+      const srStep = car?.steerRatio_step ?? 1;
+      normalized.steerRatio = srVal < 30 ? (srBase + srVal * srStep) : srVal;
+    }
+
+    const btVal = getNestedVal(mechSection, ["brakeTorque"]);
+    if (btVal !== undefined) normalized.brakePower = 100 - btVal; // Or use brakeTorque_base calculations if strict
+
+    // Preload Differential
+    const dtSection = advanced.drivetrain || getNestedVal(advanced, ["drivetrain"]);
+    const rawPreload = dtSection ? getNestedVal(dtSection, ["preload", "preloadDifferential"]) : getNestedVal(mechSection, ["preloadDifferential", "preload"]);
+    if (rawPreload !== undefined) {
+      const plBase = car?.preloadDifferential_base ?? 20;
+      const plStep = car?.preloadDifferential_step ?? 10;
+      normalized.preloadDifferential = rawPreload < 35 ? (plBase + rawPreload * plStep) : rawPreload;
+    }
+
+    // Wheel Rates (Using strict _values arrays from schema)
+    const rawWheelRates = getNestedVal(mechSection, ["wheelRate", "wheelRates"]);
+    if (Array.isArray(rawWheelRates) && rawWheelRates.length === 4) {
+      normalized.wheelRates = rawWheelRates.map((v, i) => {
         if (v < 100) {
-          if (i < 2) {
-            if (car && car.wheelRatesFront && v < car.wheelRatesFront.length) {
-              return car.wheelRatesFront[v];
-            }
-            return 100000 + v * 5000;
-          } else {
-            if (car && car.wheelRatesRear && v < car.wheelRatesRear.length) {
-              return car.wheelRatesRear[v];
-            }
-            return 80000 + v * 5000;
+          if (i < 2) { // Front
+            if (car?.wheelRateFront_values && v < car.wheelRateFront_values.length) return car.wheelRateFront_values[v];
+            return (car?.wheelRateFront_base ?? 100000) + v * (car?.wheelRateFront_step ?? 5000);
+          } else { // Rear
+            if (car?.wheelRateRear_values && v < car.wheelRateRear_values.length) return car.wheelRateRear_values[v];
+            return (car?.wheelRateRear_base ?? 80000) + v * (car?.wheelRateRear_step ?? 5000);
           }
         }
         return v;
       });
     }
 
-    const bumpStopRateVal = getNestedVal(mechanicalGripSection, ["bumpStopRate", "bumpstopRate", "bumpStopRates", "bumpstopRates"]);
-    if (Array.isArray(bumpStopRateVal) && bumpStopRateVal.length === 4) {
-      normalized.bumpstopRates = bumpStopRateVal.map((v, i) => {
-        if (v < 100) {
-          const bsFRateRange = car?.bumpStopFrontRateRange || car?.bumpStopRateRange || [300, 2500];
-          const bsRRateRange = car?.bumpStopRearRateRange || car?.bumpStopRateRange || [300, 2500];
-          const step = i < 2 
-            ? (car?.bumpStopRateFrontStep || car?.bumpStopRateStep || 100) 
-            : (car?.bumpStopRateRearStep || car?.bumpStopRateStep || 100);
-          const minVal = i < 2 ? bsFRateRange[0] : bsRRateRange[0];
-          return minVal + v * step;
-        }
-        return v;
-      });
+    // Bumpstops (Rates & Ranges)
+    const bsRates = getNestedVal(mechSection, ["bumpStopRate", "bumpStopRates"]);
+    if (Array.isArray(bsRates)) {
+      normalized.bumpstopRates = bsRates.map(v => v < 100 ? (car?.bumpStopRate_base ?? 300) + v * (car?.bumpStopRate_step ?? 100) : v);
     }
 
-    const bumpStopRangeVal = getNestedVal(mechanicalGripSection, ["bumpStopRange", "bumpstopRange", "bumpStopRanges", "bumpstopRanges", "bumpStopWindow", "bumpStopWindows", "bumpstopWindow", "bumpstopWindows"]);
-    if (Array.isArray(bumpStopRangeVal) && bumpStopRangeVal.length === 4) {
-      normalized.bumpstopRanges = bumpStopRangeVal.map((v, i) => {
-        if (v < 100) {
-          const bsFRange = car?.bumpStopWindowFrontRange || [0, 50];
-          const bsRRange = car?.bumpStopWindowRearRange || [0, 50];
-          const step = car?.bumpStopWindowStep || 1;
-          const minVal = i < 2 ? bsFRange[0] : bsRRange[0];
-          return minVal + v * step;
-        }
-        return v;
-      });
+    const bsRanges = getNestedVal(mechSection, ["bumpStopWindow", "bumpStopRange", "bumpStopRanges"]);
+    if (Array.isArray(bsRanges)) {
+      normalized.bumpstopRanges = bsRanges.map(v => v < 100 ? (car?.bumpStopRange_base ?? 0) + v * (car?.bumpStopRange_step ?? 1) : v);
     }
   }
 
-  // Differential Preload (advancedSetup.drivetrain or mechanicalGripSection.preload)
-  const drivetrainSection = advanced.drivetrain || getNestedVal(advanced, ["drivetrain"]);
-  const preloadVal = drivetrainSection ? getNestedVal(drivetrainSection, ["preload", "preloadDifferential"]) : undefined;
-  const mechPreload = mechanicalGripSection ? getNestedVal(mechanicalGripSection, ["preload"]) : undefined;
-  const targetPreload = preloadVal !== undefined ? preloadVal : mechPreload;
-  if (targetPreload !== undefined) {
-    if (targetPreload < 35) {
-      const plRange = car?.preloadRange || [50, 305];
-      const step = car?.preloadStep || 10;
-      normalized.preloadDifferential = plRange[0] + targetPreload * step;
-    } else {
-      normalized.preloadDifferential = targetPreload;
-    }
-  }
-
-  // 4. AERO (advancedSetup.aero)
-  const aeroSection = advanced.aero || getNestedVal(advanced, ["aero", "aeroSetup", "aeroBalance", "aerodynamics"]);
+  // -- AERO --
+  const aeroSection = advanced.aero || advanced.aeroBalance || getNestedVal(advanced, ["aeroBalance", "aero", "aerodynamics"]);
   if (aeroSection) {
-    const rideHeightVal = getNestedVal(aeroSection, ["rideHeight", "rideHeights"]);
+    const rhVal = getNestedVal(aeroSection, ["rideHeight", "rideHeights"]);
     const rearWingVal = getNestedVal(aeroSection, ["rearWing", "rearWingAngle"]);
     const splitterVal = getNestedVal(aeroSection, ["splitter"]);
     const brakeDuctVal = getNestedVal(aeroSection, ["brakeDuct", "brakeDucts"]);
 
-if (Array.isArray(rideHeightVal)) {
+if (Array.isArray(rhVal)) {
       // Use Nordschleife-specific ride height ranges when applicable
       const isNord = normalized.trackKey === 'nurburgring_24h';
       const fRange = (isNord ? car?.rideHeightFrontRange_n24h : null) ?? car?.rideHeightFrontRange ?? [50, 90];
       const rRange = (isNord ? car?.rideHeightRearRange_n24h : null) ?? car?.rideHeightRearRange ?? [50, 100];
       
-      // Enforce a strict 1mm step value across all cars and axles
-      const currentStep = 1;
+      normalized.rideHeights = rhVal.map((v, i) => {
+        // Handle 4-length array [LF, RF, LR, RR] or 2-length [F, R]
+        if (v < 45) {
+          const isFront = (rhVal.length === 4) ? (i < 2) : (i === 0);
+          return (isFront ? fBase : rBase) + v * 1.0; 
+        }
+        return v;
+      });
+    }
 
-      if (rideHeightVal.length === 4) {
-        // Map all 4 corners [LF, RF, LR, RR] individually to prevent averaging distortion
-        normalized.rideHeights = rideHeightVal.map((v, i) => {
-          if (v < 45) {
-            const minVal = i < 2 ? fRange[0] : rRange[0];
-            return minVal + v * currentStep;
-          }
-          return v;
-        });
-      } else if (rideHeightVal.length === 2) {
-        normalized.rideHeights = rideHeightVal.map((v, i) => {
-          if (v < 45) {
-            const minVal = i === 0 ? fRange[0] : rRange[0];
-            return minVal + v * currentStep;
-          }
-          return v;
-        });
-      }
-    }
-    if (rearWingVal !== undefined) normalized.rearWing = rearWingVal;
-    if (splitterVal !== undefined) normalized.splitter = splitterVal;
-    if (Array.isArray(brakeDuctVal) && brakeDuctVal.length === 2) {
-      normalized.brakeDucts = brakeDuctVal;
-    }
+    normalized.rearWing = getNestedVal(aeroSection, ["rearWing"]) ?? normalized.rearWing;
+    normalized.splitter = getNestedVal(aeroSection, ["splitter"]) ?? normalized.splitter;
+    normalized.brakeDucts = getNestedVal(aeroSection, ["brakeDuct", "brakeDucts"]) ?? normalized.brakeDucts;
   }
 
-  // 5. DAMPERS (advancedSetup.dampers)
+  // -- DAMPERS --
   const dampersSection = advanced.dampers || getNestedVal(advanced, ["dampers"]);
   if (dampersSection) {
     const bumpSlowVal = getNestedVal(dampersSection, ["bumpSlow", "bumpSlows"]);
@@ -511,191 +400,6 @@ if (Array.isArray(rideHeightVal)) {
     if (Array.isArray(reboundFastVal) && reboundFastVal.length === 4) {
       normalized.reboundFast = reboundFastVal;
     }
-  }
-
-  // Alignment click-to-degree scaling conversions (ACC JSON exports are click indices)
-  const defCamberF = car?.camberFrontRange || [-4.0, -1.5];
-  const defCamberR = car?.camberRearRange || [-3.5, -1.0];
-  const defCamberStep = car?.camberStep || 0.1;
-  
-  const defToeF = car?.toeFrontRange || [-0.4, 0.4];
-  const defToeR = car?.toeRearRange || [-0.4, 0.4];
-  const defToeStep = car?.toeStep || 0.01;
-
-  const defCasterRange = car?.casterRange || [4.0, 15.0];
-  const defCasterStep = car?.casterStep || 0.1;
-  const casterArr = car?.casterArr || [];
-
-// Convert cambers (index raw is non-negative, physical degrees are negative)
-  normalized.cambers = normalized.cambers.map((c, idx) => {
-    if (c >= 0) { // It is a raw click index
-      const minVal = idx < 2 ? defCamberF[0] : defCamberR[0];
-      const step = defCamberStep;
-      return Math.round((minVal + c * step) * 100) / 100;
-    }
-    return c; // Already in physical degrees
-  });
-
-  // Convert toes (click indices are whole numbers usually between 0 and 80)
-  normalized.toes = normalized.toes.map((t, idx) => {
-    // If it's a whole number, it is a click index
-    if (Number.isInteger(t)) {
-      const minVal = idx < 2 ? defToeF[0] : defToeR[0];
-      const step = defToeStep;
-      return Math.round((minVal + t * step) * 100) / 100;
-    }
-    return t; // Already in physical degrees
-  });
-
-    const warnings: string[] = [];
-    normalized.validationWarnings = warnings;
-
-  function clamp(val: number, min: number, max: number, name: string): number {
-    const clamped = Math.min(Math.max(val, min), max);
-    if (Math.abs(clamped - val) > 0.0001) {
-      warnings.push(`${name} clamped to range [${min}, ${max}] (originally ${val})`);
-    }
-    return clamped;
-  }
-
-  function snap(val: number, arr: number[], name: string): number {
-    if (!arr || arr.length === 0) return val;
-    let closest = arr[0];
-    let minDiff = Math.abs(val - closest);
-    for (let i = 1; i < arr.length; i++) {
-      const diff = Math.abs(val - arr[i]);
-      if (diff < minDiff) {
-        minDiff = diff;
-        closest = arr[i];
-      }
-    }
-    if (Math.abs(closest - val) > 0.0001) {
-      warnings.push(`${name} snapped to nearest valid discrete rate: ${closest} (originally ${val})`);
-    }
-    return closest;
-  }
-
-  if (!car) {
-    normalized.isUnsupportedCar = true;
-    warnings.push(`Car bounds not found for "${normalized.carKey}". Default slider limits applied.`);
-  } else {
-    // 1. Tyre pressures
-    const pressRange = car.tyrePressureRange || [20.3, 35.0];
-    normalized.tyrePressures = normalized.tyrePressures.map((p, idx) => {
-      const names = ["LF pressure", "RF pressure", "LR pressure", "RR pressure"];
-      return clamp(p, pressRange[0], pressRange[1], names[idx]);
-    });
-
-    // 2. Toes
-    const toeFRange = car.toeFrontRange || [-0.4, 0.4];
-    normalized.toes[0] = clamp(normalized.toes[0], toeFRange[0], toeFRange[1], "Toe LF");
-    normalized.toes[1] = clamp(normalized.toes[1], toeFRange[0], toeFRange[1], "Toe RF");
-    
-    const toeRRange = car.toeRearRange || [-0.4, 0.4];
-    normalized.toes[2] = clamp(normalized.toes[2], toeRRange[0], toeRRange[1], "Toe LR");
-    normalized.toes[3] = clamp(normalized.toes[3], toeRRange[0], toeRRange[1], "Toe RR");
-
-    // 3. Cambers
-    const cambFRange = car.camberFrontRange || [-4.0, -1.5];
-    normalized.cambers[0] = clamp(normalized.cambers[0], cambFRange[0], cambFRange[1], "Camber LF");
-    normalized.cambers[1] = clamp(normalized.cambers[1], cambFRange[0], cambFRange[1], "Camber RF");
-
-    const cambRRange = car.camberRearRange || [-3.5, -1.0];
-    normalized.cambers[2] = clamp(normalized.cambers[2], cambRRange[0], cambRRange[1], "Camber LR");
-    normalized.cambers[3] = clamp(normalized.cambers[3], cambRRange[0], cambRRange[1], "Camber RR");
-
-// 4. Casters validation block
-    if (car.casterArr && Array.isArray(car.casterArr) && car.casterArr.length > 0) {
-      // Use snap to lock onto the discrete elements in the array
-      normalized.casters[0] = snap(normalized.casters[0], car.casterArr, "Caster LF");
-      normalized.casters[1] = snap(normalized.casters[1], car.casterArr, "Caster RF");
-    } else {
-      // Fallback range limits for cars without a explicit physics lookup array
-      const castRange = car.casterRange || [4.0, 15.0];
-      normalized.casters[0] = clamp(normalized.casters[0], castRange[0], castRange[1], "Caster LF");
-      normalized.casters[1] = clamp(normalized.casters[1], castRange[0], castRange[1], "Caster RF");
-    }
-
-    // 5. ECU Map and Brake Bias
-    const ecuRange = car.eCUMapRange || [1, 12];
-    normalized.ecuMap = clamp(normalized.ecuMap, ecuRange[0], ecuRange[1], "ECU Engine Map");
-
-    const bbRange = car.brakeBiasRange || [40.0, 75.0];
-    normalized.brakeBias = clamp(normalized.brakeBias, bbRange[0], bbRange[1], "Brake Bias");
-
-    const btRange = car.brakeTorqueRange || [80, 100];
-    normalized.brakePower = clamp(normalized.brakePower, btRange[0], btRange[1], "Brake Power");
-
-    // 6. Mechanical Grip
-    const srRange = car.steerRatioRange || [10, 18];
-    normalized.steerRatio = clamp(normalized.steerRatio, srRange[0], srRange[1], "Steer Ratio");
-
-    if (car.wheelRatesFront && car.wheelRatesFront.length > 0) {
-      normalized.wheelRates[0] = snap(normalized.wheelRates[0], car.wheelRatesFront, "Wheel Rate LF");
-      normalized.wheelRates[1] = snap(normalized.wheelRates[1], car.wheelRatesFront, "Wheel Rate RF");
-    }
-    if (car.wheelRatesRear && car.wheelRatesRear.length > 0) {
-      normalized.wheelRates[2] = snap(normalized.wheelRates[2], car.wheelRatesRear, "Wheel Rate LR");
-      normalized.wheelRates[3] = snap(normalized.wheelRates[3], car.wheelRatesRear, "Wheel Rate RR");
-    }
-
-    const plRange = car.preloadRange || [20, 300];
-    normalized.preloadDifferential = clamp(normalized.preloadDifferential, plRange[0], plRange[1], "Diff Preload");
-
-    // Anti-roll bars (Translated to 0-based for user displays & manual alignments)
-const arbFRange = car.antirollBarFrontRange || [1, 10];
-normalized.arbFront = clamp(normalized.arbFront, arbFRange[0], arbFRange[1], "Front ARB");
-
-const arbRRange = car.antirollBarRearRange || [1, 10];
-normalized.arbRear = clamp(normalized.arbRear, arbRRange[0], arbRRange[1], "Rear ARB");
-
-    // Bumpstops
-    const bsFRateRange = car.bumpStopFrontRateRange || car.bumpStopRateRange || [300, 2500];
-    normalized.bumpstopRates[0] = clamp(normalized.bumpstopRates[0], bsFRateRange[0], bsFRateRange[1], "Bumpstop Rate LF");
-    normalized.bumpstopRates[1] = clamp(normalized.bumpstopRates[1], bsFRateRange[0], bsFRateRange[1], "Bumpstop Rate RF");
-
-    const bsRRateRange = car.bumpStopRearRateRange || car.bumpStopRateRange || [300, 2500];
-    normalized.bumpstopRates[2] = clamp(normalized.bumpstopRates[2], bsRRateRange[0], bsRRateRange[1], "Bumpstop Rate LR");
-    normalized.bumpstopRates[3] = clamp(normalized.bumpstopRates[3], bsRRateRange[0], bsRRateRange[1], "Bumpstop Rate RR");
-
-    const bsFWinRange = car.bumpStopWindowFrontRange || [0, 50];
-    normalized.bumpstopRanges[0] = clamp(normalized.bumpstopRanges[0], bsFWinRange[0], bsFWinRange[1], "Bumpstop Range LF");
-    normalized.bumpstopRanges[1] = clamp(normalized.bumpstopRanges[1], bsFWinRange[0], bsFWinRange[1], "Bumpstop Range RF");
-
-    const bsRWinRange = car.bumpStopWindowRearRange || [0, 80];
-    normalized.bumpstopRanges[2] = clamp(normalized.bumpstopRanges[2], bsRWinRange[0], bsRWinRange[1], "Bumpstop Range LR");
-    normalized.bumpstopRanges[3] = clamp(normalized.bumpstopRanges[3], bsRWinRange[0], bsRWinRange[1], "Bumpstop Range RR");
-
-    // 7. Aero
-    const isNordschleife = normalized.trackKey === 'nurburgring_24h';
-    const rhFRange = (isNordschleife ? car.rideHeightFrontRange_n24h : null) ?? car.rideHeightFrontRange ?? [50, 90];
-    normalized.rideHeights[0] = clamp(normalized.rideHeights[0], rhFRange[0], rhFRange[1], "Ride Height Front");
-
-    const rhRRange = (isNordschleife ? car.rideHeightRearRange_n24h : null) ?? car.rideHeightRearRange ?? [50, 100];
-    normalized.rideHeights[1] = clamp(normalized.rideHeights[1], rhRRange[0], rhRRange[1], "Ride Height Rear");
-
-    const rwRange = car.rearWingRange || [0, 15];
-    normalized.rearWing = clamp(normalized.rearWing, rwRange[0], rwRange[1], "Rear Wing");
-
-    const splRange = car.splitterRange || [0, 3];
-    normalized.splitter = clamp(normalized.splitter, splRange[0], splRange[1], "Splitter");
-
-    const bdRange = car.brakeDuctRange || [0, 6];
-    normalized.brakeDucts[0] = clamp(normalized.brakeDucts[0], bdRange[0], bdRange[1], "Brake Duct Front");
-    normalized.brakeDucts[1] = clamp(normalized.brakeDucts[1], bdRange[0], bdRange[1], "Brake Duct Rear");
-
-    // 8. Dampers
-    const dsRange = car.bumpSlowRange || [0, 40];
-    normalized.bumpSlow = normalized.bumpSlow.map((v, i) => clamp(v, dsRange[0], dsRange[1], `Bump Slow ${["LF", "RF", "LR", "RR"][i]}`));
-
-    const rsRange = car.reboundSlowRange || [0, 40];
-    normalized.reboundSlow = normalized.reboundSlow.map((v, i) => clamp(v, rsRange[0], rsRange[1], `Rebound Slow ${["LF", "RF", "LR", "RR"][i]}`));
-
-    const bfRange = car.bumpFastRange || [0, 49];
-    normalized.bumpFast = normalized.bumpFast.map((v, i) => clamp(v, bfRange[0], bfRange[1], `Bump Fast ${["LF", "RF", "LR", "RR"][i]}`));
-
-    const rfRange = car.reboundFastRange || [0, 49];
-    normalized.reboundFast = normalized.reboundFast.map((v, i) => clamp(v, rfRange[0], rfRange[1], `Rebound Fast ${["LF", "RF", "LR", "RR"][i]}`));
   }
 
   return normalized;
