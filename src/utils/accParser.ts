@@ -200,8 +200,9 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
     if (!obj || typeof obj !== "object") return undefined;
     for (const k of keys) {
       if (obj[k] !== undefined) return obj[k];
-      for (const actualKey of Object.keys(obj)) {
-        if (actualKey.toLowerCase() === k.toLowerCase()) return obj[actualKey];
+      const lowerK = k.toLowerCase();
+      for (const actualKey in obj) {
+        if (actualKey.toLowerCase() === lowerK) return obj[actualKey];
       }
     }
     return undefined;

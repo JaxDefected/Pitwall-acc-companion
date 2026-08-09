@@ -154,10 +154,12 @@ async function saveSetupsLocalBatch(newSetups: SetupItem[]): Promise<void> {
   if (newSetups.length === 0) return;
   const setups = await fetchSetupsLocal();
   // We use standard maps, but for extreme memory constraints as required, a normal loop over setups can work or a map
-  const setupMap = new Map(setups.map((s) => [s.id, s]));
+  const setupMap = new Map();
+  for (let i = 0; i < setups.length; i++) {
+    setupMap.set(setups[i].id, setups[i]);
+  }
   for (let i = 0; i < newSetups.length; i++) {
-    const setup = newSetups[i];
-    setupMap.set(setup.id, setup);
+    setupMap.set(newSetups[i].id, newSetups[i]);
   }
   localStorage.setItem(LOCAL_SETUPS_KEY, JSON.stringify(Array.from(setupMap.values())));
 }
@@ -395,22 +397,7 @@ export async function dbDeleteSetup(id: string): Promise<void> {
 export async function dbSaveGuide(content: string, userId: string = "anonymous"): Promise<void> {
   const path = "guides/active_guide";
 
-  if (isCloudEnabled && db) {
-    try {
-      const docRef = doc(db, "guides", "active_guide");
-      const docSnap = await getDoc(docRef);
-
-      const payload: GuideItem = {
-        id: "active_guide",
-        content,
-        createdAt: (docSnap.exists() && docSnap.data().createdAt) ? docSnap.data().createdAt : serverTimestamp(),
-        createdBy: (docSnap.exists() && docSnap.data().createdBy) ? docSnap.data().createdBy : userId,
-        updatedAt: serverTimestamp(),
-        updatedBy: userId,
-      };
-
-      await setDoc(docRef, payload);
-  const payload: GuideItem = {
+  const localPayload: GuideItem = {
     id: "active_guide",
     content,
     updatedAt: new Date().toISOString(),
@@ -420,7 +407,20 @@ export async function dbSaveGuide(content: string, userId: string = "anonymous")
 
   if (isCloudEnabled && db) {
     try {
-      await setDoc(doc(db, "guides", "active_guide"), payload, { merge: true });
+      const docRef = doc(db, "guides", "active_guide");
+      const docSnap = await getDoc(docRef);
+
+      const dbPayload: GuideItem = {
+        id: "active_guide",
+        content,
+        createdAt: (docSnap.exists() && docSnap.data().createdAt) ? docSnap.data().createdAt : serverTimestamp(),
+        createdBy: (docSnap.exists() && docSnap.data().createdBy) ? docSnap.data().createdBy : userId,
+        updatedAt: serverTimestamp() as unknown as string,
+        updatedBy: userId,
+        authorId: userId,
+      };
+
+      await setDoc(docRef, dbPayload, { merge: true });
     } catch (err) {
       if (isOfflineError(err)) {
         console.warn("Firestore is offline, saving guide locally:", err);
