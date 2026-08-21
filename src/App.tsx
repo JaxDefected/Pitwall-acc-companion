@@ -1364,47 +1364,51 @@ export default function App() {
     let hadError = false;
     let errorMessage = "";
 
-    await Promise.all(
-      reposList.map(async (item) => {
-        const cleanRepo = item.repo.trim().replace("https://github.com/", "").replace(/\/+$/, "");
-        const branchStr = item.branch || "master";
-        const url = `https://api.github.com/repos/${cleanRepo}/git/trees/${branchStr}?recursive=1`;
-        
-        try {
-          const headers: Record<string, string> = {
-            "Accept": "application/vnd.github.v3+json",
-          };
-          if (githubToken.trim()) {
-            headers["Authorization"] = `token ${githubToken.trim()}`;
-          }
+    const CONCURRENCY_LIMIT = 5;
+    for (let i = 0; i < reposList.length; i += CONCURRENCY_LIMIT) {
+      const chunk = reposList.slice(i, i + CONCURRENCY_LIMIT);
+      await Promise.all(
+        chunk.map(async (item) => {
+          const cleanRepo = item.repo.trim().replace("https://github.com/", "").replace(/\/+$/, "");
+          const branchStr = item.branch || "master";
+          const url = `https://api.github.com/repos/${cleanRepo}/git/trees/${branchStr}?recursive=1`;
 
-          const res = await fetch(url, { headers });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.tree && Array.isArray(data.tree)) {
-              const jsonFiles = data.tree
-                .filter((f: any) => f.type === "blob" && f.path.toLowerCase().endsWith(".json"))
-                .map((f: any) => ({
-                  ...f,
-                  repo: cleanRepo,
-                  branch: branchStr,
-                }));
-              consolidatedTree.push(...jsonFiles);
+          try {
+            const headers: Record<string, string> = {
+              "Accept": "application/vnd.github.v3+json",
+            };
+            if (githubToken.trim()) {
+              headers["Authorization"] = `token ${githubToken.trim()}`;
             }
-          } else {
-            hadError = true;
-            if (res.status === 403) {
-              errorMessage = "GitHub API rate limit exceeded. Please configure a Personal Access Token in setting inputs.";
+
+            const res = await fetch(url, { headers });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.tree && Array.isArray(data.tree)) {
+                const jsonFiles = data.tree
+                  .filter((f: any) => f.type === "blob" && f.path.toLowerCase().endsWith(".json"))
+                  .map((f: any) => ({
+                    ...f,
+                    repo: cleanRepo,
+                    branch: branchStr,
+                  }));
+                consolidatedTree.push(...jsonFiles);
+              }
             } else {
-              errorMessage = `Error scanning ${cleanRepo} (${res.status})`;
+              hadError = true;
+              if (res.status === 403) {
+                errorMessage = "GitHub API rate limit exceeded. Please configure a Personal Access Token in setting inputs.";
+              } else {
+                errorMessage = `Error scanning ${cleanRepo} (${res.status})`;
+              }
             }
+          } catch (e: any) {
+            hadError = true;
+            errorMessage = e.message || "Failed to scan remote repository.";
           }
-        } catch (e: any) {
-          hadError = true;
-          errorMessage = e.message || "Failed to scan remote repository.";
-        }
-      })
-    );
+        })
+      );
+    }
 
     if (consolidatedTree.length > 0) {
       setGithubTree(consolidatedTree);
