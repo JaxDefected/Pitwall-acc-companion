@@ -100,7 +100,26 @@ export const TRACK_KEY_MAP: Record<string, string> = {
   "zolder": "Zolder"
 };
 
+
+interface CarIndexData {
+  carClass: "GT3" | "GT4";
+  carObj: any;
+}
+
+const carIndexMap: Record<string, CarIndexData> = {};
+
+const gt3Cars = laptimesData?.classes?.GT3?.cars || [];
+for (let i = 0; i < gt3Cars.length; i++) {
+  carIndexMap[gt3Cars[i].car] = { carClass: "GT3", carObj: gt3Cars[i] };
+}
+
+const gt4Cars = laptimesData?.classes?.GT4?.cars || [];
+for (let i = 0; i < gt4Cars.length; i++) {
+  carIndexMap[gt4Cars[i].car] = { carClass: "GT4", carObj: gt4Cars[i] };
+}
+
 export function secondsToLapTimeNotes(secs: number | null | undefined): string {
+
   if (secs === null || secs === undefined) return "N/A";
   const minutes = Math.floor(secs / 60);
   const remaining = (secs - minutes * 60).toFixed(3).padStart(6, '0');
@@ -115,18 +134,10 @@ export function getLapTimesText(carKey: string, trackKey: string): string {
   let carClass: "GT3" | "GT4" | null = null;
   let foundCarObj: any = null;
 
-  const gt3Cars = laptimesData?.classes?.GT3?.cars || [];
-  const gt3Match = gt3Cars.find((c: any) => c.car === mappedCarName);
-  if (gt3Match) {
-    carClass = "GT3";
-    foundCarObj = gt3Match;
-  } else {
-    const gt4Cars = laptimesData?.classes?.GT4?.cars || [];
-    const gt4Match = gt4Cars.find((c: any) => c.car === mappedCarName);
-    if (gt4Match) {
-      carClass = "GT4";
-      foundCarObj = gt4Match;
-    }
+  const match = carIndexMap[mappedCarName];
+  if (match) {
+    carClass = match.carClass;
+    foundCarObj = match.carObj;
   }
 
   if (!foundCarObj) return "";
