@@ -57,6 +57,7 @@ service cloud.firestore {
       allow update: if isSignedIn()
                     && isValidId(setupId)
                     && isValidSetup(incoming())
+                    && existing().uploadedBy == request.auth.uid
                     && incoming().uploadedBy == existing().uploadedBy
                     && incoming().createdAt == existing().createdAt
                     && incoming().updatedAt == request.time;
