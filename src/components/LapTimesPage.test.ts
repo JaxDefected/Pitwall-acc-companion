@@ -31,4 +31,9 @@ describe('secondsToLapTime', () => {
     expect(secondsToLapTime(65.12)).toBe('1:05.120');
     expect(secondsToLapTime(65.1234)).toBe('1:05.123');
   });
+
+  it('handles minute rollover when rounding up', () => {
+    expect(secondsToLapTime(59.9996)).toBe('1:00.000');
+    expect(secondsToLapTime(119.9999)).toBe('2:00.000');
+  });
 });

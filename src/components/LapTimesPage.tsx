@@ -9,8 +9,9 @@ const laptimesData = laptimesDataImport as any;
 
 export function secondsToLapTime(secs: number | null | undefined): string {
   if (secs === null || secs === undefined) return "—";
-  const minutes = Math.floor(secs / 60);
-  const remaining = (secs - minutes * 60).toFixed(3).padStart(6, '0');
+  const roundedSecs = Math.round(secs * 1000) / 1000;
+  const minutes = Math.floor(roundedSecs / 60);
+  const remaining = (roundedSecs - minutes * 60).toFixed(3).padStart(6, '0');
   return `${minutes}:${remaining}`;
 }
 
