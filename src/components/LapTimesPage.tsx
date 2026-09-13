@@ -211,7 +211,7 @@ export default function LapTimesPage() {
         {!selectedCar && !selectedTrack && (
           <div className="flex flex-col items-center justify-center py-14 text-center bg-zinc-50 border border-dashed border-zinc-200 rounded-lg p-6 max-w-md mx-auto w-full animate-fadeIn">
             <Clock className="w-9 h-9 text-zinc-300 mb-3 animate-pulse" />
-            <h3 className="text-xs font-black font-mono uppercase tracking-widest text-zinc-700">Explore LFM Targets</h3>
+            <h2 className="text-xs font-black font-mono uppercase tracking-widest text-zinc-700">Explore LFM Targets</h2>
             <p className="text-zinc-550 text-xs mt-1.5 font-sans leading-relaxed max-w-sm">
               Choose a vehicle or circuit above to inspect professional BoP setups, 102% laptimes, and engineering telemetry.
             </p>
@@ -235,9 +235,9 @@ export default function LapTimesPage() {
                 <div className="flex items-center gap-3">
                   <Wrench className="w-5 h-5 text-red-500 shrink-0" />
                   <div>
-                    <h3 className="text-sm md:text-base font-black font-mono uppercase tracking-wider text-white">
+                    <h2 className="text-sm md:text-base font-black font-mono uppercase tracking-wider text-white">
                       {selectedCar}
-                    </h3>
+                    </h2>
                     <span className="text-[10px] text-zinc-400 font-mono font-bold uppercase tracking-widest block mt-0.5">
                       Technical Specifications & Engineering Profile
                     </span>
@@ -480,9 +480,9 @@ export default function LapTimesPage() {
           isAllNull ? (
             <div className="flex flex-col items-center justify-center py-14 text-center bg-zinc-50 border border-dashed border-zinc-250 rounded-lg p-6 max-w-xl mx-auto w-full animate-fadeIn shadow-2xs">
               <Clock className="w-10 h-10 text-zinc-450 mb-3 animate-pulse" />
-              <h3 className="text-xs font-black text-zinc-800 font-mono uppercase tracking-widest">
+              <h2 className="text-xs font-black text-zinc-800 font-mono uppercase tracking-widest">
                 ⏱️ {selectedClass} Target Lap Times
-              </h3>
+              </h2>
               <p className="text-zinc-650 text-xs mt-2.5 font-medium max-w-xs leading-relaxed font-sans">
                 {selectedClass} target lap times are coming soon in a future update.
               </p>
@@ -756,7 +756,7 @@ export default function LapTimesPage() {
                     ) : (
                       <div className="bg-zinc-50 border border-dashed border-zinc-200 rounded-lg p-5 text-center flex flex-col items-center justify-center py-12">
                         <BookOpen className="w-8 h-8 text-zinc-350 mb-2 animate-pulse" />
-                        <h3 className="text-xs font-black font-mono uppercase tracking-wider text-zinc-700">No Briefing Loaded</h3>
+                        <h2 className="text-xs font-black font-mono uppercase tracking-wider text-zinc-700">No Briefing Loaded</h2>
                         <p className="text-zinc-650 text-xs mt-1 font-medium">Select a track circuit to unlock expert lap guidance notes.</p>
                       </div>
                     )}

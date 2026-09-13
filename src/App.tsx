@@ -434,7 +434,7 @@ function SetupSlider({ label, value, min, max, step, unit = "", discreteArray }:
         <span className="text-[9.5px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">{label}</span>
         <span className="text-[11.5px] font-mono font-black text-red-655 bg-zinc-100/80 px-1.5 py-0.5 rounded border border-zinc-150">
           {value.toFixed(unit === "°" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
-          <span className="text-[8px] font-bold text-zinc-400 ml-0.5">{unit}</span>
+          <span className="text-[8px] font-bold text-zinc-500 ml-0.5">{unit}</span>
         </span>
       </div>
 
@@ -457,7 +457,7 @@ function SetupSlider({ label, value, min, max, step, unit = "", discreteArray }:
           })}
         </div>
 
-        <div className="flex justify-between mt-1.5 text-[8.5px] font-mono text-zinc-400 font-bold">
+        <div className="flex justify-between mt-1.5 text-[8.5px] font-mono text-zinc-500 font-bold">
           <span>{discreteArray ? "SEGMENTED" : `MIN: ${min}${unit}`}</span>
           {step > 0 && <span className="text-[7.5px] bg-zinc-100 px-1 rounded border border-zinc-200">STEP: {step}</span>}
           <span>{discreteArray ? `OPTS: ${discreteArray.length}` : `MAX: ${max}${unit}`}</span>
@@ -2059,10 +2059,10 @@ export default function App() {
                 ACC Setup Lab
               </span>
             </h1>
-            <p className={`text-[9px] md:text-xs text-zinc-500 truncate transition-all duration-300 ease-in-out ${
+            <p className={`text-[9px] md:text-xs text-zinc-400 truncate transition-all duration-300 ease-in-out ${
               isScrolled 
                 ? "max-h-0 opacity-0 pr-0 mt-0 overflow-hidden" 
-                : "max-h-4 opacity-100 mt-0.5"
+                : "max-h-6 opacity-100 mt-0.5"
             }`}>
               ACC Companion App
             </p>
@@ -2072,7 +2072,7 @@ export default function App() {
         {/* Sync panel & Auth login block */}
         <div className="flex items-center gap-2 sm:gap-4 text-xs font-mono shrink-0">
           {authLoading ? (
-            <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-md text-zinc-400 font-bold select-none uppercase tracking-wider text-[10px] animate-pulse">
+            <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-md text-zinc-500 font-bold select-none uppercase tracking-wider text-[10px] animate-pulse">
               <span className="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
               Syncing...
             </div>
@@ -2139,7 +2139,7 @@ export default function App() {
 
       {/* View Switcher Menu Bar */}
       <div 
-        id="app-view-switcher" 
+        id="app-view-switcher" role="navigation" aria-label="Main Views"
         className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-950/95 border-t border-zinc-850 p-2 pb-[calc(8px+env(safe-area-inset-bottom,16px))] shadow-2xl md:static md:z-auto md:bg-transparent md:border-none md:p-0 md:shadow-none max-w-7xl w-full mx-auto md:px-4 lg:md:px-6 md:pt-3 md:sm:pt-5"
       >
         <div className="bg-transparent border-none p-0 flex gap-1 font-mono text-[9px] sm:text-[10px] md:text-xs md:bg-white md:border md:border-zinc-250 md:p-1.5 md:rounded-lg md:gap-2 md:shadow-3xs w-full max-w-full justify-around md:justify-start" role="tablist" aria-label="App Views">
@@ -2151,7 +2151,7 @@ export default function App() {
             className={`flex-grow md:flex-1 py-1.5 md:py-2.5 rounded-md font-bold transition-all flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 cursor-pointer min-h-[46px] md:min-h-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${
               currentView === "telemetry"
                 ? "bg-zinc-900 text-red-500 md:bg-zinc-900 md:text-white shadow-xs font-extrabold border border-zinc-800 md:border-none"
-                : "text-zinc-400 hover:text-zinc-200 md:text-zinc-600 md:hover:text-zinc-900 md:hover:bg-zinc-50"
+                : "text-zinc-300 hover:text-white md:text-zinc-600 md:hover:text-zinc-900 md:hover:bg-zinc-50"
             }`}
           >
             <Gauge className="w-4 h-4 text-red-500" />
@@ -2166,7 +2166,7 @@ export default function App() {
             className={`flex-grow md:flex-1 py-1.5 md:py-2.5 rounded-md font-bold transition-all flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 cursor-pointer min-h-[46px] md:min-h-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${
               currentView === "laptimes"
                 ? "bg-zinc-900 text-red-500 md:bg-zinc-900 md:text-white shadow-xs font-extrabold border border-zinc-800 md:border-none"
-                : "text-zinc-400 hover:text-zinc-200 md:text-zinc-650 md:hover:text-zinc-900 md:hover:bg-zinc-50"
+                : "text-zinc-400 hover:text-zinc-200 md:text-zinc-700 md:hover:text-zinc-900 md:hover:bg-zinc-50"
             }`}
           >
             <Clock className="w-4 h-4 text-red-500 animate-pulse" />
@@ -2181,7 +2181,7 @@ export default function App() {
             className={`flex-grow md:flex-1 py-1.5 md:py-2.5 rounded-md font-bold transition-all flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 cursor-pointer min-h-[46px] md:min-h-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${
               currentView === "garage"
                 ? "bg-zinc-900 text-red-500 md:bg-zinc-900 md:text-white shadow-xs font-extrabold border border-zinc-800 md:border-none"
-                : "text-zinc-400 hover:text-zinc-200 md:text-zinc-650 md:hover:text-zinc-900 md:hover:bg-zinc-50"
+                : "text-zinc-400 hover:text-zinc-200 md:text-zinc-700 md:hover:text-zinc-900 md:hover:bg-zinc-50"
             }`}
           >
             <Folder className="w-4 h-4 text-red-500" />
@@ -2195,7 +2195,7 @@ export default function App() {
             className={`flex-grow md:flex-1 py-1.5 md:py-2.5 rounded-md font-bold transition-all flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 cursor-pointer min-h-[46px] md:min-h-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
               currentView === "engineer"
                 ? "bg-zinc-900 text-red-500 md:bg-zinc-900 md:text-white shadow-xs font-extrabold border border-zinc-800 md:border-none"
-                : "text-zinc-400 hover:text-zinc-200 md:text-zinc-650 md:hover:text-zinc-900 md:hover:bg-zinc-50"
+                : "text-zinc-400 hover:text-zinc-200 md:text-zinc-700 md:hover:text-zinc-900 md:hover:bg-zinc-50"
             }`}
           >
             <Wrench className="w-4 h-4 text-emerald-440" />
@@ -2215,11 +2215,11 @@ export default function App() {
           <div className="bg-white border border-zinc-250 shadow-sm rounded-lg p-4 flex flex-col gap-3 sticky top-[48px] md:relative md:top-auto z-30">
             <div className="flex items-center justify-between">
               <label htmlFor="registry-search-input" className="text-xs font-mono font-bold tracking-widest text-red-655 uppercase">Registry Search</label>
-              <Activity className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+              <Activity className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
             </div>
 
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
               <input
                 id="registry-search-input"
                 type="text"
@@ -2375,7 +2375,7 @@ export default function App() {
               className="border-2 border-dashed border-zinc-300 hover:border-red-655 bg-white hover:bg-zinc-50 transition-all rounded-lg p-5 text-center flex flex-col items-center justify-center gap-2 group shadow-sm text-zinc-800"
             >
               <div className="flex flex-col items-center justify-center">
-                <Upload className="w-8 h-8 text-zinc-400 group-hover:text-red-600 mb-2 transition-colors" />
+                <Upload className="w-8 h-8 text-zinc-500 group-hover:text-red-600 mb-2 transition-colors" />
                 <span className="text-sm font-bold text-zinc-900 tracking-tight">Upload Setup JSON(s)</span>
                 <p className="text-xs text-zinc-500 mt-1 max-w-[250px] leading-relaxed">
                   Drag & drop `.json` files here, or choose your upload mode:
@@ -2415,7 +2415,7 @@ export default function App() {
                   </label>
                 </div>
 
-                <span className="text-[10px] font-mono text-zinc-400 block mt-3">
+                <span className="text-[10px] font-mono text-zinc-500 block mt-3">
                   Typically inside Documents/Assetto Corsa Competizione/Setups
                 </span>
               </div>
@@ -2461,6 +2461,7 @@ export default function App() {
                         <label className="text-zinc-500 text-[10px] font-mono block">Apply Car Model to All</label>
                         <div className="flex gap-1">
                           <select
+                            aria-label="Batch Car"
                             value={batchCar}
                             onChange={(e) => setBatchCar(e.target.value)}
                             className="bg-white border border-zinc-300 text-[10px] p-1.5 rounded text-zinc-700 focus:outline-none w-full"
@@ -2488,6 +2489,7 @@ export default function App() {
                         <label className="text-zinc-500 text-[10px] font-mono block">Apply Track to All</label>
                         <div className="flex gap-1">
                           <select
+                            aria-label="Batch Track"
                             value={batchTrack}
                             onChange={(e) => setBatchTrack(e.target.value)}
                             className="bg-white border border-zinc-300 text-[10px] p-1.5 rounded text-zinc-700 focus:outline-none w-full"
@@ -2557,7 +2559,7 @@ export default function App() {
                               Circuit: {ACC_TRACKS[setup.trackKey] || setup.parsedData.trackName || "Unknown Track"}
                             </div>
                             {/* Line 3: Filename / Path */}
-                            <div className="text-[9px] text-zinc-400 font-mono truncate max-w-[280px] mt-0.5" title={setup.relativePath || setup.fileName}>
+                            <div className="text-[9px] text-zinc-500 font-mono truncate max-w-[280px] mt-0.5" title={setup.relativePath || setup.fileName}>
                               File: {setup.relativePath || setup.fileName}
                             </div>
                             
@@ -2585,7 +2587,7 @@ export default function App() {
                             onClick={() => {
                               setPendingSetups(prev => prev.filter(item => item.id !== setup.id));
                             }}
-                            className="text-zinc-400 hover:text-red-600 p-1 rounded hover:bg-zinc-50 transition-colors cursor-pointer shrink-0"
+                            className="text-zinc-500 hover:text-red-600 p-1 rounded hover:bg-zinc-50 transition-colors cursor-pointer shrink-0"
                             title="Discard from upload"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -2691,7 +2693,7 @@ export default function App() {
                 className={`flex-1 text-center py-3 font-mono text-[10px] sm:text-xs font-bold tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   activeGarageTab === "github"
                     ? "bg-white text-red-655 border-b-2 border-red-600 font-extrabold"
-                    : "text-zinc-550 hover:text-zinc-900 font-semibold"
+                    : "text-zinc-600 hover:text-zinc-900 font-semibold"
                 }`}
               >
                 <Github className="w-3.5 h-3.5" />
@@ -2703,7 +2705,7 @@ export default function App() {
                 className={`flex-1 text-center py-3 font-mono text-[10px] sm:text-xs font-bold tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   activeGarageTab === "team"
                     ? "bg-white text-red-655 border-b-2 border-red-600 font-extrabold"
-                    : "text-zinc-550 hover:text-zinc-900 font-semibold"
+                    : "text-zinc-600 hover:text-zinc-900 font-semibold"
                 }`}
               >
                 <Folder className="w-3.5 h-3.5" />
@@ -2744,7 +2746,7 @@ export default function App() {
                             Circuit: {ACC_TRACKS[setup.track] || setup.track || "Unknown Track"}
                           </div>
                           {/* Line 3: Filename / Name */}
-                          <div className={`text-[9px] font-mono truncate max-w-[280px] mt-0.5 ${isActive ? "text-zinc-500" : "text-zinc-400"}`}>
+                          <div className={`text-[9px] font-mono truncate max-w-[280px] mt-0.5 ${isActive ? "text-zinc-500" : "text-zinc-500"}`}>
                             Setup: {setup.name}
                           </div>
                           {(setup.notes?.includes('[Adapted from') || setup.versionNote?.includes('[Adapted from')) && (
@@ -2807,14 +2809,14 @@ export default function App() {
 
                 {/* Scanned Setup Files list */}
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 border-b border-zinc-200 pb-2">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-zinc-500 border-b border-zinc-200 pb-2">
                     <span className="flex items-center gap-1.5 font-bold uppercase text-[9px] text-zinc-600 tracking-wider">
                       🌍 Remote Community Search Results
                       {githubStatus === "connected" && (
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Synchronized Live" />
                       )}
                     </span>
-                    <span className="font-bold text-zinc-650">{githubMatches.length} items found</span>
+                    <span className="font-bold text-zinc-700">{githubMatches.length} items found</span>
                   </div>
 
                   {githubTree.length === 0 && githubStatus !== "loading" ? (
@@ -2828,7 +2830,7 @@ export default function App() {
                     <div className="p-6 text-center text-zinc-500 border border-dashed border-zinc-800/60 rounded">
                       <Info className="w-5 h-5 mx-auto mb-2 opacity-40 text-emerald-400" />
                       <p className="text-[10px] max-w-[240px] mx-auto leading-relaxed">
-                        No setups match active filters (<strong className="text-zinc-400">{carFilter === "all" ? "All Cars" : ACC_CARS[carFilter] || carFilter}</strong> @ <strong className="text-zinc-400">{trackFilter === "all" ? "All Tracks" : ACC_TRACKS[trackFilter] || trackFilter}</strong>). Adjust filters to discover matches!
+                        No setups match active filters (<strong className="text-zinc-500">{carFilter === "all" ? "All Cars" : ACC_CARS[carFilter] || carFilter}</strong> @ <strong className="text-zinc-500">{trackFilter === "all" ? "All Tracks" : ACC_TRACKS[trackFilter] || trackFilter}</strong>). Adjust filters to discover matches!
                       </p>
                     </div>
                   ) : (
@@ -2860,7 +2862,7 @@ export default function App() {
                                 {item.repo && (
                                   <span className={`font-mono text-[8.5px] px-1 rounded font-bold shrink-0 ${
                                     item.repo.toLowerCase().includes("temetias") 
-                                      ? "bg-emerald-950/40 text-emerald-400 border border-emerald-900/35" 
+                                      ? "bg-emerald-700 text-emerald-400 border border-emerald-900"
                                       : item.repo.toLowerCase().includes("lon3035") 
                                       ? "bg-sky-950/40 text-sky-450 border border-sky-900/35"
                                       : "bg-zinc-850 text-zinc-350"
@@ -2871,14 +2873,14 @@ export default function App() {
                               </div>
 
                               {/* 2. Track/Circuit line */}
-                              <div className="text-[10px] text-zinc-400 font-medium truncate mt-0.5">
+                              <div className="text-[10px] text-zinc-500 font-medium truncate mt-0.5">
                                 Circuit: {ACC_TRACKS[item.trackKey] || (item.trackKey !== "unknown" ? item.trackKey : "Unsorted Circuit")}
                               </div>
 
                               {/* 3. Filename & Metadata badging */}
                               <div className="flex items-center gap-1 mx-0 flex-wrap mt-1 text-[9px]">
                                 {item.meta.patch && (
-                                  <span className="bg-zinc-850 text-zinc-400 font-mono px-1 rounded">
+                                  <span className="bg-zinc-850 text-zinc-500 font-mono px-1 rounded">
                                     v{item.meta.patch}
                                   </span>
                                 )}
@@ -2887,7 +2889,7 @@ export default function App() {
                                     className={`font-mono px-1 rounded font-bold ${
                                       item.meta.session.toLowerCase().includes("q")
                                         ? "bg-violet-950/40 text-violet-400 border border-violet-900/30"
-                                        : "bg-emerald-950/40 text-emerald-400 border border-emerald-900/30"
+                                        : "bg-emerald-700 text-emerald-400 border border-emerald-900/30"
                                     }`}
                                     title={item.meta.sessionLabel}
                                   >
@@ -2924,7 +2926,7 @@ export default function App() {
                               <button
                                 disabled={!!isImportingFromGithub}
                                 onClick={() => handleImportGithubSetup(item.path, false, item.repo, item.branch)}
-                                className="px-2 py-1 rounded bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-950/40 font-mono text-[9px] font-bold text-emerald-400 hover:text-emerald-300 transition-all cursor-pointer flex items-center gap-1 disabled:opacity-40"
+                                className="px-2 py-1 rounded bg-emerald-800 hover:bg-emerald-900/60 border border-emerald-900 font-mono text-[9px] font-bold text-emerald-400 hover:text-emerald-300 transition-all cursor-pointer flex items-center gap-1 disabled:opacity-40"
                               >
                                 {isThisImporting ? (
                                   <RefreshCw className="w-2.5 h-2.5 animate-spin" />
@@ -2954,12 +2956,12 @@ export default function App() {
                 <BookOpen className="w-4 h-4 text-emerald-400" />
                 <span className="text-xs font-mono font-bold tracking-widest text-emerald-400 uppercase">Engineering Workbook</span>
               </div>
-              {isGuidePanelOpen ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
+              {isGuidePanelOpen ? <ChevronUp className="w-4 h-4 text-zinc-500" /> : <ChevronDown className="w-4 h-4 text-zinc-500" />}
             </button>
 
             {isGuidePanelOpen && (
               <div className="p-4 flex flex-col gap-4 bg-zinc-900/60">
-                <div className="text-xs text-zinc-400 leading-relaxed">
+                <div className="text-xs text-zinc-500 leading-relaxed">
                   <div className="flex items-center gap-1.5 mb-1 text-white font-semibold">
                     <Info className="w-3.5 h-3.5 text-cyan-400" />
                     How to Ground your pitwall:
@@ -3038,7 +3040,7 @@ export default function App() {
                 <h2 className="text-xl md:text-2xl font-black text-zinc-950 tracking-tight leading-snug break-words">
                   {activeSetup ? activeSetup.name : "Select an ACC Setup to inspect"}
                 </h2>
-                <div className="text-[11.5px] text-zinc-650 font-mono font-semibold flex items-center flex-wrap gap-x-2.5 gap-y-1">
+                <div className="text-[11.5px] text-zinc-700 font-mono font-semibold flex items-center flex-wrap gap-x-2.5 gap-y-1">
                   {activeSetup ? (
                     <>
                       <span className="text-zinc-500">Car: <strong className="text-zinc-900 font-extrabold">{ACC_CARS[activeSetup.car] || activeSetup.car}</strong></span>
@@ -3117,8 +3119,8 @@ export default function App() {
                         <Wrench className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="font-extrabold text-amber-600 uppercase tracking-wider text-[11px]">Active Tuning Workshop Mode</h4>
-                        <p className="text-[10px] text-zinc-650 mt-0.5 leading-tight">Modify values using +/- controls inside the Tyre pressures, Electronics, and Mechanical sections.</p>
+                        <h3 className="font-extrabold text-amber-600 uppercase tracking-wider text-[11px]">Active Tuning Workshop Mode</h3>
+                        <p className="text-[10px] text-zinc-700 mt-0.5 leading-tight">Modify values using +/- controls inside the Tyre pressures, Electronics, and Mechanical sections.</p>
                       </div>
                     </div>
                     
@@ -3147,7 +3149,7 @@ export default function App() {
                         </select>
                       </div>
                       
-                      <label className="flex items-center gap-1.5 text-[10.5px] text-zinc-650 cursor-pointer select-none font-bold">
+                      <label className="flex items-center gap-1.5 text-[10.5px] text-zinc-700 cursor-pointer select-none font-bold">
                         <input
                           type="checkbox"
                           checked={tuneIsTeamWorkspace}
@@ -3190,7 +3192,7 @@ export default function App() {
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <FileText className={`w-4 h-4 text-red-650 shrink-0 ${isCrewNotesOpen ? "animate-pulse" : ""}`} />
-                        <span className="text-zinc-550 font-extrabold font-mono uppercase tracking-wider text-[10px] truncate">
+                        <span className="text-zinc-600 font-extrabold font-mono uppercase tracking-wider text-[10px] truncate">
                           Uploaded by <strong className="text-zinc-800 font-extrabold">{activeSetup.uploadedByName || "Team Lead"}</strong> • Crew Notes
                         </span>
                       </div>
@@ -3227,7 +3229,7 @@ export default function App() {
                           </div>
                           <strong className="text-zinc-[850] font-extrabold text-sm font-mono text-zinc-900">
                             {(activeSetupRatings.reduce((acc, r) => acc + r.rating, 0) / activeSetupRatings.length).toFixed(1)} 
-                            <span className="text-zinc-550 font-medium text-[11px] font-sans"> ({activeSetupRatings.length} reviews)</span>
+                            <span className="text-zinc-600 font-medium text-[11px] font-sans"> ({activeSetupRatings.length} reviews)</span>
                           </strong>
                         </div>
                       ) : (
@@ -3251,7 +3253,7 @@ export default function App() {
                           
                           const uniqueTags = Object.keys(tagCounts);
                           if (uniqueTags.length === 0) {
-                            return <span className="text-zinc-400 italic text-[11px] mt-0.5 block font-medium">No community tags submitted yet</span>;
+                            return <span className="text-zinc-500 italic text-[11px] mt-0.5 block font-medium">No community tags submitted yet</span>;
                           }
                           
                           return uniqueTags.map((tag) => (
@@ -3337,7 +3339,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "tyres"}
                     aria-controls="tabpanel-tyres"
-                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "tyres" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "tyres" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-600 hover:text-zinc-900 font-bold"}`}
                   >
                     Tyres & Alignment
                   </button>
@@ -3347,7 +3349,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "electronics"}
                     aria-controls="tabpanel-electronics"
-                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "electronics" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "electronics" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-600 hover:text-zinc-900 font-bold"}`}
                   >
                     Electronics
                   </button>
@@ -3357,7 +3359,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "fuel"}
                     aria-controls="tabpanel-fuel"
-                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "fuel" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "fuel" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-600 hover:text-zinc-900 font-bold"}`}
                   >
                     Fuel Strategy
                   </button>
@@ -3367,7 +3369,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "mechanical"}
                     aria-controls="tabpanel-mechanical"
-                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "mechanical" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "mechanical" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-600 hover:text-zinc-900 font-bold"}`}
                   >
                     Mechanical Grip
                   </button>
@@ -3377,7 +3379,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "dampers"}
                     aria-controls="tabpanel-dampers"
-                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "dampers" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "dampers" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-600 hover:text-zinc-900 font-bold"}`}
                   >
                     Suspension Dampers
                   </button>
@@ -3387,7 +3389,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "aero"}
                     aria-controls="tabpanel-aero"
-                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "aero" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "aero" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-600 hover:text-zinc-900 font-bold"}`}
                   >
                     Aero & Ducts
                   </button>
@@ -3406,7 +3408,7 @@ export default function App() {
                             <Gauge className="w-5 h-5" />
                           </div>
                           <div>
-                            <h4 className="text-xs font-mono font-black text-zinc-900 uppercase tracking-wider">Tyre Operating Window Upgraded</h4>
+                            <h3 className="text-xs font-mono font-black text-zinc-900 uppercase tracking-wider">Tyre Operating Window Upgraded</h3>
                             <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">
                               Optimal pressure targets has been adjusted to <strong className="text-emerald-700 font-extrabold">26.5 - 27.5 PSI</strong>. Target Racing Hot: <strong className="text-zinc-900 font-extrabold">27.0 PSI</strong>.
                             </p>
@@ -3423,7 +3425,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">FRONT TYRES & ALIGNMENT (LF/RF)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">PRESSURE & CAR OUTLINES</span>
+                            <span className="text-[9px] text-zinc-500 font-mono font-bold">PRESSURE & CAR OUTLINES</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">
@@ -3435,7 +3437,7 @@ export default function App() {
                                 <div className={`p-4 rounded-lg border hover:border-red-650 transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">LF Front Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
-                                    <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
+                                    <span className="text-zinc-600 font-semibold text-xs">Tyre Pressure:</span>
                                     <div className="flex items-center gap-1.5">
                                       {isTuneMode && (
                                         <button
@@ -3505,7 +3507,7 @@ export default function App() {
                                     </div>
                                   </div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1 text-xs">
-                                    <span className="text-zinc-550">Caster:</span>
+                                    <span className="text-zinc-600">Caster:</span>
                                     <div className="flex items-center gap-1">
                                       {isTuneMode && (
                                         <button
@@ -3538,7 +3540,7 @@ export default function App() {
                                 <div className={`p-4 rounded-lg border hover:border-red-650 transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">RF Front Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
-                                    <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
+                                    <span className="text-zinc-600 font-semibold text-xs">Tyre Pressure:</span>
                                     <div className="flex items-center gap-1.5">
                                       {isTuneMode && (
                                         <button
@@ -3639,7 +3641,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">REAR TYRES & ALIGNMENT (LR/RR)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">PRESSURE & CAR OUTLINES</span>
+                            <span className="text-[9px] text-zinc-500 font-mono font-bold">PRESSURE & CAR OUTLINES</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">
@@ -3651,7 +3653,7 @@ export default function App() {
                                 <div className={`p-4 rounded-lg border hover:border-red-650 transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">LR Rear Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
-                                    <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
+                                    <span className="text-zinc-600 font-semibold text-xs">Tyre Pressure:</span>
                                     <div className="flex items-center gap-1.5">
                                       {isTuneMode && (
                                         <button
@@ -3732,7 +3734,7 @@ export default function App() {
                                 <div className={`p-4 rounded-lg border hover:border-red-650 transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">RR Rear Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
-                                    <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
+                                    <span className="text-zinc-600 font-semibold text-xs">Tyre Pressure:</span>
                                     <div className="flex items-center gap-1.5">
                                       {isTuneMode && (
                                         <button
@@ -3878,9 +3880,10 @@ export default function App() {
                                 <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1.5 rounded border border-zinc-200 focus-within:border-red-250">
                                   <span className="text-[10px] font-mono text-zinc-500 font-bold">HRS:</span>
                                   <input
-                                    type="number"
-                                    min={0}
-                                    max={24}
+                                      aria-label="Hours"
+                                      type="number"
+                                      min={0}
+                                      max={24}
                                     value={durationHours}
                                     onChange={(e) => {
                                       const val = Math.max(0, parseInt(e.target.value) || 0);
@@ -3894,9 +3897,10 @@ export default function App() {
                                 <div className="flex items-center gap-1.5 bg-zinc-50 px-2.5 py-1.5 rounded border border-zinc-200 focus-within:border-red-250">
                                   <span className="text-[10px] font-mono text-zinc-500 font-bold">MINS:</span>
                                   <input
-                                    type="number"
-                                    min={0}
-                                    max={59}
+                                      aria-label="Minutes"
+                                      type="number"
+                                      min={0}
+                                      max={59}
                                     value={durationMinutes}
                                     onChange={(e) => {
                                       const val = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
@@ -3913,7 +3917,7 @@ export default function App() {
 
                           {/* Race Start Temperatures Section Header */}
                           <div className="pt-2.5 border-t border-zinc-200">
-                            <span className="text-[9.5px] font-mono font-extrabold text-zinc-550 uppercase tracking-wider block mb-2">
+                            <span className="text-[9.5px] font-mono font-extrabold text-zinc-600 uppercase tracking-wider block mb-2">
                               Race Start Temperatures
                             </span>
                           </div>
@@ -3992,7 +3996,7 @@ export default function App() {
                           {/* Calculator Results Board */}
                           <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3.5 space-y-3.5">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-zinc-200 pb-2">
-                              <span className="text-[9.5px] font-mono text-zinc-650 uppercase font-bold">Session Thermal Evolution</span>
+                              <span className="text-[9.5px] font-mono text-zinc-700 uppercase font-bold">Session Thermal Evolution</span>
                               <span className="text-[10.5px] font-mono text-amber-800 font-extrabold flex items-center gap-1">
                                 {parseInt(transitionTimeStart.split(":")[0]) >= 16 && parseInt(transitionTimeStart.split(":")[0]) < 21 ? (
                                   <>🌅 {coolingData.coolingType}</>
@@ -4010,7 +4014,7 @@ export default function App() {
                                 const isLoss = val >= 0;
                                 return (
                                   <div className="bg-white p-2.5 rounded border border-zinc-200 shadow-xs">
-                                    <span className="text-[8.5px] font-mono text-zinc-550 uppercase block tracking-wider font-bold">
+                                    <span className="text-[8.5px] font-mono text-zinc-600 uppercase block tracking-wider font-bold">
                                       {isLoss ? "Est. Ambient Drop" : "Est. Ambient Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-emerald-700" : "text-amber-600"}`}>
@@ -4028,7 +4032,7 @@ export default function App() {
                                 const isLoss = val >= 0;
                                 return (
                                   <div className="bg-white p-2.5 rounded border border-zinc-200 shadow-xs">
-                                    <span className="text-[8.5px] font-mono text-zinc-550 uppercase block tracking-wider font-bold">
+                                    <span className="text-[8.5px] font-mono text-zinc-600 uppercase block tracking-wider font-bold">
                                       {isLoss ? "Est. Track Drop" : "Est. Track Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-blue-700" : "text-orange-600"}`}>
@@ -4062,9 +4066,9 @@ export default function App() {
                                 <div className="bg-amber-50 border border-amber-250 rounded-md p-3.5">
                                   <div className="flex items-center gap-2 mb-1.5">
                                     <AlertTriangle className="text-amber-800 w-4 h-4 shrink-0" />
-                                    <h4 className="text-[10px] font-mono font-black text-amber-900 uppercase tracking-wider">
+                                    <h3 className="text-[10px] font-mono font-black text-amber-900 uppercase tracking-wider">
                                       Prescribed starting cold inflation compensation ({isPositiveComp ? "Positive Offset" : "Negative Offset"})
-                                    </h4>
+                                    </h3>
                                   </div>
                                   <p className="text-[10px] text-zinc-805 leading-normal font-mono">
                                     In {transitionDuration}m races under {trendTerm}-trending track conditions, {thermalEffect}. To hit the optimal <strong className="text-emerald-700 font-extrabold text-[10.5px]">26.5 - 27.5 PSI</strong> sweet spot, you must <strong className={`${actionColorClass} font-black underline`}>{actionWord} cold inflations by {compensationSign}{absCompValue.toFixed(1)} PSI</strong> (or <strong className="text-zinc-900 font-black">{compensationSign}{absClicks} garage clicks</strong>) per tyre!
@@ -4083,28 +4087,28 @@ export default function App() {
                             <div className="grid grid-cols-4 gap-2 text-center font-mono text-[10px]">
                               <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
                                 <div className="text-[8px] text-zinc-500 font-black uppercase">LF Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[0].toFixed(1)}</span>
+                                <span className="text-zinc-500 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[0].toFixed(1)}</span>
                                 <div className="text-emerald-700 font-black mt-0.5 text-[11px]">Set: {(parsedActiveSetup.tyrePressures[0] + coolingData.compensationPSI).toFixed(1)}</div>
                                 <div className="text-red-655 text-[8.5px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
                               </div>
 
                               <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
                                 <div className="text-[8px] text-zinc-500 font-black uppercase">RF Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[1].toFixed(1)}</span>
+                                <span className="text-zinc-500 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[1].toFixed(1)}</span>
                                 <div className="text-emerald-700 font-black mt-0.5 text-[11px]">Set: {(parsedActiveSetup.tyrePressures[1] + coolingData.compensationPSI).toFixed(1)}</div>
                                 <div className="text-red-655 text-[8.5px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
                               </div>
 
                               <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
                                 <div className="text-[8px] text-zinc-500 font-black uppercase">LR Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[2].toFixed(1)}</span>
+                                <span className="text-zinc-500 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[2].toFixed(1)}</span>
                                 <div className="text-emerald-700 font-black mt-0.5 text-[11px]">Set: {(parsedActiveSetup.tyrePressures[2] + coolingData.compensationPSI).toFixed(1)}</div>
                                 <div className="text-red-655 text-[8.5px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
                               </div>
 
                               <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
                                 <div className="text-[8px] text-zinc-500 font-black uppercase">RR Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[3].toFixed(1)}</span>
+                                <span className="text-zinc-500 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[3].toFixed(1)}</span>
                                 <div className="text-emerald-700 font-black mt-0.5 text-[11px]">Set: {(parsedActiveSetup.tyrePressures[3] + coolingData.compensationPSI).toFixed(1)}</div>
                                 <div className="text-red-655 text-[8.5px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
                               </div>
@@ -4292,11 +4296,11 @@ export default function App() {
                         {/* Race Fuel Tool calculator console (8 cols) */}
                         <div className="md:col-span-8 bg-white border border-zinc-200 p-5 rounded-lg shadow-sm space-y-4 text-zinc-900">
                           <div className="flex justify-between items-center border-b border-zinc-200 pb-2">
-                            <h4 className="text-xs font-mono font-bold tracking-widest text-red-655 uppercase flex items-center gap-1.5">
+                            <h3 className="text-xs font-mono font-bold tracking-widest text-red-655 uppercase flex items-center gap-1.5">
                               <Sparkles className="w-3.5 h-3.5 text-red-600 shrink-0" />
                               Interactive Race Fuel Tool
-                            </h4>
-                            <span className="text-[10px] font-mono text-zinc-550 font-bold">DYNAMIC CALCULATOR</span>
+                            </h3>
+                            <span className="text-[10px] font-mono text-zinc-600 font-bold">DYNAMIC CALCULATOR</span>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -4304,10 +4308,11 @@ export default function App() {
                             <div className="space-y-3.5">
                               <div>
                                 <div className="flex justify-between text-xs mb-1 font-mono">
-                                  <span className="text-zinc-550 font-bold">Race Duration</span>
+                                  <span className="text-zinc-600 font-bold">Race Duration</span>
                                   <span className="text-zinc-900 font-extrabold">{fuelRaceTime} Mins</span>
                                 </div>
                                 <input
+                                  aria-label="Race Duration Range"
                                   type="range"
                                   min={5}
                                   max={180}
@@ -4320,7 +4325,7 @@ export default function App() {
 
                               <div>
                                 <div className="flex justify-between text-xs mb-1 font-mono">
-                                  <span className="text-zinc-550 font-bold">Average Lap Time</span>
+                                  <span className="text-zinc-600 font-bold">Average Lap Time</span>
                                   <span className="text-zinc-900 font-extrabold">
                                     {fuelLapTimeMin === "" ? 0 : fuelLapTimeMin}m {fuelLapTimeSec === "" ? 0 : fuelLapTimeSec < 10 ? `0${fuelLapTimeSec}` : fuelLapTimeSec}s
                                   </span>
@@ -4329,6 +4334,7 @@ export default function App() {
                                   <div className="flex items-center gap-1.5 bg-zinc-50 px-2 py-1 rounded border border-zinc-200 focus-within:border-red-250">
                                     <span className="text-[10px] font-mono text-zinc-500 font-bold">MIN:</span>
                                     <input
+                                      aria-label="Average Lap Time Minutes"
                                       type="number"
                                       min={0}
                                       max={5}
@@ -4355,6 +4361,7 @@ export default function App() {
                                   <div className="flex items-center gap-1.5 bg-zinc-50 px-2 py-1 rounded border border-zinc-200 focus-within:border-red-250">
                                     <span className="text-[10px] font-mono text-zinc-500 font-bold">SEC:</span>
                                     <input
+                                      aria-label="Average Lap Time Seconds"
                                       type="number"
                                       min={0}
                                       max={59}
@@ -4386,10 +4393,11 @@ export default function App() {
                             <div className="space-y-3.5">
                               <div>
                                 <div className="flex justify-between text-xs mb-1 font-mono">
-                                  <span className="text-zinc-550 font-bold">Consumption Per Lap</span>
+                                  <span className="text-zinc-600 font-bold">Consumption Per Lap</span>
                                   <span className="text-emerald-700 font-extrabold">{fuelPerLap.toFixed(2)} L/Lap</span>
                                 </div>
                                 <input
+                                  aria-label="Consumption Per Lap Range"
                                   type="range"
                                   min={1.0}
                                   max={15.0}
@@ -4402,7 +4410,7 @@ export default function App() {
 
                               <div>
                                 <div className="flex justify-between text-xs mb-1 font-mono">
-                                  <span className="text-zinc-550 font-bold">Safety Buffer</span>
+                                  <span className="text-zinc-600 font-bold">Safety Buffer</span>
                                   <span className="text-red-700 font-bold">+{fuelSafetyLaps} Laps</span>
                                 </div>
                                 <div className="flex gap-1.5">
@@ -4410,7 +4418,7 @@ export default function App() {
                                     <button
                                       key={num}
                                       onClick={() => setFuelSafetyLaps(num)}
-                                      className={`flex-1 py-1 rounded border text-xs font-mono font-bold transition-all cursor-pointer ${fuelSafetyLaps === num ? "bg-red-50 border-red-500 text-red-700 shadow-xs" : "bg-zinc-50 border-zinc-200 text-zinc-650 hover:text-zinc-900"}`}
+                                      className={`flex-1 py-1 rounded border text-xs font-mono font-bold transition-all cursor-pointer ${fuelSafetyLaps === num ? "bg-red-50 border-red-500 text-red-700 shadow-xs" : "bg-zinc-50 border-zinc-200 text-zinc-700 hover:text-zinc-900"}`}
                                     >
                                       {num} L
                                     </button>
@@ -4440,7 +4448,7 @@ export default function App() {
                             </div>
                           </div>
 
-                          <span className="text-[10px] block text-zinc-550 leading-relaxed italic text-center font-sans font-medium">
+                          <span className="text-[10px] block text-zinc-600 leading-relaxed italic text-center font-sans font-medium">
                             *Pit strategy recommendation: {((((calculatedFuelLapTimeSec > 0 ? Math.ceil((fuelRaceTime * 60) / calculatedFuelLapTimeSec) : 0) + fuelSafetyLaps) * fuelPerLap) > pitMaxFuelCapacity) ? `⚠️ Refuel pitstop needed: Minimum load exceeds your customized ${pitMaxFuelCapacity}L tank limit.` : "✓ Optimal run capacity: No physical mid-session refuelling breaks strictly required by tank volume."}
                           </span>
                         </div>
@@ -4455,7 +4463,7 @@ export default function App() {
                               <Wrench className="w-4 h-4 text-red-600 shrink-0" />
                               ACC Pit & Stint Strategy Planner
                             </h3>
-                            <p className="text-[11px] text-zinc-650 mt-0.5 font-medium">
+                            <p className="text-[11px] text-zinc-700 mt-0.5 font-medium">
                               Optimize starting fuel weight loadouts, stint timing, and MFD presets for 45m - 2h endurance sessions.
                             </p>
                           </div>
@@ -4469,7 +4477,7 @@ export default function App() {
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                           {/* Config Controls (Col Span 5) */}
                           <div className="lg:col-span-5 space-y-4 bg-zinc-50 p-4 rounded-lg border border-zinc-200">
-                            <h4 className="text-[10px] font-mono font-bold tracking-widest text-zinc-550 uppercase mb-2">Race Pit Rules & Settings</h4>
+                            <h3 className="text-[10px] font-mono font-bold tracking-widest text-zinc-600 uppercase mb-2">Race Pit Rules & Settings</h3>
 
                             <div className="grid grid-cols-2 gap-3">
                               {/* Fuel capacity */}
@@ -4496,6 +4504,7 @@ export default function App() {
                                   Stint Strategy Style
                                 </label>
                                 <select
+                                  aria-label="Pit Strategy Preference"
                                   value={pitStrategyPreference}
                                   onChange={(e) => setPitStrategyPreference(e.target.value as any)}
                                   className="w-full bg-white border border-zinc-200 rounded font-mono text-xs text-zinc-800 p-1.5 hover:border-zinc-350 focus:outline-none cursor-pointer font-bold shadow-xs"
@@ -4552,7 +4561,7 @@ export default function App() {
                                       className={`py-1.5 rounded text-[10px] font-mono font-black transition-all cursor-pointer ${
                                         isSelected
                                           ? "bg-red-600 text-white shadow-md shadow-red-500/10"
-                                          : "bg-white text-zinc-650 hover:text-zinc-900 border border-zinc-200 hover:border-zinc-350 shadow-xs"
+                                          : "bg-white text-zinc-700 hover:text-zinc-900 border border-zinc-200 hover:border-zinc-350 shadow-xs"
                                       }`}
                                     >
                                       {tab.val} Stop{tab.val !== 1 ? "s" : ""}
@@ -4809,7 +4818,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">FRONT WHEELS (LF/RF)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">FRONT AXLE SPRING RATES</span>
+                            <span className="text-[9px] text-zinc-500 font-mono font-bold">FRONT AXLE SPRING RATES</span>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -4861,7 +4870,7 @@ export default function App() {
                                   </div>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                  <span className="text-zinc-650 font-normal">Bumpstop Range:</span>
+                                  <span className="text-zinc-700 font-normal">Bumpstop Range:</span>
                                   <div className="flex items-center gap-1">
                                     {isTuneMode && (
                                       <button
@@ -4932,7 +4941,7 @@ export default function App() {
                                   </div>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                  <span className="text-zinc-650 font-normal">Bumpstop Range:</span>
+                                  <span className="text-zinc-700 font-normal">Bumpstop Range:</span>
                                   <div className="flex items-center gap-1">
                                     {isTuneMode && (
                                       <button
@@ -4961,7 +4970,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">REAR WHEELS (LR/RR)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">REAR AXLE SPRING RATES</span>
+                            <span className="text-[9px] text-zinc-500 font-mono font-bold">REAR AXLE SPRING RATES</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -5040,7 +5049,7 @@ export default function App() {
                               <span className="text-[10px] text-zinc-500 block uppercase font-mono font-bold">RR Wheel</span>
                               <div className="mt-1.5 space-y-1.5 font-mono text-xs font-semibold">
                                 <div className="flex justify-between items-center">
-                                  <span className="text-zinc-650 font-normal">Wheel Rate:</span>
+                                  <span className="text-zinc-700 font-normal">Wheel Rate:</span>
                                   <div className="flex items-center gap-1">
                                     {isTuneMode && (
                                       <button
@@ -5062,7 +5071,7 @@ export default function App() {
                                   </div>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                  <span className="text-zinc-650 font-normal">Bumpstop Rate:</span>
+                                  <span className="text-zinc-700 font-normal">Bumpstop Rate:</span>
                                   <div className="flex items-center gap-1">
                                     {isTuneMode && (
                                       <button
@@ -5084,7 +5093,7 @@ export default function App() {
                                   </div>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                  <span className="text-zinc-650 font-normal text-amber-700">Bumpstop Range:</span>
+                                  <span className="text-zinc-700 font-normal text-amber-700">Bumpstop Range:</span>
                                   <div className="flex items-center gap-1">
                                     {isTuneMode && (
                                       <button
@@ -5179,7 +5188,7 @@ export default function App() {
                           <div>
                             <div className="border-b border-zinc-200 pb-2 mb-3 flex justify-between items-center">
                               <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">FRONT AERODYNAMICS & DUCTS</span>
-                              <span className="text-[10px] font-mono font-bold text-zinc-400">GRIP INPUTS</span>
+                              <span className="text-[10px] font-mono font-bold text-zinc-500">GRIP INPUTS</span>
                             </div>
                             <div className="space-y-3 font-mono text-xs">
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-semibold items-center">
@@ -5224,7 +5233,7 @@ export default function App() {
                           <div>
                             <div className="border-b border-zinc-200 pb-2 mb-3 flex justify-between items-center">
                               <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">REAR AERODYNAMICS & DUCTS</span>
-                              <span className="text-[10px] font-mono font-bold text-zinc-400">DOWNFORCE STABILITY</span>
+                              <span className="text-[10px] font-mono font-bold text-zinc-500">DOWNFORCE STABILITY</span>
                             </div>
                             <div className="space-y-3 font-mono text-xs">
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-semibold items-center">
@@ -5284,7 +5293,7 @@ export default function App() {
                       </div>
 
                       <div className="bg-white border border-zinc-200 p-3 rounded font-mono text-xs text-center flex justify-between items-center shadow-sm">
-                        <span className="text-zinc-550 uppercase text-[10px] font-bold">Aero Rake Height Difference</span>
+                        <span className="text-zinc-600 uppercase text-[10px] font-bold">Aero Rake Height Difference</span>
                         <span className="font-black text-emerald-755 text-sm">{(parsedActiveSetup.rideHeights[1] - parsedActiveSetup.rideHeights[0]).toFixed(0)} mm Nose-Down angle</span>
                       </div>
 
@@ -5300,7 +5309,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">FRONT DAMPERS (LF/RF)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">BUMP / REBOUND</span>
+                            <span className="text-[9px] text-zinc-500 font-mono font-bold">BUMP / REBOUND</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">
@@ -5442,7 +5451,7 @@ export default function App() {
                                 </div>
                               </div>
                               <div className="flex justify-between items-center">
-                                <span className="text-zinc-550 font-semibold">Rebound:</span>
+                                <span className="text-zinc-600 font-semibold">Rebound:</span>
                                 <div className="flex items-center gap-1">
                                   {isTuneMode && (
                                     <button
@@ -5493,7 +5502,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">REAR DAMPERS (LR/RR)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">BUMP / REBOUND</span>
+                            <span className="text-[9px] text-zinc-500 font-mono font-bold">BUMP / REBOUND</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">
@@ -5544,7 +5553,7 @@ export default function App() {
                                 </div>
                               </div>
                               <div className="flex justify-between items-center">
-                                <span className="text-zinc-550 font-semibold">Rebound:</span>
+                                <span className="text-zinc-600 font-semibold">Rebound:</span>
                                 <div className="flex items-center gap-1">
                                   {isTuneMode && (
                                     <button
@@ -5751,7 +5760,7 @@ export default function App() {
               </div>
             ) : (
               <div className="p-16 text-center text-zinc-500 flex flex-col items-center justify-center gap-4">
-                <Gauge className="w-16 h-16 text-zinc-400" />
+                <Gauge className="w-16 h-16 text-zinc-500" />
                 <div>
                   <h3 className="text-zinc-900 font-extrabold text-sm tracking-tight">Virtual Garage Sandbox Standby</h3>
                   <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto leading-relaxed font-semibold">
@@ -5764,6 +5773,7 @@ export default function App() {
                     Quick Reference Car Selector:
                   </label>
                   <select
+                    aria-label="Quick Reference Car Selector"
                     className="w-full bg-white border border-zinc-250 hover:border-zinc-350 p-2 text-zinc-805 rounded font-mono text-xs focus:ring-1 focus:ring-red-500 outline-none cursor-pointer"
                     onChange={(e) => handleSelectReferenceCar(e.target.value)}
                     defaultValue=""
@@ -5824,7 +5834,7 @@ export default function App() {
       )}
 
       {/* 3. Footer indicator metadata */}
-      <footer id="visual-garage-footer" className="bg-zinc-950 border-t border-zinc-900 py-4 px-6 text-center mt-auto font-mono text-[10px] text-zinc-500">
+      <footer id="visual-garage-footer" className="bg-zinc-950 border-t border-zinc-900 py-4 px-6 text-center mt-auto font-mono text-[10px] text-zinc-400">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
           <span>PITWALL COMPANION APP V1.9 • POWERED BY JAXTUNE</span>
           <span>CRAFTED FOR ACC AND LATE NIGHT RACING</span>
@@ -5842,7 +5852,7 @@ export default function App() {
           >
             <div className={`w-2 h-2 rounded-full shrink-0 ${toast.type === "success" ? "bg-emerald-500" : toast.type === "error" ? "bg-red-500" : "bg-cyan-500"}`} />
             <span className="text-xs font-semibold leading-relaxed text-zinc-200">{toast.message}</span>
-            <button onClick={() => setToast(null)} className="ml-2 hover:text-white text-zinc-400 text-sm font-bold cursor-pointer transition-colors shrink-0">×</button>
+            <button onClick={() => setToast(null)} className="ml-2 hover:text-white text-zinc-500 text-sm font-bold cursor-pointer transition-colors shrink-0">×</button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -5869,7 +5879,7 @@ export default function App() {
                 <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-950 mt-1">
                   Connect Driver Profile
                 </h2>
-                <p className="text-zinc-650 text-xs sm:text-sm mt-2 max-w-md mx-auto">
+                <p className="text-zinc-700 text-xs sm:text-sm mt-2 max-w-md mx-auto">
                   Hi <strong className="text-zinc-800 font-bold">{user.displayName || user.email}</strong>, let's configure your central Sim Racing telemetry handle and class rules.
                 </p>
               </div>
@@ -5877,11 +5887,11 @@ export default function App() {
               <div className="space-y-5">
                 {/* 1. Username Input with real-time validation */}
                 <div>
-                  <label className="block text-zinc-650 text-xs font-mono uppercase font-black tracking-wider mb-2">
+                  <label className="block text-zinc-700 text-xs font-mono uppercase font-black tracking-wider mb-2">
                     Sim Racing Username <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3.5 top-2 text-zinc-400 font-mono text-sm">@</span>
+                    <span className="absolute left-3.5 top-2 text-zinc-500 font-mono text-sm">@</span>
                     <input
                       type="text"
                       placeholder="e.g. Apex_Driver"
@@ -5900,7 +5910,7 @@ export default function App() {
                     />
                     <div className="absolute right-3.5 top-2 flex items-center gap-1.5">
                       {onboardingCheckingUsername ? (
-                        <RefreshCw className="w-4 h-4 animate-spin text-zinc-400" />
+                        <RefreshCw className="w-4 h-4 animate-spin text-zinc-500" />
                       ) : onboardingUsernameAvailable === true ? (
                         <CheckCircle className="w-4 h-4 text-emerald-500" />
                       ) : onboardingUsernameAvailable === false ? (
@@ -5930,7 +5940,7 @@ export default function App() {
 {/* 2. Pinned Series Cars Multi-Select Selector */}
 <div>
   <div className="flex justify-between items-center mb-1">
-    <label className="block text-zinc-650 text-xs font-mono uppercase font-black tracking-wider">
+    <label className="block text-zinc-700 text-xs font-mono uppercase font-black tracking-wider">
       Pinned Series Cars
     </label>
     <span className="text-[9px] text-zinc-450 font-semibold font-mono font-bold">OPTIONAL FILTER</span>
@@ -5974,9 +5984,9 @@ export default function App() {
 
         return (
           <div key={groupName} className="bg-zinc-50 border border-zinc-200 rounded-lg p-3">
-            <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 mb-2 pb-1 border-b border-zinc-200">
+            <h3 className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 mb-2 pb-1 border-b border-zinc-200">
               {groupName} ({items.length})
-            </h4>
+            </h3>
             
             {/* Responsive grid: 1 column on mobile, 2 columns on small screens/tablets */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-sans">
@@ -6079,7 +6089,7 @@ export default function App() {
             >
               <button
                 onClick={() => setShowProfileModal(false)}
-                className="absolute right-4 top-4 hover:text-zinc-800 text-zinc-400 text-xl font-bold cursor-pointer transition-colors p-1"
+                className="absolute right-4 top-4 hover:text-zinc-800 text-zinc-500 text-xl font-bold cursor-pointer transition-colors p-1"
               >
                 ×
               </button>
@@ -6099,11 +6109,11 @@ export default function App() {
               <div className="space-y-5">
                 {/* 1. Username input with uniqueness validation if changed */}
                 <div>
-                  <label className="block text-zinc-650 text-xs font-mono uppercase font-black tracking-wider mb-2">
+                  <label className="block text-zinc-700 text-xs font-mono uppercase font-black tracking-wider mb-2">
                     Sim Racing Username <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3.5 top-2 text-zinc-400 font-mono text-sm">@</span>
+                    <span className="absolute left-3.5 top-2 text-zinc-500 font-mono text-sm">@</span>
                     <input
                       type="text"
                       placeholder="e.g. Apex_Driver"
@@ -6135,7 +6145,7 @@ export default function App() {
                     />
                     <div className="absolute right-3.5 top-2 flex items-center gap-1.5">
                       {editCheckingUsername ? (
-                        <RefreshCw className="w-4 h-4 animate-spin text-zinc-400" />
+                        <RefreshCw className="w-4 h-4 animate-spin text-zinc-500" />
                       ) : editUsernameAvailable === true ? (
                         <CheckCircle className="w-4 h-4 text-emerald-500" />
                       ) : editUsernameAvailable === false ? (
@@ -6163,7 +6173,7 @@ export default function App() {
 {/* 2. Pinned Series Cars Multi-Select Selector */}
 <div>
   <div className="flex justify-between items-center mb-1">
-    <label className="block text-zinc-650 text-xs font-mono uppercase font-black tracking-wider">
+    <label className="block text-zinc-700 text-xs font-mono uppercase font-black tracking-wider">
       Pinned Series Cars
     </label>
     <span className="text-[9px] text-zinc-450 font-semibold font-mono font-bold">OPTIONAL FILTER</span>
@@ -6207,9 +6217,9 @@ export default function App() {
 
         return (
           <div key={groupName} className="bg-zinc-50 border border-zinc-200 rounded-lg p-3">
-            <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 mb-2 pb-1 border-b border-zinc-200">
+            <h3 className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 mb-2 pb-1 border-b border-zinc-200">
               {groupName} ({items.length})
-            </h4>
+            </h3>
             
             {/* Responsive grid: 1 column on mobile, 2 columns on small screens/tablets */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-sans">
@@ -6313,13 +6323,13 @@ export default function App() {
               <Folder className="w-5 h-5 text-amber-500" />
               <span>Label Your Tuning Variant</span>
             </h3>
-            <p className="text-xs text-zinc-400 mb-4 leading-relaxed font-mono">
+            <p className="text-xs text-zinc-500 mb-4 leading-relaxed font-mono">
               Saved custom variant is stored in your private garage and synchronizes automatically on the cloud.
             </p>
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase">Version Note / Changelog</label>
+                <label className="text-[10px] font-mono font-bold text-zinc-500 uppercase">Version Note / Changelog</label>
                 <textarea
                   placeholder="e.g., Softer rear ARB for better curb stability..."
                   value={saveModalNote}
@@ -6331,7 +6341,7 @@ export default function App() {
 
               {/* Target Track Mapping Selector */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase">Target Circuit / Track Mapping</label>
+                <label className="text-[10px] font-mono font-bold text-zinc-500 uppercase">Target Circuit / Track Mapping</label>
                 <select
                   value={saveModalTargetTrack}
                   onChange={(e) => setSaveModalTargetTrack(e.target.value)}
@@ -6383,7 +6393,7 @@ export default function App() {
                       <span>🏁 Target Notes: {ACC_TRACKS[saveModalTargetTrack] || saveModalTargetTrack}</span>
                     </div>
                     <p className="text-[11px] text-zinc-200">{note.circuit_notes.length > 120 ? note.circuit_notes.substring(0, 120) + "..." : note.circuit_notes}</p>
-                    <div className="text-[10px] font-mono text-zinc-400 pt-0.5 space-y-0.5">
+                    <div className="text-[10px] font-mono text-zinc-500 pt-0.5 space-y-0.5">
                       <div><span className="font-extrabold text-zinc-300">Aero Config:</span> {note.setup_notes?.downforce}</div>
                       <div><span className="font-extrabold text-zinc-300">Tyre Load:</span> {note.setup_notes?.tyres}</div>
                     </div>
@@ -6392,7 +6402,7 @@ export default function App() {
               })()}
 
               {/* Redundant workspace info label */}
-              <div className="bg-zinc-900/65 border border-zinc-850 p-3 rounded-lg text-[10.5px] font-mono text-zinc-400 leading-normal flex gap-2">
+              <div className="bg-zinc-900/65 border border-zinc-850 p-3 rounded-lg text-[10.5px] font-mono text-zinc-500 leading-normal flex gap-2">
                 <Wrench className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold text-zinc-200">Workspace Status: </span>

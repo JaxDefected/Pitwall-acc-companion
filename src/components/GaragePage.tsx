@@ -144,7 +144,7 @@ export default function GaragePage({
           <div className="bg-amber-100/55 text-amber-600 p-4 rounded-full w-14 h-14 mx-auto mb-4 flex items-center justify-center">
             <User className="w-7 h-7" />
           </div>
-          <h3 className="text-lg font-bold text-zinc-900 font-sans tracking-tight">Connect Driver Profile Needed</h3>
+          <h2 className="text-lg font-bold text-zinc-900 font-sans tracking-tight">Connect Driver Profile Needed</h2>
           <p className="text-zinc-500 text-xs mt-2 leading-relaxed font-semibold">
             To view, store, and manage your private garage and setup variants in the cloud, please log in and connect your Sim Racing Driver Profile via the header button.
           </p>
@@ -285,7 +285,7 @@ export default function GaragePage({
                 <div className="bg-zinc-100 p-4 rounded-full w-14 h-14 mb-4 flex items-center justify-center text-zinc-400">
                   <Activity className="w-7 h-7 opacity-50" />
                 </div>
-                <h3 className="text-base font-bold text-zinc-800">No Tuned Variants Found</h3>
+                <h2 className="text-base font-bold text-zinc-800">No Tuned Variants Found</h2>
                 <p className="text-zinc-500 text-xs mt-1.5 max-w-sm font-semibold leading-relaxed">
                   {mySetupsRaw.length === 0 
                     ? "You haven't saved any customized variants yet! Click 'Tuning Workshop' in the Active HUD on any base setup to create and test custom variations with your notes." 
@@ -324,9 +324,9 @@ export default function GaragePage({
                               </span>
                             )}
                           </div>
-                          <h3 className="text-[13.5px] font-bold text-zinc-950 font-sans tracking-tight mt-1 leading-snug whitespace-normal break-words">
+                          <h2 className="text-[13.5px] font-bold text-zinc-950 font-sans tracking-tight mt-1 leading-snug whitespace-normal break-words">
                             {displayCar}
-                          </h3>
+                          </h2>
                         </div>
 
                         {showWorkspaceBadge && (
