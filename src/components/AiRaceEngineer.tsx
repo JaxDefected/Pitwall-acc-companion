@@ -30,7 +30,7 @@ interface AiRaceEngineerProps {
 
 // Shared ReactMarkdown component config
 const markdownComponents = {
-  h3: ({ node, ...props }: any) => <h3 className="text-xs font-extrabold uppercase font-mono tracking-wide text-white border-l-2 border-red-500 pl-2 mt-4 mb-2" {...props} />,
+  h2: ({ node, ...props }: any) => <h2 className="text-xs font-extrabold uppercase font-mono tracking-wide text-white border-l-2 border-red-500 pl-2 mt-4 mb-2" {...props} />,
   p: ({ node, ...props }: any) => <p className="mb-2 text-zinc-300 font-medium" {...props} />,
   ul: ({ node, ...props }: any) => <ul className="list-disc pl-5 mb-2 space-y-1 text-zinc-300" {...props} />,
   ol: ({ node, ...props }: any) => <ol className="list-decimal pl-5 mb-2 space-y-1 text-zinc-300" {...props} />,
@@ -231,7 +231,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
     `flex-1 min-w-[80px] py-2.5 rounded text-xs font-mono font-bold uppercase tracking-wide transition-all cursor-pointer flex items-center justify-center min-h-[44px] md:min-h-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
       isActive
         ? "bg-zinc-800 text-emerald-400 border border-zinc-700 shadow-sm font-extrabold"
-        : "text-zinc-500 hover:text-zinc-300"
+        : "text-zinc-400 hover:text-zinc-300"
     }`;
 
   // ─── Full-width list button style helper ───
@@ -239,7 +239,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
     `w-full py-2.5 px-3 rounded text-xs font-mono font-bold text-left transition-all cursor-pointer min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
       isActive
         ? "bg-zinc-800 text-emerald-400 border border-zinc-700"
-        : "text-zinc-500 hover:text-zinc-300"
+        : "text-zinc-400 hover:text-zinc-300"
     }`;
 
   return (
@@ -252,9 +252,9 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
             <Cpu className="w-5 h-5 animate-pulse" />
           </div>
           <div>
-            <h3 className="text-xs sm:text-sm font-extrabold uppercase font-mono tracking-wider text-white">
+            <h2 className="text-xs sm:text-sm font-extrabold uppercase font-mono tracking-wider text-white">
               🔧 Virtual AI Race Engineer
-            </h3>
+            </h2>
             <p className="text-zinc-400 text-[10px] sm:text-xs font-mono uppercase tracking-widest mt-0.5">
               Setup Diagnostics & Handling Advice
             </p>
@@ -268,7 +268,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
             <span className="text-[9px] sm:text-[10px] font-mono text-emerald-400 uppercase font-black tracking-widest max-w-[100px] sm:max-w-[150px] truncate">
               {ACC_CARS[activeSetup.car]?.split(" ")[0] || activeSetup.car} — {ACC_TRACKS[activeSetup.track] || activeSetup.track}
             </span>
-            <span className="hidden sm:inline text-[9px] font-mono text-zinc-500 px-1 border border-zinc-800 rounded">SETUP LOADED</span>
+            <span className="hidden sm:inline text-[9px] font-mono text-zinc-400 px-1 border border-zinc-800 rounded">SETUP LOADED</span>
           </div>
         ) : (
           <div className="flex items-center gap-2 bg-amber-500/5 border border-amber-500/20 px-2 sm:px-3 py-1.5 rounded-full">
@@ -294,7 +294,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
             className={`flex-1 py-2 rounded text-[10px] sm:text-xs font-mono font-bold uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 min-h-[36px] ${
               mode === "local"
                 ? "bg-zinc-800 text-emerald-400 border border-zinc-700 shadow-sm font-extrabold"
-                : "text-zinc-500 hover:text-zinc-300"
+                : "text-zinc-400 hover:text-zinc-300"
             }`}
           >
             <Wrench className="w-3 h-3" />
@@ -305,7 +305,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
             className={`flex-1 py-2 rounded text-[10px] sm:text-xs font-mono font-bold uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 min-h-[36px] ${
               mode === "chat"
                 ? "bg-zinc-800 text-emerald-400 border border-zinc-700 shadow-sm font-extrabold"
-                : "text-zinc-500 hover:text-zinc-300"
+                : "text-zinc-400 hover:text-zinc-300"
             }`}
           >
             <Sparkles className="w-3 h-3" />
@@ -458,7 +458,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                 </h4>
                 <button
                   onClick={handleReset}
-                  className="text-[9px] font-mono text-zinc-500 hover:text-white uppercase tracking-widest flex items-center gap-1 cursor-pointer focus-visible:outline-none transition-colors"
+                  className="text-[9px] font-mono text-zinc-400 hover:text-white uppercase tracking-widest flex items-center gap-1 cursor-pointer focus-visible:outline-none transition-colors"
                 >
                   <RefreshCw className="w-2.5 h-2.5" />
                   New Query
@@ -468,7 +468,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
               {/* Active Setup Reference */}
               {localResult.setupSummary && (
                 <div className="bg-zinc-900/60 border border-zinc-800/60 rounded-lg p-3 text-[10px] text-zinc-400 leading-relaxed font-mono flex gap-2">
-                  <Info className="w-3 h-3 text-zinc-500 shrink-0 mt-0.5" />
+                  <Info className="w-3 h-3 text-zinc-400 shrink-0 mt-0.5" />
                   <span className="break-all">{localResult.setupSummary}</span>
                 </div>
               )}
@@ -513,8 +513,8 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
           {/* Empty state */}
           {!issueType && (
             <div className="flex flex-col items-center justify-center h-40 gap-3 text-center">
-              <Cpu className="w-8 h-8 text-zinc-700" />
-              <p className="text-xs text-zinc-500 font-mono">Select a handling issue above to get engineering advice.</p>
+              <Cpu className="w-8 h-8 text-zinc-600" />
+              <p className="text-xs text-zinc-600 font-mono">Select a handling issue above to get engineering advice.</p>
               <p className="text-[10px] text-zinc-600 font-mono">No API required — all responses are local.</p>
             </div>
           )}
@@ -532,7 +532,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                 className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
               >
                 {/* Meta label */}
-                <div className={`flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-widest font-bold mb-1.5 ${msg.role === "user" ? "text-zinc-500" : "text-emerald-400"}`}>
+                <div className={`flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-widest font-bold mb-1.5 ${msg.role === "user" ? "text-zinc-400" : "text-emerald-400"}`}>
                   {msg.role === "user" ? (
                     <>
                       <span>Driver</span>
@@ -562,7 +562,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                 {/* Suggestion Chips on initial greeting */}
                 {idx === 0 && messages.length <= 1 && (
                   <div className="mt-4 flex flex-col gap-2 w-full animate-fade-in">
-                    <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 font-bold ml-1">
+                    <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 font-bold ml-1">
                       💡 Select a handling feedback prompt:
                     </span>
                     <div className="flex flex-wrap gap-2">
@@ -604,7 +604,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                   <Wrench className="w-2.5 h-2.5" />
                   <span>Engineer</span>
                 </div>
-                <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl rounded-tl-none px-4 py-3 text-zinc-500 text-xs font-mono flex items-center gap-2">
+                <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl rounded-tl-none px-4 py-3 text-zinc-600 text-xs font-mono flex items-center gap-2">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-450" />
                   <span>Analyzing telemetry logs...</span>
                 </div>
