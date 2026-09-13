@@ -407,14 +407,24 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
       const rBase = rRange[0];
       const rhStep = car?.rideHeightStep ?? 1;
       
-      normalized.rideHeights = rhVal.map((v, i) => {
-        // Handle 4-length array [LF, RF, LR, RR] or 2-length [F, R]
-        if (v < 45) {
-          const isFront = (rhVal.length === 4) ? (i < 2) : (i === 0);
-          return (isFront ? fBase : rBase) + v * rhStep; 
-        }
-        return v;
-      });
+      if (rhVal.length === 4) {
+        // 4-element array [LF, RF, LR, RR] → consolidate to [Front, Rear]
+        // Average left/right per axle for display
+        const frontAvg = (rhVal[0] + rhVal[1]) / 2;
+        const rearAvg = (rhVal[2] + rhVal[3]) / 2;
+        normalized.rideHeights = [
+          Math.round(fBase + frontAvg * rhStep),
+          Math.round(rBase + rearAvg * rhStep),
+        ];
+      } else {
+        // 2-element array [F, R] — use directly
+        normalized.rideHeights = rhVal.map((v, i) => {
+          if (v < 45) {
+            return (i === 0 ? fBase : rBase) + v * rhStep;
+          }
+          return v;
+        });
+      }
     }
 
     // Rear wing — raw value is index, add rearWingRange[0] base
