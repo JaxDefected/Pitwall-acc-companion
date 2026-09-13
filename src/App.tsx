@@ -6214,7 +6214,7 @@ export default function App() {
             {/* Responsive grid: 1 column on mobile, 2 columns on small screens/tablets */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-sans">
               {items.map(([carKey, carName]) => {
-                const isChecked = onboardingPinnedCars.includes(carKey);
+                const isChecked = editPinnedCars.includes(carKey);
                 return (
                   <label
                     key={carKey}
@@ -6229,9 +6229,9 @@ export default function App() {
                       checked={isChecked}
                       onChange={() => {
                         if (isChecked) {
-                          setOnboardingPinnedCars(onboardingPinnedCars.filter((k) => k !== carKey));
+                          setEditPinnedCars(editPinnedCars.filter((k) => k !== carKey));
                         } else {
-                          setOnboardingPinnedCars([...onboardingPinnedCars, carKey]);
+                          setEditPinnedCars([...editPinnedCars, carKey]);
                         }
                       }}
                       className="accent-red-650 w-3.5 h-3.5 cursor-pointer shrink-0"

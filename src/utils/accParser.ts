@@ -61,6 +61,11 @@ export const ACC_CARS: Record<string, string> = {
   ferrari_488_challenge_evo: "Ferrari 488 Challenge Evo",
   bmw_m6_gt3: "BMW M6 GT3",
   ford_mustang_gt3: "Ford Mustang GT3 (2024)",
+
+  // Aliases — some setups use alternate car key names
+  amr_v12_vantage_gt3: "Aston Martin V12 Vantage GT3",
+  porsche_718_cayman_gt4_cs: "Porsche 718 Cayman GT4 CS",
+  aston_martin_vantage_gt4: "Aston Martin Vantage GT4",
 };
 
 // Dictionary mapping for tracks in ACC
@@ -226,7 +231,8 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
     }
   }
 
-  normalized.fuel = getNestedVal(basic, ["fuel"]) ?? getNestedVal(tyresSection, ["fuel"]) ?? 20;
+  const stratSection = basic.strategy || getNestedVal(basic, ["strategy"]);
+  normalized.fuel = getNestedVal(basic, ["fuel"]) ?? getNestedVal(stratSection, ["fuel"]) ?? getNestedVal(tyresSection, ["fuel"]) ?? 20;
 
   // -- ALIGNMENT --
   const alignmentSection = basic.alignment || getNestedVal(basic, ["alignment"]);
@@ -292,7 +298,12 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
     normalized.tc1 = getNestedVal(elecSection, ["tc1", "tC1"]) ?? normalized.tc1;
     normalized.tc2 = getNestedVal(elecSection, ["tc2", "tC2"]) ?? normalized.tc2;
     normalized.abs = getNestedVal(elecSection, ["abs", "aBS"]) ?? normalized.abs;
-    normalized.ecuMap = getNestedVal(elecSection, ["ecuMap", "eCUMap"]) ?? normalized.ecuMap;
+    const rawEcu = getNestedVal(elecSection, ["ecuMap", "eCUMap"]);
+    if (rawEcu !== undefined) {
+      const ecuBase = car?.eCUMapRange?.[0] ?? 1;
+      const ecuStep = car?.eCUMapStep ?? 1;
+      normalized.ecuMap = typeof rawEcu === 'number' && rawEcu < 30 ? (ecuBase + rawEcu * ecuStep) : rawEcu;
+    }
     normalized.fuelMap = getNestedVal(elecSection, ["fuelMap"]) ?? normalized.fuelMap;
     normalized.telemetryLaps = getNestedVal(elecSection, ["telemetryLaps"]) ?? normalized.telemetryLaps;
   }
