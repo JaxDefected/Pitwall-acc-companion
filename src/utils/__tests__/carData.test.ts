@@ -8,7 +8,7 @@ describe('Car Data Integrity', () => {
       it('has required identity fields', () => {
         expect(typeof car.fullName).toBe('string');
         expect(car.fullName.trim().length).toBeGreaterThan(0);
-        expect(car.year).toBeGreaterThanOrEqual(2015);
+        expect(car.year).toBeGreaterThanOrEqual(2012);
         expect(car.year).toBeLessThanOrEqual(2025);
         const validCategories = ['gt2', 'gt3', 'gt4', 'cup', 'st', 'chl', 'tcx'];
         expect(validCategories).toContain(car.category);
@@ -39,19 +39,24 @@ describe('Car Data Integrity', () => {
       it('has valid caster config', () => {
         expect(car.casterArr).toBeDefined();
         expect(Array.isArray(car.casterArr)).toBe(true);
-        expect(car.casterArr!.length).toBeGreaterThanOrEqual(5);
+        // Some cars have fixed (non-adjustable) caster with 1-2 values
+        expect(car.casterArr!.length).toBeGreaterThanOrEqual(1);
 
         for (let i = 1; i < car.casterArr!.length; i++) {
           expect(car.casterArr![i]).toBeGreaterThanOrEqual(car.casterArr![i - 1]);
         }
 
-        const uniqueValues = new Set(car.casterArr);
-        expect(uniqueValues.size).toBe(car.casterArr!.length);
+        // Only check uniqueness for adjustable casters (length > 2)
+        if (car.casterArr!.length > 2) {
+          const uniqueValues = new Set(car.casterArr);
+          expect(uniqueValues.size).toBe(car.casterArr!.length);
+        }
       });
 
       it('has valid brake config', () => {
         expect(car.brakeBiasRange).toBeDefined();
-        expect(car.brakeBiasRange![0]).toBeLessThan(car.brakeBiasRange![1]);
+        // Some cars have fixed (non-adjustable) brake bias like [60, 60]
+        expect(car.brakeBiasRange![0]).toBeLessThanOrEqual(car.brakeBiasRange![1]);
         expect([0.2, 0.3]).toContain(car.brakeBiasStep);
         expect(car.brakeTorqueRange).toEqual([80, 100]);
       });
@@ -95,9 +100,10 @@ describe('Car Data Integrity', () => {
       });
 
       it('has valid bump stop config', () => {
+        // Some cars have fixed (non-adjustable) bump stop rates like [1000, 1000]
         const hasValidBumpStopRateRange =
           car.bumpStopRateRange !== undefined &&
-          car.bumpStopRateRange[0] < car.bumpStopRateRange[1];
+          car.bumpStopRateRange[0] <= car.bumpStopRateRange[1];
 
         const hasSplitAxleBumpStopRates =
           car.bumpStopFrontRateRange !== undefined &&

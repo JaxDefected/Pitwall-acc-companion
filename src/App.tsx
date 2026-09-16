@@ -2106,7 +2106,7 @@ export default function App() {
                     {(profile?.username || user.displayName || user.email || "D").charAt(0).toUpperCase()}
                   </div>
                 )}
-                <div className={`flex flex-col min-w-0 transition-all duration-300 ease-in-out overflow-hidden origin-right ${
+                <div className={`hidden sm:flex flex-col min-w-0 transition-all duration-300 ease-in-out overflow-hidden origin-right ${
                   isScrolled 
                     ? "max-w-0 opacity-0 md:max-w-[124px] md:opacity-100" 
                     : "max-w-[124px] opacity-100"
@@ -2156,7 +2156,7 @@ export default function App() {
           >
             <Gauge className="w-4 h-4 text-red-500" />
             <span className="hidden md:inline">SETUP LAB TELEMETRY ANALYZER</span>
-            <span className="md:hidden">TELEMETRY</span>
+            <span className="md:hidden">SETUP</span>
           </button>
           <button
             id="view-btn-laptimes"
@@ -2171,7 +2171,7 @@ export default function App() {
           >
             <Clock className="w-4 h-4 text-red-500 animate-pulse" />
             <span className="hidden md:inline">ACC LAP TIMES REFERENCE</span>
-            <span className="md:hidden">LAP TIMES</span>
+            <span className="md:hidden">TIMES</span>
           </button>
           <button
             id="view-btn-garage"
@@ -2185,7 +2185,8 @@ export default function App() {
             }`}
           >
             <Folder className="w-4 h-4 text-red-500" />
-            <span>MY GARAGE</span>
+            <span className="hidden md:inline">MY GARAGE</span>
+            <span className="md:hidden">GARAGE</span>
           </button>
           <button
             id="view-btn-engineer"
@@ -2209,7 +2210,7 @@ export default function App() {
         <main id="dashboard-workspace" className="flex-1 max-w-7xl w-full mx-auto p-4 pb-20 md:pb-6 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* LEFT COLUMN: Team Registry, Filters, and Uploaders (Span 4) */}
-        <section id="column-registry-controls" className="lg:col-span-4 flex flex-col gap-6 w-full">
+        <section id="column-registry-controls" className="lg:col-span-4 flex flex-col gap-6 w-full order-2 lg:order-1">
           
           {/* A. Search and Filters */}
           <div className="bg-white border border-zinc-250 shadow-sm rounded-lg p-4 flex flex-col gap-3 sticky top-[48px] md:relative md:top-auto z-30">
@@ -2539,7 +2540,7 @@ export default function App() {
                 )}
 
                 {/* Individual Setup Editors in Batch */}
-                <div className="max-h-[350px] overflow-y-auto space-y-3 pr-1 divide-y divide-zinc-100">
+                <div className="md:max-h-[350px] md:overflow-y-auto space-y-3 pr-1 divide-y divide-zinc-100">
                   {pendingSetups.map((setup) => {
                     const hasTrackUnknown = setup.trackKey === "unknown";
                     const hasCarUnknown = setup.carKey === "unknown";
@@ -2712,7 +2713,7 @@ export default function App() {
             </div>
 
             {activeGarageTab === "team" ? (
-              <div id="setup-registry-list" className="max-h-[380px] overflow-y-auto divide-y divide-zinc-150">
+              <div id="setup-registry-list" className="md:max-h-[380px] md:overflow-y-auto divide-y divide-zinc-150">
                 {filteredSetups.length === 0 ? (
                   <div className="p-6 text-center text-zinc-500 text-xs">
                     <FileText className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -2785,7 +2786,7 @@ export default function App() {
                 )}
               </div>
             ) : (
-              <div className="p-4 flex flex-col gap-4 max-h-[500px] overflow-y-auto w-full">
+              <div className="p-4 flex flex-col gap-4 md:max-h-[500px] md:overflow-y-auto w-full">
                 {githubStatus === "loading" && (
                   <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4 flex flex-col items-center justify-center text-center gap-3 py-6 shadow-xs">
                     <RefreshCw className="w-5 h-5 animate-spin text-red-600" />
@@ -2832,7 +2833,7 @@ export default function App() {
                       </p>
                     </div>
                   ) : (
-                    <div className="flex flex-col divide-y divide-zinc-850/50 max-h-[300px] overflow-y-auto w-full">
+                    <div className="flex flex-col divide-y divide-zinc-850/50 md:max-h-[300px] md:overflow-y-auto w-full">
                       {githubMatches.map((item, index) => {
                         const isThisImporting = isImportingFromGithub === item.path;
                         const hasGrade = item.meta.grade !== undefined;
@@ -3023,7 +3024,7 @@ export default function App() {
         </section>
 
         {/* RIGHT COLUMN: Active Setup HTML representation & AI engineer (Span 8) */}
-        <section id="column-inspection-engineer" className="lg:col-span-8 flex flex-col gap-6 w-full">
+        <section id="column-inspection-engineer" className="lg:col-span-8 flex flex-col gap-6 w-full order-1 lg:order-2">
           
           {/* Main Inspection Terminal */}
           <div className="bg-white border border-zinc-200 shadow-xs rounded-lg overflow-hidden flex flex-col">
@@ -4080,7 +4081,7 @@ export default function App() {
                               Starting Cold Garage Card Pressures (Transitional Adjusted)
                             </div>
                             
-                            <div className="grid grid-cols-4 gap-2 text-center font-mono text-[10px]">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center font-mono text-xs sm:text-[10px]">
                               <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
                                 <div className="text-[8px] text-zinc-500 font-black uppercase">LF Tyre</div>
                                 <span className="text-zinc-400 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[0].toFixed(1)}</span>

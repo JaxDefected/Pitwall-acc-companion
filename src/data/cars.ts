@@ -1838,7 +1838,7 @@ export const cars: Record<string, CarSetupConfig> = {
     brakeBiasStep: 0.2,
     steerRatioRange: [11, 17],
     wheelRatesFront: [83000, 100000, 116000, 133000, 149000, 166000],
-    wheelRatesRear: [155000, 128000, 141000, 154000, 167000, 180000],
+    wheelRatesRear: [115000, 128000, 141000, 154000, 167000, 180000],
     bumpStopRateRange: [300, 2500],
     bumpStopRateStep: 100,
     bumpStopWindowFrontRange: [0, 50],
