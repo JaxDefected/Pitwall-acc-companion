@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, DragEvent, ChangeEvent, MouseEvent } from "react";
+import { useState, useEffect, useRef, useMemo, DragEvent, ChangeEvent, MouseEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import {
@@ -64,7 +64,7 @@ import {
   UserProfile
 } from "./firebase";
 import { useAuth } from "./hooks/useAuth";
-import { parseAccSetup, NormalizedAccSetup, ACC_CARS, ACC_TRACKS } from "./utils/accParser";
+import { parseAccSetup, NormalizedAccSetup, ACC_CARS, ACC_TRACKS, TRACK_FUEL_RANGES, DEFAULT_FUEL_RANGE } from "./utils/accParser";
 import { CIRCUIT_NOTES } from "./data/circuitNotes";
 import { cars } from "./data/cars";
 import { getLapTimesText } from "./data/carNameMap";
@@ -595,6 +595,20 @@ export default function App() {
   const [fuelLapTimeSec, setFuelLapTimeSec] = useState<number | "">(45);
   const [fuelPerLap, setFuelPerLap] = useState<number>(3.2); // litres consumed per lap
   const [fuelSafetyLaps, setFuelSafetyLaps] = useState<number>(2); // safety buffer laps
+
+  // Derive fuel consumption range from the active setup's track
+  const activeFuelRange = useMemo(() => {
+    const trackKey = activeSetup?.track || "";
+    return TRACK_FUEL_RANGES[trackKey] || DEFAULT_FUEL_RANGE;
+  }, [activeSetup?.track]);
+
+  // Auto-update fuelPerLap to the track-appropriate default when setup changes
+  useEffect(() => {
+    if (activeSetup?.track) {
+      const range = TRACK_FUEL_RANGES[activeSetup.track] || DEFAULT_FUEL_RANGE;
+      setFuelPerLap(range.default);
+    }
+  }, [activeSetup?.track]);
   
   // Interactive Pit & Stint Strategy Planner states
   const [pitMandatoryFuel, setPitMandatoryFuel] = useState<boolean>(true);
@@ -4392,13 +4406,17 @@ export default function App() {
                                 </div>
                                 <input
                                   type="range"
-                                  min={1.0}
-                                  max={15.0}
+                                  min={activeFuelRange.min}
+                                  max={activeFuelRange.max}
                                   step={0.05}
                                   value={fuelPerLap}
                                   onChange={(e) => setFuelPerLap(parseFloat(e.target.value))}
                                   className="w-full accent-red-600 h-1 bg-zinc-100 rounded-lg cursor-pointer"
                                 />
+                                <div className="flex justify-between text-[10px] text-zinc-400 font-mono mt-0.5">
+                                  <span>{activeFuelRange.min.toFixed(1)}L</span>
+                                  <span>{activeFuelRange.max.toFixed(1)}L</span>
+                                </div>
                               </div>
 
                               <div>

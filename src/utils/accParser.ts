@@ -98,6 +98,46 @@ export const ACC_TRACKS: Record<string, string> = {
   jeddah: "Jeddah Corniche Circuit",
 };
 
+/**
+ * Per-track fuel consumption ranges (L/lap) for the interactive fuel calculator.
+ * Provides realistic slider min/max/default values based on typical GT3 fuel usage.
+ * - Short/technical tracks: ~1.5–3.5 L/lap
+ * - Medium circuits: ~2.0–4.5 L/lap
+ * - Long/high-speed circuits: ~2.5–5.0 L/lap
+ * - Nordschleife 24h: ~9.0–15.0 L/lap
+ */
+export const TRACK_FUEL_RANGES: Record<string, { min: number; max: number; default: number }> = {
+  monza:          { min: 2.0, max: 4.5, default: 2.7 },
+  spa:            { min: 2.5, max: 5.0, default: 3.5 },
+  mount_panorama: { min: 2.5, max: 5.0, default: 3.3 },
+  silverstone:    { min: 2.5, max: 5.0, default: 3.2 },
+  barcelona:      { min: 2.0, max: 4.5, default: 3.0 },
+  brands_hatch:   { min: 1.5, max: 3.5, default: 2.2 },
+  imola:          { min: 2.0, max: 4.5, default: 2.8 },
+  kyalami:        { min: 2.0, max: 4.5, default: 2.9 },
+  nurburgring:    { min: 2.0, max: 4.5, default: 2.8 },
+  nurburgring_24h:{ min: 9.0, max: 15.0, default: 12.5 },
+  paul_ricard:    { min: 2.0, max: 5.0, default: 3.1 },
+  zandvoort:      { min: 1.5, max: 3.5, default: 2.3 },
+  zolder:         { min: 1.5, max: 3.5, default: 2.1 },
+  hungaroring:    { min: 2.0, max: 4.0, default: 2.7 },
+  misano:         { min: 1.5, max: 3.5, default: 2.3 },
+  cota:           { min: 2.5, max: 5.0, default: 3.3 },
+  watkins_glen:   { min: 2.0, max: 4.5, default: 2.9 },
+  indianapolis:   { min: 2.0, max: 4.5, default: 2.8 },
+  donington:      { min: 1.5, max: 4.0, default: 2.4 },
+  oulton_park:    { min: 1.5, max: 3.5, default: 2.2 },
+  snetterton:     { min: 1.5, max: 3.5, default: 2.1 },
+  laguna_seca:    { min: 1.5, max: 4.0, default: 2.5 },
+  suzuka:         { min: 2.5, max: 5.0, default: 3.2 },
+  red_bull_ring:  { min: 1.5, max: 4.0, default: 2.4 },
+  valencia:       { min: 2.0, max: 4.5, default: 2.8 },
+  jeddah:         { min: 2.5, max: 5.0, default: 3.2 },
+};
+
+/** Fallback fuel range when track is unknown or not in the map */
+export const DEFAULT_FUEL_RANGE = { min: 1.5, max: 5.0, default: 3.2 };
+
 export interface NormalizedAccSetup {
   carKey: string;
   carName: string;
