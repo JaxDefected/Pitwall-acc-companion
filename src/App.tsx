@@ -4425,7 +4425,7 @@ export default function App() {
                                   <span className="text-red-700 font-bold">+{fuelSafetyLaps} Laps</span>
                                 </div>
                                 <div className="flex gap-1.5">
-                                  {[1, 2, 3, 4].map((num) => (
+                                  {[0, 1, 2, 3].map((num) => (
                                     <button
                                       key={num}
                                       onClick={() => setFuelSafetyLaps(num)}
