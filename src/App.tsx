@@ -18,6 +18,7 @@ import {
   Flame,
   Layers,
   ChevronDown,
+  ChevronLeft,
   ChevronUp,
   FileCode,
   Sparkles,
@@ -488,6 +489,10 @@ export default function App() {
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [isCrewNotesOpen, setIsCrewNotesOpen] = useState<boolean>(true);
 
+  // Mobile view switching state
+  const [mobileView, setMobileView] = useState<'registry' | 'inspection'>('registry');
+  const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       setIsCrewNotesOpen(window.innerWidth >= 1024);
@@ -502,6 +507,18 @@ export default function App() {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
+  }, []);
+
+  // Mobile breakpoint detection
+  useEffect(() => {
+    const check = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (!mobile) setMobileView('registry'); // reset on desktop
+    };
+    check();
+    window.addEventListener('resize', check, { passive: true });
+    return () => window.removeEventListener('resize', check);
   }, []);
 
   // Onboarding UI inputs state
@@ -1593,11 +1610,7 @@ export default function App() {
         const carName = ACC_CARS[finalCar] || finalCar || "GT3 Car";
         const trackName = ACC_TRACKS[finalTrack] || finalTrack || "Circuit";
         showToast(`${carName} setup for ${trackName} has been loaded.`, "success");
-        if (window.innerWidth < 1024) {
-          setTimeout(() => {
-            document.getElementById("column-inspection-engineer")?.scrollIntoView({ behavior: "smooth" });
-          }, 100);
-        }
+        if (isMobile) setMobileView('inspection');
       } else {
         await dbSaveSetup(mockSetupItem);
         const list = await dbFetchSetups();
@@ -1606,11 +1619,7 @@ export default function App() {
         const carName = ACC_CARS[finalCar] || finalCar || "GT3 Car";
         const trackName = ACC_TRACKS[finalTrack] || finalTrack || "Circuit";
         showToast(`${carName} setup for ${trackName} has been synchronized and loaded.`, "success");
-        if (window.innerWidth < 1024) {
-          setTimeout(() => {
-            document.getElementById("column-inspection-engineer")?.scrollIntoView({ behavior: "smooth" });
-          }, 100);
-        }
+        if (isMobile) setMobileView('inspection');
       }
     } catch (err: any) {
       console.error(err);
@@ -2224,7 +2233,7 @@ export default function App() {
         <main id="dashboard-workspace" className="flex-1 max-w-7xl w-full mx-auto p-4 pb-20 md:pb-6 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* LEFT COLUMN: Team Registry, Filters, and Uploaders (Span 4) */}
-        <section id="column-registry-controls" className="lg:col-span-4 flex flex-col gap-6 w-full order-2 lg:order-1">
+        <section id="column-registry-controls" className={`lg:col-span-4 flex flex-col gap-6 w-full ${isMobile && mobileView === 'inspection' ? 'hidden' : ''}`}>
           
           {/* A. Search and Filters */}
           <div className="bg-white border border-zinc-250 shadow-sm rounded-lg p-4 flex flex-col gap-3 sticky top-[48px] md:relative md:top-auto z-30">
@@ -2741,11 +2750,7 @@ export default function App() {
                         key={setup.id}
                         onClick={() => {
                           setActiveSetup(setup);
-                          if (window.innerWidth < 1024) {
-                            setTimeout(() => {
-                              document.getElementById("column-inspection-engineer")?.scrollIntoView({ behavior: "smooth" });
-                            }, 100);
-                          }
+                          if (isMobile) setMobileView('inspection');
                         }}
                         className={`p-3.5 hover:bg-zinc-50 transition-all cursor-pointer flex items-start justify-between gap-2 group ${isActive ? "bg-red-50/60 border-l-4 border-red-600" : "bg-white"}`}
                       >
@@ -3037,8 +3042,31 @@ export default function App() {
           </div>
         </section>
 
+        {/* MOBILE: Back navigation bar — visible only during mobile inspection view */}
+        {isMobile && mobileView === 'inspection' && (
+          <div className="lg:hidden col-span-full bg-white border border-zinc-200 rounded-lg px-4 py-3 flex items-center gap-3 shadow-sm">
+            <button
+              onClick={() => {
+                setMobileView('registry');
+                window.scrollTo({ top: 0 });
+              }}
+              className="flex items-center gap-1 text-red-600 font-bold text-sm -ml-1 px-2 py-1.5 rounded-lg active:bg-red-50 transition-colors min-h-[44px]"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Setups
+            </button>
+            {activeSetup && (
+              <div className="flex-1 min-w-0 text-right">
+                <p className="text-[11px] font-mono text-zinc-400 truncate">
+                  {ACC_CARS[activeSetup.car] || activeSetup.car} · {ACC_TRACKS[activeSetup.track] || activeSetup.track}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* RIGHT COLUMN: Active Setup HTML representation & AI engineer (Span 8) */}
-        <section id="column-inspection-engineer" className="lg:col-span-8 flex flex-col gap-6 w-full order-1 lg:order-2">
+        <section id="column-inspection-engineer" className={`lg:col-span-8 flex flex-col gap-6 w-full ${isMobile && mobileView === 'registry' ? 'hidden' : ''} ${isMobile && mobileView === 'inspection' ? 'mobile-slide-in' : ''}`}>
           
           {/* Main Inspection Terminal */}
           <div className="bg-white border border-zinc-200 shadow-xs rounded-lg overflow-hidden flex flex-col">
@@ -3345,14 +3373,14 @@ export default function App() {
                 </div>
 
                 {/* Dashboard Tabs */}
-                <div className="bg-zinc-100/85 border-b border-zinc-200 flex font-mono text-xs overflow-x-auto" role="tablist" aria-label="Setup Parameters">
+                <div className="bg-zinc-100/85 border-b border-zinc-200 flex font-mono text-xs overflow-x-auto scrollbar-none" role="tablist" aria-label="Setup Parameters">
                   <button
                     id="tab-btn-tyres"
                     onClick={() => setSelectedTab("tyres")}
                     role="tab"
                     aria-selected={selectedTab === "tyres"}
                     aria-controls="tabpanel-tyres"
-                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "tyres" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "tyres" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Tyres & Alignment
                   </button>
@@ -3362,7 +3390,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "electronics"}
                     aria-controls="tabpanel-electronics"
-                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "electronics" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "electronics" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Electronics
                   </button>
@@ -3372,7 +3400,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "fuel"}
                     aria-controls="tabpanel-fuel"
-                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "fuel" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "fuel" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Fuel Strategy
                   </button>
@@ -3382,7 +3410,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "mechanical"}
                     aria-controls="tabpanel-mechanical"
-                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "mechanical" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "mechanical" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Mechanical Grip
                   </button>
@@ -3392,7 +3420,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "dampers"}
                     aria-controls="tabpanel-dampers"
-                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "dampers" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "dampers" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Suspension Dampers
                   </button>
@@ -3402,7 +3430,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "aero"}
                     aria-controls="tabpanel-aero"
-                    className={`px-5 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "aero" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "aero" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Aero & Ducts
                   </button>
@@ -5813,9 +5841,7 @@ export default function App() {
               setActiveSetup(setupRep);
               setCurrentView("telemetry");
               showToast("Loaded tuned variant into Active HUD!", "success");
-              setTimeout(() => {
-                document.getElementById("column-inspection-engineer")?.scrollIntoView({ behavior: "smooth" });
-              }, 120);
+              if (isMobile) setMobileView('inspection');
             }}
             onDelete={async (id) => {
               try {

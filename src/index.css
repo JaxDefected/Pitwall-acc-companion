@@ -75,3 +75,27 @@ div {
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
 }
+
+/* Mobile view slide-in transition for setup inspection view */
+@keyframes mobile-slide-in {
+  from { transform: translateX(40px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.mobile-slide-in {
+  animation: mobile-slide-in 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Hide scrollbar on horizontally-scrolling tab bars */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* iOS momentum scrolling for overflow containers */
+.overflow-y-auto,
+.overflow-y-scroll {
+  -webkit-overflow-scrolling: touch;
+}
