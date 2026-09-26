@@ -72,6 +72,7 @@ import { getLapTimesText } from "./data/carNameMap";
 import LapTimesPage from "./components/LapTimesPage";
 import GaragePage from "./components/GaragePage";
 import AiRaceEngineer from "./components/AiRaceEngineer";
+import SectionErrorBoundary from "./components/SectionErrorBoundary";
 
 export interface PendingSetup {
   id: string;
@@ -521,6 +522,19 @@ export default function App() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  // Dynamic page title based on active view and setup
+  useEffect(() => {
+    const titles: Record<string, string> = {
+      telemetry: activeSetup
+        ? `${ACC_CARS[activeSetup.car] || activeSetup.car} · Pitwall`
+        : 'Pitwall ACC Setup Lab',
+      laptimes: 'Lap Times · Pitwall',
+      garage: 'Garage · Pitwall',
+      engineer: 'Race Engineer · Pitwall',
+    };
+    document.title = titles[currentView] || 'Pitwall ACC Setup Lab';
+  }, [currentView, activeSetup]);
+
   // Onboarding UI inputs state
   const [onboardingUsername, setOnboardingUsername] = useState<string>("");
   const [onboardingPinnedCars, setOnboardingPinnedCars] = useState<string[]>([]);
@@ -812,7 +826,7 @@ export default function App() {
 
   const handleSaveRating = async () => {
     if (!profile) {
-      showToast("Please register or log in first to review setups.", "error");
+      showToast("Sign in to review setups", "error");
       return;
     }
     if (!activeSetup) return;
@@ -832,11 +846,11 @@ export default function App() {
       };
       
       await dbSaveSetupRating(newRatingItem);
-      showToast("Pilot review and handling rating submitted!", "success");
+      showToast("Review submitted", "success");
       loadActiveRatings(activeSetup.id);
     } catch (err) {
       console.error(err);
-      showToast("Failed to submit setup review.", "error");
+      showToast("Review failed — try again", "error");
     } finally {
       setIsSavingRating(false);
     }
@@ -1052,7 +1066,7 @@ export default function App() {
 
   const handleSaveCustomTunedSetup = async (customNote?: string, targetTrack?: string) => {
     if (!profile) {
-      showToast("Whoops! Connect Driver Profile first to claim ownership of tuned setups.", "error");
+      showToast("Sign in to save tuned setups", "error");
       return;
     }
     if (!activeSetup || !tunedRawData) return;
@@ -1090,7 +1104,7 @@ export default function App() {
       };
       
       await dbSaveTunedSetup(payload);
-      showToast("Tuned custom variant successfully saved!", "success");
+      showToast("Variant saved", "success");
       
       if (tuneIsTeamWorkspace) {
         const standardSetup: SetupItem = {
@@ -1117,7 +1131,7 @@ export default function App() {
       loadTunedSetups();
     } catch (err) {
       console.error(err);
-      showToast("Failed to write customized setup variance.", "error");
+      showToast("Save failed — try again", "error");
     }
   };
 
@@ -1160,7 +1174,7 @@ export default function App() {
   const handleLogin = async () => {
     try {
       await handleLoginWithHook();
-      showToast("Connected to team driver profile successfully!", "success");
+      showToast("Signed in", "success");
     } catch (e: any) {
       console.error(e);
       const errMsg = e.message || e.toString() || "Failed to authenticate.";
@@ -1171,10 +1185,10 @@ export default function App() {
   const handleLogout = async () => {
     try {
       await handleLogoutWithHook();
-      showToast("Logged out from driver profile. Local caching active.", "info");
+      showToast("Signed out", "info");
     } catch (e: any) {
       console.error(e);
-      showToast("Failed to sign out.", "error");
+      showToast("Sign out failed", "error");
     }
   };
 
@@ -1333,7 +1347,7 @@ export default function App() {
         setActiveSetup(lastSavedItem);
         const carName = ACC_CARS[lastSavedItem.car] || lastSavedItem.car || "GT3 Car";
         const trackName = ACC_TRACKS[lastSavedItem.track] || lastSavedItem.track || "Circuit";
-        showToast(`${carName} setup for ${trackName} has been loaded.`, "success");
+        showToast(`${carName} · ${trackName} loaded`, "success");
       }
 
       setPendingSetups([]);
@@ -1367,10 +1381,10 @@ export default function App() {
   const handleSaveCustomGuide = async () => {
     try {
       await dbSaveGuide(customGuideText, user?.uid || "guest");
-      showToast("Troubleshooting Scenario Workbook saved successfully. The AI Engineer will now consult this file for diagnoses.", "success");
+      showToast("Engineering workbook saved", "success");
       setIsGuidePanelOpen(false);
     } catch (err) {
-      showToast("Failed to save troubleshooting workbook.", "error");
+      showToast("Workbook save failed", "error");
     }
   };
 
@@ -1380,7 +1394,7 @@ export default function App() {
       const reader = new FileReader();
       reader.onload = (event) => {
         setCustomGuideText(event.target?.result as string);
-        showToast("Scenario guidebook successfully imported in interface! Click 'Commit Workbook' below to save permanently.", "info");
+        showToast("Workbook imported — commit to save", "info");
       };
       reader.readAsText(file);
     }
@@ -1539,7 +1553,7 @@ export default function App() {
     cleanRepo = cleanRepo.replace(/\/+$/, "");
     
     if (!cleanRepo) {
-      showToast("Please configure and connect a GitHub repository first.", "info");
+      showToast("Connect a GitHub repo first", "info");
       return;
     }
 
@@ -1609,7 +1623,7 @@ export default function App() {
         setActiveSetup(mockSetupItem);
         const carName = ACC_CARS[finalCar] || finalCar || "GT3 Car";
         const trackName = ACC_TRACKS[finalTrack] || finalTrack || "Circuit";
-        showToast(`${carName} setup for ${trackName} has been loaded.`, "success");
+        showToast(`${carName} · ${trackName} loaded`, "success");
         if (isMobile) setMobileView('inspection');
       } else {
         await dbSaveSetup(mockSetupItem);
@@ -1618,7 +1632,7 @@ export default function App() {
         setActiveSetup(mockSetupItem);
         const carName = ACC_CARS[finalCar] || finalCar || "GT3 Car";
         const trackName = ACC_TRACKS[finalTrack] || finalTrack || "Circuit";
-        showToast(`${carName} setup for ${trackName} has been synchronized and loaded.`, "success");
+        showToast(`${carName} · ${trackName} synced`, "success");
         if (isMobile) setMobileView('inspection');
       }
     } catch (err: any) {
@@ -3069,6 +3083,11 @@ export default function App() {
         <section id="column-inspection-engineer" className={`lg:col-span-8 flex flex-col gap-6 w-full ${isMobile && mobileView === 'registry' ? 'hidden' : ''} ${isMobile && mobileView === 'inspection' ? 'mobile-slide-in' : ''}`}>
           
           {/* Main Inspection Terminal */}
+          <SectionErrorBoundary
+            fallbackTitle="Setup viewer error"
+            fallbackMessage="This setup file couldn't be displayed. It may be malformed or missing data."
+            onReset={() => setActiveSetup(null)}
+          >
           <div className="bg-white border border-zinc-200 shadow-xs rounded-lg overflow-hidden flex flex-col">
             
             {/* active setup selector header info */}
@@ -3121,7 +3140,7 @@ export default function App() {
                           setTuneIsTeamWorkspace(false);
                           setSaveModalTargetTrack(activeSetup.track);
                           setIsTuneMode(true);
-                          showToast("Tuning session active! Tweak parameters inside the dashboard panels below.", "info");
+                          showToast("Tune mode active", "info");
                         } else {
                           setIsTuneMode(false);
                           setTunedRawData(null);
@@ -5826,6 +5845,7 @@ export default function App() {
               </div>
             )}
           </div>
+          </SectionErrorBoundary>
         </section>
       </main>
       ) : currentView === "laptimes" ? (
@@ -5840,31 +5860,36 @@ export default function App() {
             onInspect={(setupRep) => {
               setActiveSetup(setupRep);
               setCurrentView("telemetry");
-              showToast("Loaded tuned variant into Active HUD!", "success");
+              showToast("Variant loaded", "success");
               if (isMobile) setMobileView('inspection');
             }}
             onDelete={async (id) => {
               try {
                 await dbDeleteTunedSetup(id);
-                showToast("Successfully deleted custom variant.", "success");
+                showToast("Variant deleted", "success");
                 loadTunedSetups();
               } catch (err) {
                 console.error(err);
-                showToast("Failed to delete variant.", "error");
+                showToast("Delete failed — try again", "error");
               }
             }}
             onRefresh={async () => {
               await loadTunedSetups();
-              showToast("Garage list synchronized with Cloud Storage.", "info");
+              showToast("Garage synced", "info");
             }}
           />
         </main>
       ) : (
         <main id="engineer-workspace" className="flex-1 max-w-7xl w-full mx-auto p-4 pb-20 md:pb-6 lg:p-6">
-          <AiRaceEngineer
-            activeSetup={activeSetup}
-            parsedSetupData={activeSetup ? parseAccSetup(tunedRawData || activeSetup.rawData, activeSetup.name) : null}
-          />
+          <SectionErrorBoundary
+            fallbackTitle="Race Engineer error"
+            fallbackMessage="The AI Race Engineer encountered an error. Try resetting to continue."
+          >
+            <AiRaceEngineer
+              activeSetup={activeSetup}
+              parsedSetupData={activeSetup ? parseAccSetup(tunedRawData || activeSetup.rawData, activeSetup.name) : null}
+            />
+          </SectionErrorBoundary>
         </main>
       )}
 
@@ -6083,7 +6108,7 @@ export default function App() {
                       setIsSubmittingOnboarding(true);
                       try {
                         await saveProfileData(onboardingUsername.trim(), onboardingPinnedCars);
-                        showToast(`Profile initialized as @${onboardingUsername.trim()}! Welcome to the squad.`, "success");
+                        showToast(`Welcome, @${onboardingUsername.trim()}`, "success");
                       } catch (err: any) {
                         console.error(err);
                         const msg = err.message || err.toString() || "Server write failed.";
@@ -6315,7 +6340,7 @@ export default function App() {
                         setIsSubmittingProfileEdit(true);
                         try {
                           await saveProfileData(editUsername.trim(), editPinnedCars);
-                          showToast("Crew driver profile updated successfully!", "success");
+                          showToast("Profile updated", "success");
                           setShowProfileModal(false);
                         } catch (err: any) {
                           console.error(err);
