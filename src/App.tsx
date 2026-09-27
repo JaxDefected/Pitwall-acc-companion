@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, DragEvent, ChangeEvent, MouseEvent } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, DragEvent, ChangeEvent, MouseEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import {
@@ -66,6 +66,7 @@ import {
 } from "./firebase";
 import { useAuth } from "./hooks/useAuth";
 import { parseAccSetup, NormalizedAccSetup, ACC_CARS, ACC_TRACKS, TRACK_FUEL_RANGES, DEFAULT_FUEL_RANGE } from "./utils/accParser";
+import { fetchWithRetry } from "./utils/fetchWithRetry";
 import { CIRCUIT_NOTES } from "./data/circuitNotes";
 import { cars } from "./data/cars";
 import { getLapTimesText } from "./data/carNameMap";
@@ -751,7 +752,7 @@ export default function App() {
     async function loadData() {
       setIsLoading(true);
       try {
-        const fetchedSetups = await dbFetchSetups();
+        const fetchedSetups = await fetchWithRetry(() => dbFetchSetups());
         if (fetchedSetups.length > 0) {
           setSetupsList(fetchedSetups);
           // Auto select first setup
@@ -763,7 +764,7 @@ export default function App() {
           setActiveSetup(DEMO_SETUPS[0]);
         }
 
-        const fetchedGuide = await dbFetchGuide();
+        const fetchedGuide = await fetchWithRetry(() => dbFetchGuide());
         if (fetchedGuide) {
           setCustomGuideText(fetchedGuide);
         }
@@ -806,23 +807,23 @@ export default function App() {
     loadTunedSetups();
   }, [profile]);
 
-  const loadActiveRatings = async (setupId: string) => {
+  const loadActiveRatings = useCallback(async (setupId: string) => {
     try {
-      const list = await dbFetchSetupRatings(setupId);
+      const list = await fetchWithRetry(() => dbFetchSetupRatings(setupId));
       setActiveSetupRatings(list);
     } catch (err) {
       console.error("Error loading pilot ratings:", err);
     }
-  };
+  }, []);
 
-  const loadTunedSetups = async () => {
+  const loadTunedSetups = useCallback(async () => {
     try {
-      const list = await dbFetchTunedSetups();
+      const list = await fetchWithRetry(() => dbFetchTunedSetups());
       setTunedSetupsList(list);
     } catch (err) {
       console.error("Error loading custom custom setups:", err);
     }
-  };
+  }, []);
 
   const handleSaveRating = async () => {
     if (!profile) {
@@ -855,6 +856,12 @@ export default function App() {
       setIsSavingRating(false);
     }
   };
+
+  // Memoized handler for registry list item clicks — prevents N function allocations per render
+  const handleSetupClick = useCallback((setup: SetupItem) => {
+    setActiveSetup(setup);
+    if (isMobile) setMobileView('inspection');
+  }, [isMobile]);
 
   const handleAdjustSetupValue = (field: string, delta: number, index?: number) => {
     if (!isTuneMode || !tunedRawData) return;
@@ -2762,10 +2769,7 @@ export default function App() {
                     return (
                       <div
                         key={setup.id}
-                        onClick={() => {
-                          setActiveSetup(setup);
-                          if (isMobile) setMobileView('inspection');
-                        }}
+                        onClick={() => handleSetupClick(setup)}
                         className={`p-3.5 hover:bg-zinc-50 transition-all cursor-pointer flex items-start justify-between gap-2 group ${isActive ? "bg-red-50/60 border-l-4 border-red-600" : "bg-white"}`}
                       >
                         <div className="min-w-0 flex-1">
