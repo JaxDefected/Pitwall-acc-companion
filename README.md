@@ -1,7 +1,6 @@
-# PitWall - ACC Setup Lab
+# PitWall - ACC Setup Lab v2
 
 **An advanced, AI-powered companion application for Assetto Corsa Competizione (ACC).**
-</div>
 
 ## Description
 
