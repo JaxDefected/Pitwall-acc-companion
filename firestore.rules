@@ -91,7 +91,7 @@ service cloud.firestore {
                             
       allow delete: if isSignedIn()
                     && isValidId(guideId)
-                    && (('createdBy' in existing() && existing().createdBy == request.auth.uid) || (!('createdBy' in existing()) && existing().updatedBy == request.auth.uid) || (request.auth.token.email == 'lowther.jack@gmail.com' && request.auth.token.email_verified == true))
+                    && (('createdBy' in existing() && existing().createdBy == request.auth.uid) || (!('createdBy' in existing()) && existing().updatedBy == request.auth.uid) || (request.auth.token.admin == true))
                     && (!('authorId' in existing()) ? true : existing().authorId == request.auth.uid);
     }
 
