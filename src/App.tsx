@@ -425,6 +425,7 @@ export default function App() {
   const [isUploaderPanelOpen, setIsUploaderPanelOpen] = useState<boolean>(false);
   const [isGuidePanelOpen, setIsGuidePanelOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoadingTunedSetups, setIsLoadingTunedSetups] = useState<boolean>(true);
 
 
 
@@ -689,6 +690,7 @@ export default function App() {
   }, []);
 
   const loadTunedSetups = useCallback(async () => {
+    setIsLoadingTunedSetups(true);
     try {
       const list = await fetchWithRetry(() => dbFetchTunedSetups());
       setTunedSetupsList(list);
@@ -703,6 +705,8 @@ export default function App() {
       }
     } catch (err) {
       console.error("Error loading custom custom setups:", err);
+    } finally {
+      setIsLoadingTunedSetups(false);
     }
   }, [isMobile]);
 
@@ -4782,6 +4786,7 @@ export default function App() {
           <GaragePage
             tunedSetupsList={tunedSetupsList}
             profile={profile}
+            isLoading={isLoadingTunedSetups}
             onInspect={(setupRep) => {
               setActiveSetup(setupRep);
               setCurrentView("telemetry");

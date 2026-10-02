@@ -20,6 +20,7 @@ interface GaragePageProps {
   onInspect: (setup: SetupItem) => void;
   onDelete: (id: string) => Promise<void>;
   onRefresh: () => Promise<void>;
+  isLoading?: boolean;
 }
 
 export default function GaragePage({
@@ -27,12 +28,14 @@ export default function GaragePage({
   profile,
   onInspect,
   onDelete,
-  onRefresh
+  onRefresh,
+  isLoading = false
 }: GaragePageProps) {
   const [internalSearch, setInternalSearch] = useState("");
   const [internalCarFilter, setInternalCarFilter] = useState("all");
   const [internalTrackFilter, setInternalTrackFilter] = useState("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Filter only my setups
@@ -42,10 +45,12 @@ export default function GaragePage({
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
+    setRefreshError(null);
     try {
       await onRefresh();
     } catch (e) {
       console.error(e);
+      setRefreshError("Failed to synchronize with Cloud Storage. Please try again.");
     } finally {
       setIsRefreshing(false);
     }
@@ -280,7 +285,38 @@ export default function GaragePage({
 
           {/* Right Column: responsive grid list (Span 9) */}
           <div className="lg:col-span-9">
-            {sortedMySetups.length === 0 ? (
+            {isLoading || isRefreshing ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="bg-white border border-zinc-200 rounded-xl p-4 flex flex-col gap-3 shadow-3xs">
+                    <div className="flex justify-between items-center">
+                      <div className="h-5 w-24 bg-zinc-200 rounded" />
+                      <div className="h-4 w-16 bg-zinc-200 rounded" />
+                    </div>
+                    <div className="h-5 w-40 bg-zinc-200 rounded" />
+                    <div className="h-10 w-full bg-zinc-100 rounded" />
+                    <div className="flex gap-2 pt-2 border-t border-zinc-100">
+                      <div className="h-8 flex-1 bg-zinc-200 rounded" />
+                      <div className="h-8 w-16 bg-zinc-200 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : refreshError ? (
+              <div className="bg-white border border-red-200 p-12 text-center rounded-xl flex flex-col items-center justify-center">
+                <div className="bg-red-50 p-3 rounded-full w-12 h-12 mb-3 flex items-center justify-center text-red-500">
+                  <Activity className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-bold text-zinc-900">Sync Error</h3>
+                <p className="text-zinc-600 text-xs mt-1 max-w-sm">{refreshError}</p>
+                <button
+                  onClick={handleRefresh}
+                  className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                >
+                  Retry Sync
+                </button>
+              </div>
+            ) : sortedMySetups.length === 0 ? (
               <div className="bg-white border border-dashed border-zinc-300 p-16 text-center rounded-xl flex flex-col items-center justify-center">
                 <div className="bg-zinc-100 p-4 rounded-full w-14 h-14 mb-4 flex items-center justify-center text-zinc-400">
                   <Activity className="w-7 h-7 opacity-50" />
