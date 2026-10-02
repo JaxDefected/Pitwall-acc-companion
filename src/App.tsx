@@ -74,6 +74,9 @@ import { getLapTimesText } from "./data/carNameMap";
 import LapTimesPage from "./components/LapTimesPage";
 import GaragePage from "./components/GaragePage";
 import AiRaceEngineer from "./components/AiRaceEngineer";
+import FuelStrategyTab from "./components/FuelStrategyTab";
+import TuningWorkshopBanner from "./components/TuningWorkshopBanner";
+import OnboardingModal from "./components/OnboardingModal";
 import SectionErrorBoundary from "./components/SectionErrorBoundary";
 
 export interface PendingSetup {
@@ -229,10 +232,10 @@ function SetupSlider({ label, value, min, max, step, unit = "", discreteArray }:
   return (
     <div className="bg-zinc-50 border border-zinc-200/60 rounded p-3 text-zinc-900 shadow-3xs hover:border-zinc-350 hover:bg-zinc-50/80 transition-all flex flex-col justify-between">
       <div className="flex justify-between items-start gap-1 pb-1.5 border-b border-zinc-150">
-        <span className="text-[9.5px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">{label}</span>
-        <span className="text-[11.5px] font-mono font-black text-red-655 bg-zinc-100/80 px-1.5 py-0.5 rounded border border-zinc-150">
-          {value.toFixed(unit === "°" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
-          <span className="text-[8px] font-bold text-zinc-400 ml-0.5">{unit}</span>
+        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">{label}</span>
+        <span className="text-xs font-mono font-black text-brand bg-zinc-100/80 px-1.5 py-0.5 rounded border border-zinc-150">
+          {value.toFixed(unit === "\u00B0" || unit === "&deg;" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
+          <span className="text-[10px] font-bold text-zinc-400 ml-0.5">{unit}</span>
         </span>
       </div>
 
@@ -255,9 +258,9 @@ function SetupSlider({ label, value, min, max, step, unit = "", discreteArray }:
           })}
         </div>
 
-        <div className="flex justify-between mt-1.5 text-[8.5px] font-mono text-zinc-400 font-bold">
+        <div className="flex justify-between mt-1.5 text-[10px] font-mono text-zinc-400 font-bold">
           <span>{discreteArray ? "SEGMENTED" : `MIN: ${min}${unit}`}</span>
-          {step > 0 && <span className="text-[7.5px] bg-zinc-100 px-1 rounded border border-zinc-200">STEP: {step}</span>}
+          {step > 0 && <span className="text-[10px] bg-zinc-100 px-1 rounded border border-zinc-200">STEP: {step}</span>}
           <span>{discreteArray ? `OPTS: ${discreteArray.length}` : `MAX: ${max}${unit}`}</span>
         </div>
       </div>
@@ -282,12 +285,23 @@ export default function App() {
   const [customGuideText, setCustomGuideText] = useState<string>("");
   const [activeSetup, setActiveSetup] = useState<SetupItem | null>(null);
   const [selectedTab, setSelectedTab] = useState<"tyres" | "electronics" | "fuel" | "mechanical" | "aero" | "dampers">("tyres");
-  const [currentView, setCurrentView] = useState<"telemetry" | "laptimes" | "garage" | "engineer">("telemetry");
+  const [currentView, setCurrentView] = useState<"telemetry" | "laptimes" | "garage" | "engineer">(() => {
+    if (typeof window === "undefined") return "telemetry";
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab === "laptimes" || tab === "garage" || tab === "engineer") return tab;
+    if (params.has("laptimes") || params.has("circuit")) return "laptimes";
+    return "telemetry";
+  });
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [isCrewNotesOpen, setIsCrewNotesOpen] = useState<boolean>(true);
 
   // Mobile view switching state
-  const [mobileView, setMobileView] = useState<'registry' | 'inspection'>('registry');
+  const [mobileView, setMobileView] = useState<'registry' | 'inspection'>(() => {
+    if (typeof window === "undefined") return "registry";
+    const params = new URLSearchParams(window.location.search);
+    return params.get("view") === "inspection" || params.has("setup") ? "inspection" : "registry";
+  });
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -331,12 +345,6 @@ export default function App() {
     document.title = titles[currentView] || 'Pitwall ACC Setup Lab';
   }, [currentView, activeSetup]);
 
-  // Onboarding UI inputs state
-  const [onboardingUsername, setOnboardingUsername] = useState<string>("");
-  const [onboardingPinnedCars, setOnboardingPinnedCars] = useState<string[]>([]);
-  const [onboardingCheckingUsername, setOnboardingCheckingUsername] = useState<boolean>(false);
-  const [onboardingUsernameAvailable, setOnboardingUsernameAvailable] = useState<boolean | null>(null);
-  const [isSubmittingOnboarding, setIsSubmittingOnboarding] = useState<boolean>(false);
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
 
   // Edit Profile UI inputs state
@@ -357,11 +365,6 @@ export default function App() {
   // Tuning raw data & options states
   const [isTuneMode, setIsTuneMode] = useState<boolean>(false);
   const [tunedRawData, setTunedRawData] = useState<any>(null);
-  const [tuneVersionNote, setTuneVersionNote] = useState<string>("");
-  const [tuneIsTeamWorkspace, setTuneIsTeamWorkspace] = useState<boolean>(false);
-  const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
-  const [saveModalNote, setSaveModalNote] = useState<string>("");
-  const [saveModalTargetTrack, setSaveModalTargetTrack] = useState<string>("");
   const [tunedSetupsList, setTunedSetupsList] = useState<SavedSetupItem[]>([]);
 
   // Setup quality star ratings & handling tags
@@ -430,98 +433,13 @@ export default function App() {
   const [transitionTrackTemp, setTransitionTrackTemp] = useState<number>(32);
   const [transitionAmbientTemp, setTransitionAmbientTemp] = useState<number>(24);
   const [showCompensated, setShowCompensated] = useState<boolean>(false);
-  const [fuelLapTimeMin, setFuelLapTimeMin] = useState<number | "">(1);
-  const [fuelLapTimeSec, setFuelLapTimeSec] = useState<number | "">(45);
-  const [fuelPerLap, setFuelPerLap] = useState<number>(3.2); // litres consumed per lap
-  const [fuelSafetyLaps, setFuelSafetyLaps] = useState<number>(2); // safety buffer laps
-
-  // Derive fuel consumption range from the active setup's track
-  const activeFuelRange = useMemo(() => {
-    const trackKey = activeSetup?.track || "";
-    return TRACK_FUEL_RANGES[trackKey] || DEFAULT_FUEL_RANGE;
-  }, [activeSetup?.track]);
-
-  // Auto-update fuelPerLap to the track-appropriate default when setup changes
-  useEffect(() => {
-    if (activeSetup?.track) {
-      const range = TRACK_FUEL_RANGES[activeSetup.track] || DEFAULT_FUEL_RANGE;
-      setFuelPerLap(range.default);
-    }
-  }, [activeSetup?.track]);
-  
-  // Interactive Pit & Stint Strategy Planner states
-  const [pitMandatoryFuel, setPitMandatoryFuel] = useState<boolean>(true);
-  const [pitMandatoryTyres, setPitMandatoryTyres] = useState<boolean>(true);
-  const [pitMaxFuelCapacity, setPitMaxFuelCapacity] = useState<number>(120);
-  const [pitNumberOfStops, setPitNumberOfStops] = useState<number>(1);
-  const [pitStrategyPreference, setPitStrategyPreference] = useState<"balanced" | "undercut" | "overcut">("balanced");
   
   const [isUploaderPanelOpen, setIsUploaderPanelOpen] = useState<boolean>(false);
   const [isGuidePanelOpen, setIsGuidePanelOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoadingTunedSetups, setIsLoadingTunedSetups] = useState<boolean>(true);
 
-  // Sync state with browser physical back button and popstate events
-  useEffect(() => {
-    if (typeof window === "undefined") return;
 
-    const handlePopState = (event: PopStateEvent) => {
-      const state = event.state;
-      if (state && typeof state === "object") {
-        if ("view" in state) setCurrentView(state.view);
-        if ("showProfile" in state) setShowProfileModal(state.showProfile);
-        if ("showSave" in state) setIsSaveModalOpen(state.showSave);
-        if ("showUploader" in state) setIsUploaderPanelOpen(state.showUploader);
-        if ("showGuide" in state) setIsGuidePanelOpen(state.showGuide);
-      } else {
-        // Safe fallback to original state when history is blank
-        setCurrentView("telemetry");
-        setShowProfileModal(false);
-        setIsSaveModalOpen(false);
-        setIsUploaderPanelOpen(false);
-        setIsGuidePanelOpen(false);
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const currentState = {
-      view: currentView,
-      showProfile: showProfileModal,
-      showSave: isSaveModalOpen,
-      showUploader: isUploaderPanelOpen,
-      showGuide: isGuidePanelOpen,
-    };
-
-    const isInitial = 
-      currentView === "telemetry" && 
-      !showProfileModal && 
-      !isSaveModalOpen && 
-      !isUploaderPanelOpen && 
-      !isGuidePanelOpen;
-
-    if (isInitial) {
-      window.history.replaceState(currentState, "");
-    } else {
-      const historyState = window.history.state;
-      const isMatch = historyState && 
-        historyState.view === currentView &&
-        historyState.showProfile === showProfileModal &&
-        historyState.showSave === isSaveModalOpen &&
-        historyState.showUploader === isUploaderPanelOpen &&
-        historyState.showGuide === isGuidePanelOpen;
-
-      if (!isMatch) {
-        window.history.pushState(currentState, "");
-      }
-    }
-  }, [currentView, showProfileModal, isSaveModalOpen, isUploaderPanelOpen, isGuidePanelOpen]);
 
   // Drag and Drop files or parsing state
   const [parsedSetup, setParsedSetup] = useState<NormalizedAccSetup | null>(null);
@@ -538,10 +456,167 @@ export default function App() {
 
   // Search/Filters states
   const [searchText, setSearchText] = useState<string>("");
-  const [carFilter, setCarFilter] = useState<string>("all");
-  const [trackFilter, setTrackFilter] = useState<string>("all");
+  const [carFilter, setCarFilter] = useState<string>(() => {
+    if (typeof window === "undefined") return "all";
+    return new URLSearchParams(window.location.search).get("car") || "all";
+  });
+  const [trackFilter, setTrackFilter] = useState<string>(() => {
+    if (typeof window === "undefined") return "all";
+    return new URLSearchParams(window.location.search).get("track") || "all";
+  });
   const [githubGradeFilter, setGithubGradeFilter] = useState<string>("all");
   const [githubSessionFilter, setGithubSessionFilter] = useState<string>("all");
+
+  // ─── URL & Browser History Synchronization (P1.2) ───────────────────
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handlePopState = (event: PopStateEvent) => {
+      const params = new URLSearchParams(window.location.search);
+
+      // 1. Sync tab / view from URL
+      const tabParam = params.get("tab");
+      const validTab = (tabParam === "laptimes" || tabParam === "garage" || tabParam === "engineer")
+        ? tabParam
+        : (params.has("laptimes") || params.has("circuit") ? "laptimes" : "telemetry");
+      setCurrentView(validTab);
+
+      // 2. Sync active setup if specified in URL
+      const setupId = params.get("setup");
+      if (setupId) {
+        setSetupsList((currentList) => {
+          const match = currentList.find((s) => s.id === setupId);
+          if (match) setActiveSetup(match);
+          return currentList;
+        });
+      }
+
+      // 3. Sync filters
+      setCarFilter(params.get("car") || "all");
+      setTrackFilter(params.get("track") || "all");
+
+      // 4. Sync mobile view
+      const viewParam = params.get("view");
+      setMobileView(viewParam === "inspection" ? "inspection" : "registry");
+
+      // 5. Sync modals from state
+      const state = event.state;
+      if (state && typeof state === "object") {
+        setShowProfileModal(!!state.showProfile);
+        setIsUploaderPanelOpen(!!state.showUploader);
+        setIsGuidePanelOpen(!!state.showGuide);
+      } else {
+        setShowProfileModal(false);
+        setIsUploaderPanelOpen(false);
+        setIsGuidePanelOpen(false);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  const isInitialMount = useRef(true);
+  const prevNavRef = useRef({
+    view: currentView,
+    setupId: activeSetup?.id,
+    car: carFilter,
+    track: trackFilter,
+    mobileView,
+    showProfile: showProfileModal,
+    showUploader: isUploaderPanelOpen,
+    showGuide: isGuidePanelOpen,
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams();
+    if (currentView !== "telemetry") params.set("tab", currentView);
+    if (currentView === "telemetry") {
+      if (activeSetup?.id) params.set("setup", activeSetup.id);
+      if (carFilter && carFilter !== "all") params.set("car", carFilter);
+      if (trackFilter && trackFilter !== "all") params.set("track", trackFilter);
+      if (isMobile && mobileView === "inspection") params.set("view", "inspection");
+    } else if (currentView === "laptimes") {
+      const existing = new URLSearchParams(window.location.search);
+      if (existing.has("circuit")) params.set("circuit", existing.get("circuit")!);
+      if (existing.has("class")) params.set("class", existing.get("class")!);
+      if (existing.has("car")) params.set("car", existing.get("car")!);
+    }
+
+    const qs = params.toString();
+    const newSearch = qs ? `?${qs}` : "";
+    const newUrl = `${window.location.pathname}${newSearch}`;
+    const currentSearch = window.location.search;
+
+    const historyState = {
+      view: currentView,
+      setupId: activeSetup?.id,
+      car: carFilter,
+      track: trackFilter,
+      mobileView,
+      showProfile: showProfileModal,
+      showUploader: isUploaderPanelOpen,
+      showGuide: isGuidePanelOpen,
+    };
+
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      window.history.replaceState(historyState, "", newUrl);
+      prevNavRef.current = {
+        view: currentView,
+        setupId: activeSetup?.id,
+        car: carFilter,
+        track: trackFilter,
+        mobileView,
+        showProfile: showProfileModal,
+        showUploader: isUploaderPanelOpen,
+        showGuide: isGuidePanelOpen,
+      };
+      return;
+    }
+
+    const prev = prevNavRef.current;
+    const isMajorNav =
+      prev.view !== currentView ||
+      (activeSetup?.id && prev.setupId !== activeSetup.id) ||
+      (prev.mobileView !== mobileView && mobileView === "inspection") ||
+      (!prev.showProfile && showProfileModal) ||
+      (!prev.showUploader && isUploaderPanelOpen) ||
+      (!prev.showGuide && isGuidePanelOpen);
+
+    prevNavRef.current = {
+      view: currentView,
+      setupId: activeSetup?.id,
+      car: carFilter,
+      track: trackFilter,
+      mobileView,
+      showProfile: showProfileModal,
+      showUploader: isUploaderPanelOpen,
+      showGuide: isGuidePanelOpen,
+    };
+
+    if (newSearch !== currentSearch || isMajorNav) {
+      if (isMajorNav) {
+        window.history.pushState(historyState, "", newUrl);
+      } else {
+        window.history.replaceState(historyState, "", newUrl);
+      }
+    }
+  }, [
+    currentView,
+    activeSetup?.id,
+    carFilter,
+    trackFilter,
+    mobileView,
+    isMobile,
+    showProfileModal,
+    isUploaderPanelOpen,
+    isGuidePanelOpen,
+  ]);
 
   // Chat interface
   const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "model"; content: string }>>([
@@ -560,15 +635,27 @@ export default function App() {
       setIsLoading(true);
       try {
         const fetchedSetups = await fetchWithRetry(() => dbFetchSetups());
+        const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+        const requestedSetupId = urlParams?.get("setup");
+
         if (fetchedSetups.length > 0) {
           setSetupsList(fetchedSetups);
-          // Auto select first setup
-          setActiveSetup(fetchedSetups[0]);
+          const target = requestedSetupId ? fetchedSetups.find((s) => s.id === requestedSetupId) : null;
+          if (target) {
+            setActiveSetup(target);
+            if (isMobile) setMobileView("inspection");
+          } else {
+            setActiveSetup(fetchedSetups[0]);
+          }
         } else {
-          // If no setups in DB, use our visual demos so the UI looks active and fully formed!
-          // We do NOT write demo setups to the cloud database to honor security rules and prevent permission errors.
           setSetupsList(DEMO_SETUPS);
-          setActiveSetup(DEMO_SETUPS[0]);
+          const target = requestedSetupId ? DEMO_SETUPS.find((s) => s.id === requestedSetupId) : null;
+          if (target) {
+            setActiveSetup(target);
+            if (isMobile) setMobileView("inspection");
+          } else {
+            setActiveSetup(DEMO_SETUPS[0]);
+          }
         }
 
         const fetchedGuide = await fetchWithRetry(() => dbFetchGuide());
@@ -598,8 +685,6 @@ export default function App() {
   useEffect(() => {
     setIsTuneMode(false);
     setTunedRawData(null);
-    setTuneVersionNote("");
-    setTuneIsTeamWorkspace(false);
     setSelectedReviewTags([]);
     
     if (activeSetup) {
@@ -624,13 +709,30 @@ export default function App() {
   }, []);
 
   const loadTunedSetups = useCallback(async () => {
+    setIsLoadingTunedSetups(true);
     try {
       const list = await fetchWithRetry(() => dbFetchTunedSetups());
       setTunedSetupsList(list);
+      const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+      const requestedSetupId = urlParams?.get("setup");
+      if (requestedSetupId && list.length > 0) {
+        const match = list.find((s) => s.id === requestedSetupId);
+        if (match) {
+          setActiveSetup({
+            ...match,
+            name: match.versionNote || `${match.car} @ ${match.track}`,
+            uploadedBy: match.authorUsername || "Driver",
+            uploadedByName: match.authorUsername || "Driver",
+          });
+          if (isMobile) setMobileView("inspection");
+        }
+      }
     } catch (err) {
       console.error("Error loading custom custom setups:", err);
+    } finally {
+      setIsLoadingTunedSetups(false);
     }
-  }, []);
+  }, [isMobile]);
 
   const handleSaveRating = async () => {
     if (!profile) {
@@ -640,31 +742,44 @@ export default function App() {
     if (!activeSetup) return;
     
     setIsSavingRating(true);
+    const ratingId = `${activeSetup.id}_${profile.username}`;
+    const newRatingItem: SetupRatingItem = {
+      id: ratingId,
+      setupId: activeSetup.id,
+      rating: userRating,
+      tags: selectedReviewTags,
+      username: profile.username,
+      userId: profile.uid,
+      uid: profile.uid,
+      createdAt: new Date().toISOString()
+    };
+
+    // Optimistic update
+    const prevRatings = [...activeSetupRatings];
+    setActiveSetupRatings((prev) => {
+      const existingIdx = prev.findIndex((r) => r.username === profile.username || r.userId === profile.uid);
+      if (existingIdx >= 0) {
+        const next = [...prev];
+        next[existingIdx] = newRatingItem;
+        return next;
+      }
+      return [...prev, newRatingItem];
+    });
+
     try {
-      const ratingId = `${activeSetup.id}_${profile.username}`;
-      const newRatingItem: SetupRatingItem = {
-        id: ratingId,
-        setupId: activeSetup.id,
-        rating: userRating,
-        tags: selectedReviewTags,
-        username: profile.username,
-        userId: profile.uid,
-        uid: profile.uid,
-        createdAt: new Date().toISOString()
-      };
-      
       await dbSaveSetupRating(newRatingItem);
       showToast("Review submitted", "success");
-      loadActiveRatings(activeSetup.id);
     } catch (err) {
       console.error(err);
-      showToast("Review failed — try again", "error");
+      // Rollback to previous state on error
+      setActiveSetupRatings(prevRatings);
+      showToast("Review failed - try again", "error");
     } finally {
       setIsSavingRating(false);
     }
   };
 
-  // Memoized handler for registry list item clicks — prevents N function allocations per render
+  // Memoized handler for registry list item clicks - prevents N function allocations per render
   const handleSetupClick = useCallback((setup: SetupItem) => {
     setActiveSetup(setup);
     if (isMobile) setMobileView('inspection');
@@ -878,7 +993,7 @@ export default function App() {
     setTunedRawData(cloned);
   };
 
-  const handleSaveCustomTunedSetup = async (customNote?: string, targetTrack?: string) => {
+  const handleSaveCustomTunedSetup = async (customNote?: string, targetTrack?: string, isTeamWorkspace = false) => {
     if (!profile) {
       showToast("Sign in to save tuned setups", "error");
       return;
@@ -892,7 +1007,7 @@ export default function App() {
       const sourceTrackLabel = ACC_TRACKS[activeSetup.track] || activeSetup.track;
       const targetTrackLabel = ACC_TRACKS[destinationTrack] || destinationTrack;
       
-      let finalNote = (customNote || tuneVersionNote).trim() || "Tweaked custom parameters.";
+      let finalNote = customNote?.trim() || "Tweaked custom parameters.";
       if (isAdapted) {
         finalNote = `[Adapted from ${sourceTrackLabel}] ${finalNote}`;
       }
@@ -908,7 +1023,7 @@ export default function App() {
         parentSetupId: activeSetup.id,
         authorUsername: profile.username,
         versionNote: finalNote,
-        isTeamWorkspace: tuneIsTeamWorkspace,
+        isTeamWorkspace: isTeamWorkspace,
         car: activeSetup.car,
         track: destinationTrack,
         notes: finalNote,
@@ -920,7 +1035,7 @@ export default function App() {
       await dbSaveTunedSetup(payload);
       showToast("Variant saved", "success");
       
-      if (tuneIsTeamWorkspace) {
+      if (isTeamWorkspace) {
         const standardSetup: SetupItem = {
           id: tunedItemId,
           name: revisionName,
@@ -941,29 +1056,10 @@ export default function App() {
       
       setIsTuneMode(false);
       setTunedRawData(null);
-      setTuneVersionNote("");
       loadTunedSetups();
     } catch (err) {
       console.error(err);
-      showToast("Save failed — try again", "error");
-    }
-  };
-
-  const handleCheckUsername = async (val: string) => {
-    setOnboardingUsername(val);
-    if (val.trim().length < 3) {
-      setOnboardingUsernameAvailable(null);
-      return;
-    }
-    setOnboardingCheckingUsername(true);
-    try {
-      const isOk = await dbCheckUsernameAvailable(val);
-      setOnboardingUsernameAvailable(isOk);
-    } catch (err) {
-      console.error(err);
-      setOnboardingUsernameAvailable(true); // default true for safety on connectivity limits
-    } finally {
-      setOnboardingCheckingUsername(false);
+      showToast("Save failed - try again", "error");
     }
   };
 
@@ -1208,7 +1304,7 @@ export default function App() {
       const reader = new FileReader();
       reader.onload = (event) => {
         setCustomGuideText(event.target?.result as string);
-        showToast("Workbook imported — commit to save", "info");
+        showToast("Workbook imported - commit to save", "info");
       };
       reader.readAsText(file);
     }
@@ -1447,203 +1543,15 @@ export default function App() {
     setActiveSetup(refSetup);
   };
 
-  // Track Temp Transition Calculator math
-  const getTransitionCoolingModel = () => {
-    const startHour = parseInt(transitionTimeStart.split(":")[0]) || 17;
-    const durationHrs = transitionDuration / 60;
-    
-    let trackCoolingRate = 0; // °C per hour
-    let ambientCoolingRate = 0; // °C per hour
-    let coolingType = "Stable Ambient";
-    
-    if (startHour >= 12 && startHour < 16) {
-      trackCoolingRate = 0.5;
-      ambientCoolingRate = 0.2;
-      coolingType = "Stable Peak Heat";
-    } else if (startHour >= 16 && startHour < 18) {
-      trackCoolingRate = 3.2;
-      ambientCoolingRate = 1.2;
-      coolingType = "Late Afternoon Golden Hour (High Cooling)";
-    } else if (startHour >= 18 && startHour < 21) {
-      trackCoolingRate = 5.0;
-      ambientCoolingRate = 2.0;
-      coolingType = "Sunset Dusk Transition (Severe Cooling)";
-    } else if (startHour >= 21 || startHour < 5) {
-      trackCoolingRate = 1.0;
-      ambientCoolingRate = 0.5;
-      coolingType = "Early Night/Midnight (Slow Cooling)";
-    } else {
-      trackCoolingRate = -2.0; // heats up!
-      ambientCoolingRate = -1.0;
-      coolingType = "Morning Transition (Warming Up)";
-    }
-    
-    const trackDrop = trackCoolingRate * durationHrs;
-    const ambientDrop = ambientCoolingRate * durationHrs;
-    
-    // In ACC, base cold pressures need to increase as temps drop
-    // Factor: ~ +0.1 PSI for every 1°C of track drop, ~ +0.12 PSI for every 1°C of ambient drop
-    const rawOffset = (trackDrop * 0.1) + (ambientDrop * 0.12);
-    // Keep offset representation clean and rounded
-    const compensationPSI = Math.round(rawOffset * 10) / 10;
-    
-    return {
-      trackCoolingRate,
-      ambientCoolingRate,
-      coolingType,
-      trackDrop,
-      ambientDrop,
-      compensationPSI,
-    };
-  };
-
-  const coolingData = getTransitionCoolingModel();
-
-  // Pit & Stint Strategy Model
-  const getPitStrategyModel = () => {
-    const minVal = fuelLapTimeMin === "" ? 0 : fuelLapTimeMin;
-    const secVal = fuelLapTimeSec === "" ? 0 : fuelLapTimeSec;
-    const lapTimeSec = (minVal * 60) + secVal;
-    const totalRaceSecs = fuelRaceTime * 60;
-    const estTotalLaps = lapTimeSec > 0 ? Math.ceil(totalRaceSecs / lapTimeSec) : 0;
-    const safetyBufferLaps = fuelSafetyLaps;
-    const totalLapsWithBuffer = estTotalLaps + safetyBufferLaps;
-    const totalFuelNeeded = totalLapsWithBuffer * fuelPerLap;
-    
-    interface Stint {
-      index: number;
-      durationMins: number;
-      laps: number;
-      fuelNeeded: number;
-      isOverfilled: boolean;
-    }
-    
-    const stintsCount = pitNumberOfStops + 1;
-    let stints: Stint[] = [];
-    let msg = "";
-    let alertMsg = "";
-    
-    if (pitNumberOfStops === 0) {
-      // 0 stops = 1 single stint
-      const overfill = totalFuelNeeded > pitMaxFuelCapacity;
-      stints.push({
-        index: 1,
-        durationMins: fuelRaceTime,
-        laps: estTotalLaps,
-        fuelNeeded: totalFuelNeeded,
-        isOverfilled: overfill
-      });
-      if (overfill) {
-        alertMsg = `⚠️ Critical: Total fuel required (${totalFuelNeeded.toFixed(1)}L) exceeds max tank capacity (${pitMaxFuelCapacity}L). You MUST plan at least 1 pitstop!`;
-      } else {
-        msg = "✓ Standard single stint. No pitstop required.";
-      }
-    } else if (pitNumberOfStops === 1) {
-      // 1 stop = 2 stints
-      let ratio1 = 0.5;
-      let ratio2 = 0.5;
-      
-      if (pitStrategyPreference === "undercut") {
-        ratio1 = 0.4;
-        ratio2 = 0.6;
-      } else if (pitStrategyPreference === "overcut") {
-        ratio1 = 0.6;
-        ratio2 = 0.4;
-      }
-      
-      const laps1 = Math.ceil(estTotalLaps * ratio1);
-      const laps2 = estTotalLaps - laps1;
-      
-      const stint1Fuel = (laps1 + Math.ceil(safetyBufferLaps / 2)) * fuelPerLap;
-      const stint2Fuel = (laps2 + Math.floor(safetyBufferLaps / 2)) * fuelPerLap;
-      
-      const stint1Overfilled = stint1Fuel > pitMaxFuelCapacity;
-      const stint2Overfilled = stint2Fuel > pitMaxFuelCapacity;
-      
-      stints.push({
-        index: 1,
-        durationMins: Math.round(fuelRaceTime * ratio1 * 10) / 10,
-        laps: laps1,
-        fuelNeeded: stint1Overfilled ? pitMaxFuelCapacity : stint1Fuel,
-        isOverfilled: stint1Overfilled
-      });
-      
-      stints.push({
-        index: 2,
-        durationMins: Math.round(fuelRaceTime * ratio2 * 10) / 10,
-        laps: laps2,
-        fuelNeeded: stint2Overfilled ? pitMaxFuelCapacity : stint2Fuel,
-        isOverfilled: stint2Overfilled
-      });
-      
-      if (stint1Overfilled || stint2Overfilled) {
-        alertMsg = `⚠️ Tank limitation reached! One of your stints exceeds ${pitMaxFuelCapacity}L capacity. Consider planning 2 stops or shifting the stint balance.`;
-      }
-    } else if (pitNumberOfStops === 2) {
-      // 2 stops = 3 stints
-      let ratio1 = 0.33;
-      let ratio2 = 0.33;
-      let ratio3 = 0.34;
-      
-      if (pitStrategyPreference === "undercut") {
-        ratio1 = 0.25;
-        ratio2 = 0.35;
-        ratio3 = 0.4;
-      } else if (pitStrategyPreference === "overcut") {
-        ratio1 = 0.4;
-        ratio2 = 0.35;
-        ratio3 = 0.25;
-      }
-      
-      const laps1 = Math.ceil(estTotalLaps * ratio1);
-      const laps2 = Math.ceil(estTotalLaps * ratio2);
-      const laps3 = estTotalLaps - laps1 - laps2;
-      
-      const stint1Fuel = (laps1 + 1) * fuelPerLap;
-      const stint2Fuel = (laps2 + 1) * fuelPerLap;
-      const stint3Fuel = (laps3 + (safetyBufferLaps - 2)) * fuelPerLap;
-      
-      stints.push({
-        index: 1,
-        durationMins: Math.round(fuelRaceTime * ratio1 * 10) / 10,
-        laps: laps1,
-        fuelNeeded: stint1Fuel > pitMaxFuelCapacity ? pitMaxFuelCapacity : stint1Fuel,
-        isOverfilled: stint1Fuel > pitMaxFuelCapacity
-      });
-      stints.push({
-        index: 2,
-        durationMins: Math.round(fuelRaceTime * ratio2 * 10) / 10,
-        laps: laps2,
-        fuelNeeded: stint2Fuel > pitMaxFuelCapacity ? pitMaxFuelCapacity : stint2Fuel,
-        isOverfilled: stint2Fuel > pitMaxFuelCapacity
-      });
-      stints.push({
-        index: 3,
-        durationMins: Math.round(fuelRaceTime * ratio3 * 10) / 10,
-        laps: laps3,
-        fuelNeeded: stint3Fuel > pitMaxFuelCapacity ? pitMaxFuelCapacity : stint3Fuel,
-        isOverfilled: stint3Fuel > pitMaxFuelCapacity
-      });
-    }
-    
-    const standardMaxInitialFuel = Math.min(pitMaxFuelCapacity, totalFuelNeeded);
-    const splitStartingFuel = stints.length > 0 ? stintsCount > 1 ? stints[0].fuelNeeded : totalFuelNeeded : totalFuelNeeded;
-    const fuelWeightDifference = Math.max(0, (standardMaxInitialFuel - splitStartingFuel) * 0.74);
-    const estimatedTimeGainPerLap = (fuelWeightDifference / 10) * 0.08;
-    
-    return {
-      estTotalLaps,
-      totalFuelNeeded,
-      stints,
-      msg,
-      alertMsg,
-      fuelWeightDifference,
-      estimatedTimeGainPerLap
-    };
-  };
-
-  const pitStrategy = getPitStrategyModel();
-  const calculatedFuelLapTimeSec = (fuelLapTimeMin === "" ? 0 : fuelLapTimeMin) * 60 + (fuelLapTimeSec === "" ? 0 : fuelLapTimeSec);
+  // ACC Thermal Behavior Engine v2.0 (Diurnal solar curve & thermodynamic pressure model)
+  const coolingData = useMemo(() => {
+    return calculateTransitionCoolingModel({
+      startTime: transitionTimeStart,
+      durationMinutes: transitionDuration,
+      startTrackTemp: transitionTrackTemp,
+      startAmbientTemp: transitionAmbientTemp,
+    });
+  }, [transitionTimeStart, transitionDuration, transitionTrackTemp, transitionAmbientTemp]);
 
   return (
     <div id="acc-app-root" className="min-h-screen bg-zinc-100/60 font-sans text-zinc-900 flex flex-col antialiased w-full max-w-full overflow-x-hidden">
@@ -1664,13 +1572,13 @@ export default function App() {
             <h1 className="text-xs sm:text-sm md:text-lg font-bold tracking-tight text-white flex items-center gap-1 sm:gap-1.5 truncate">
               <Gauge className="text-red-500 w-3.5 h-3.5 md:w-5 md:h-5 animate-pulse shrink-0" />
               <span className="shrink-0">PitWall</span>
-              <span className={`text-[9px] md:text-xs text-zinc-400 border-l border-zinc-800 pl-1 sm:pl-1.5 font-normal transition-all duration-300 ease-in-out overflow-hidden ${
+              <span className={`text-[10px] md:text-xs text-zinc-400 border-l border-zinc-800 pl-1 sm:pl-1.5 font-normal transition-all duration-300 ease-in-out overflow-hidden ${
                 isScrolled ? "max-w-0 opacity-0 md:max-w-[240px] md:opacity-100" : "max-w-[240px] opacity-100"
               }`}>
                 ACC Setup Lab
               </span>
             </h1>
-            <p className={`text-[9px] md:text-xs text-zinc-500 truncate transition-all duration-300 ease-in-out ${
+            <p className={`text-[10px] md:text-xs text-zinc-500 truncate transition-all duration-300 ease-in-out ${
               isScrolled 
                 ? "max-h-0 opacity-0 pr-0 mt-0 overflow-hidden" 
                 : "max-h-4 opacity-100 mt-0.5"
@@ -1722,11 +1630,11 @@ export default function App() {
                     ? "max-w-0 opacity-0 md:max-w-[124px] md:opacity-100" 
                     : "max-w-[124px] opacity-100"
                 }`}>
-                  <span className="text-zinc-200 group-hover:text-red-400 truncate font-semibold text-[11px] leading-tight flex items-center gap-1">
+                  <span className="text-zinc-200 group-hover:text-red-400 truncate font-semibold text-xs leading-tight flex items-center gap-1">
                     <span>{profile?.username ? `@${profile.username}` : (user.displayName || user.email)}</span>
                     <Wrench className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-red-100" />
                   </span>
-                  <span className="text-[8px] text-red-500 font-black tracking-wider uppercase leading-none mt-0.5 animate-pulse">
+                  <span className="text-[10px] text-red-500 font-black tracking-wider uppercase leading-none mt-0.5 animate-pulse">
                     TEAM CLOUD ACTIVE
                   </span>
                 </div>
@@ -1736,10 +1644,10 @@ export default function App() {
             <button
               id="btn-google-sign-in"
               onClick={handleLogin}
-              className={`flex items-center gap-2 bg-red-650 hover:bg-red-700 transition-all duration-300 text-white rounded font-black cursor-pointer font-mono uppercase tracking-wider shadow-md shadow-red-600/10 active:scale-95 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
+              className={`flex items-center gap-2 bg-brand hover:bg-red-700 transition-all duration-300 text-white rounded font-black cursor-pointer font-mono uppercase tracking-wider shadow-md shadow-red-600/10 active:scale-95 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
                 isScrolled 
-                  ? "px-2.5 py-1.5 text-[9px] max-w-[90px]" 
-                  : "px-4 py-2.5 sm:py-1.5 text-[11px] max-w-[200px]"
+                  ? "px-2.5 py-1.5 text-[10px] max-w-[90px]" 
+                  : "px-4 py-2.5 sm:py-1.5 text-xs max-w-[200px]"
               }`}
             >
               <span className="truncate">{isScrolled ? "Connect" : "Connect Driver"}</span>
@@ -1753,7 +1661,7 @@ export default function App() {
         id="app-view-switcher" 
         className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-950/95 border-t border-zinc-850 p-2 pb-[calc(8px+env(safe-area-inset-bottom,16px))] shadow-2xl md:static md:z-auto md:bg-transparent md:border-none md:p-0 md:shadow-none max-w-7xl w-full mx-auto md:px-4 lg:md:px-6 md:pt-3 md:sm:pt-5"
       >
-        <div className="bg-transparent border-none p-0 flex gap-1 font-mono text-[9px] sm:text-[10px] md:text-xs md:bg-white md:border md:border-zinc-250 md:p-1.5 md:rounded-lg md:gap-2 md:shadow-3xs w-full max-w-full justify-around md:justify-start" role="tablist" aria-label="App Views">
+        <div className="bg-transparent border-none p-0 flex gap-1 font-mono text-[10px] sm:text-[10px] md:text-xs md:bg-white md:border md:border-zinc-250 md:p-1.5 md:rounded-lg md:gap-2 md:shadow-3xs w-full max-w-full justify-around md:justify-start" role="tablist" aria-label="App Views">
           <button
             id="view-btn-telemetry"
             onClick={() => setCurrentView("telemetry")}
@@ -1811,7 +1719,7 @@ export default function App() {
             }`}
           >
             <Wrench className="w-4 h-4 text-emerald-440" />
-            <span className="hidden md:inline">🔧 AI RACE ENGINEER</span>
+            <span className="hidden md:inline">AI RACE ENGINEER</span>
             <span className="md:hidden">ENGINEER</span>
           </button>
         </div>
@@ -1826,7 +1734,7 @@ export default function App() {
           {/* A. Search and Filters */}
           <div className="bg-white border border-zinc-250 shadow-sm rounded-lg p-4 flex flex-col gap-3 sticky top-[48px] md:relative md:top-auto z-30">
             <div className="flex items-center justify-between">
-              <label htmlFor="registry-search-input" className="text-xs font-mono font-bold tracking-widest text-red-655 uppercase">Registry Search</label>
+              <label htmlFor="registry-search-input" className="text-xs font-mono font-bold tracking-widest text-brand uppercase">Registry Search</label>
               <Activity className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
             </div>
 
@@ -1836,6 +1744,7 @@ export default function App() {
                 id="registry-search-input"
                 type="text"
                 placeholder="Search setup notes..."
+                aria-label="Search setups"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 className="w-full bg-zinc-50 text-zinc-900 pl-9 pr-4 py-2 border border-zinc-250 rounded text-base md:text-sm focus:outline-none focus:border-red-600 focus-visible:ring-2 focus-visible:ring-red-600"
@@ -1847,8 +1756,8 @@ export default function App() {
                 <div className="flex items-center gap-2">
                   <Flame className="w-4 h-4 text-red-500 animate-pulse" />
                   <div className="min-w-0">
-                    <p className="text-[11px] font-black text-red-700 tracking-tight leading-none">Series Vehicles Active</p>
-                    <p className="text-[9px] text-zinc-500 mt-0.5 font-mono leading-none">Pin list: {profile.pinnedSeriesCars.length} cars configured</p>
+                    <p className="text-xs font-black text-red-700 tracking-tight leading-none">Series Vehicles Active</p>
+                    <p className="text-[10px] text-zinc-500 mt-0.5 font-mono leading-none">Pin list: {profile.pinnedSeriesCars.length} cars configured</p>
                   </div>
                 </div>
                 <label className="flex items-center gap-2 text-xs text-red-600 font-bold bg-white border border-red-200 hover:border-red-350 shadow-3xs px-3 py-1.5 rounded-lg cursor-pointer select-none active:scale-95 transition-all h-9 shrink-0">
@@ -1856,7 +1765,7 @@ export default function App() {
                     type="checkbox"
                     checked={onlyPinnedCarsFilter}
                     onChange={(e) => setOnlyPinnedCarsFilter(e.target.checked)}
-                    className="accent-red-650 w-4 h-4 cursor-pointer block shrink-0"
+                    className="accent-brand w-4 h-4 cursor-pointer block shrink-0"
                   />
                   <span className="font-mono text-[10px] font-black uppercase tracking-wider">Series Only</span>
                 </label>
@@ -1866,13 +1775,13 @@ export default function App() {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label htmlFor="filter-car-select" className="text-zinc-500 block font-mono uppercase text-[9px] font-bold">Car Class</label>
+                  <label htmlFor="filter-car-select" className="text-zinc-500 block font-mono uppercase text-[10px] font-bold">Car Class</label>
                 </div>
                 <select
                   id="filter-car-select"
                   value={carFilter}
                   onChange={(e) => setCarFilter(e.target.value)}
-                  className="w-full bg-zinc-50 border border-zinc-250 text-zinc-850 p-3 md:p-2 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 font-mono text-base md:text-[11px] font-semibold min-h-[44px] md:min-h-0 cursor-pointer"
+                  className="w-full bg-zinc-50 border border-zinc-250 text-zinc-850 p-3 md:p-2 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 font-mono text-base md:text-xs font-semibold min-h-[44px] md:min-h-0 cursor-pointer"
                 >
                   <option value="all">All Cars</option>
                   {(() => {
@@ -1945,12 +1854,12 @@ export default function App() {
                 </select>
               </div>
               <div>
-                <label htmlFor="filter-track-select" className="text-zinc-500 block mb-1 font-mono uppercase text-[9px] font-bold">Track</label>
+                <label htmlFor="filter-track-select" className="text-zinc-500 block mb-1 font-mono uppercase text-[10px] font-bold">Track</label>
                 <select
                   id="filter-track-select"
                   value={trackFilter}
                   onChange={(e) => setTrackFilter(e.target.value)}
-                  className="w-full bg-zinc-50 border border-zinc-250 text-zinc-850 p-3 md:p-2 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 font-mono text-base md:text-[11px] font-semibold min-h-[44px] md:min-h-0 cursor-pointer"
+                  className="w-full bg-zinc-50 border border-zinc-250 text-zinc-850 p-3 md:p-2 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 font-mono text-base md:text-xs font-semibold min-h-[44px] md:min-h-0 cursor-pointer"
                 >
                   <option value="all">All Tracks</option>
                   {(() => {
@@ -1984,7 +1893,7 @@ export default function App() {
               id="drop-zone-setup"
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleFileDrop}
-              className="border-2 border-dashed border-zinc-300 hover:border-red-655 bg-white hover:bg-zinc-50 transition-all rounded-lg p-5 text-center flex flex-col items-center justify-center gap-2 group shadow-sm text-zinc-800"
+              className="border-2 border-dashed border-zinc-300 hover:border-brand bg-white hover:bg-zinc-50 transition-all rounded-lg p-5 text-center flex flex-col items-center justify-center gap-2 group shadow-sm text-zinc-800"
             >
               <div className="flex flex-col items-center justify-center">
                 <Upload className="w-8 h-8 text-zinc-400 group-hover:text-red-600 mb-2 transition-colors" />
@@ -1996,7 +1905,7 @@ export default function App() {
                 <div className="flex gap-2.5 mt-3.5">
                   <label
                     htmlFor="file-input-setup"
-                    className="bg-white hover:bg-zinc-50 text-[11px] text-zinc-700 px-3 py-1.5 rounded border border-zinc-300 font-mono cursor-pointer transition-colors font-semibold shadow-sm focus-within:ring-2 focus-within:ring-red-600 focus-within:outline-none animate-none"
+                    className="bg-white hover:bg-zinc-50 text-xs text-zinc-700 px-3 py-1.5 rounded border border-zinc-300 font-mono cursor-pointer transition-colors font-semibold shadow-sm focus-within:ring-2 focus-within:ring-red-600 focus-within:outline-none animate-none"
                   >
                     <input
                       id="file-input-setup"
@@ -2010,7 +1919,7 @@ export default function App() {
                   </label>
                   <label
                     htmlFor="folder-input-setup"
-                    className="bg-red-50 hover:bg-red-100 text-[11px] text-red-700 px-3 py-1.5 rounded border border-red-200 font-mono cursor-pointer transition-colors font-semibold shadow-sm focus-within:ring-2 focus-within:ring-red-600 focus-within:outline-none animate-none"
+                    className="bg-red-50 hover:bg-red-100 text-xs text-red-700 px-3 py-1.5 rounded border border-red-200 font-mono cursor-pointer transition-colors font-semibold shadow-sm focus-within:ring-2 focus-within:ring-red-600 focus-within:outline-none animate-none"
                   >
                     <input
                       id="folder-input-setup"
@@ -2045,8 +1954,8 @@ export default function App() {
               >
                 <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
                   <div className="flex items-center gap-2">
-                    <FileCode className="text-red-650 w-4 h-4" />
-                    <h3 className="text-xs font-mono font-bold tracking-widest text-red-650 uppercase">
+                    <FileCode className="text-brand w-4 h-4" />
+                    <h3 className="text-xs font-mono font-bold tracking-widest text-brand uppercase">
                       Configure Setup Batch ({pendingSetups.length})
                     </h3>
                   </div>
@@ -2065,7 +1974,7 @@ export default function App() {
                 {/* Bulk Actions Panel */}
                 {pendingSetups.length > 1 && (
                   <div className="bg-zinc-50 p-3 rounded-md border border-zinc-200 space-y-2">
-                    <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-red-650">
+                    <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-brand">
                       Bulk Batch Settings (Apply to All in list)
                     </span>
                     <div className="grid grid-cols-2 gap-2 text-xs">
@@ -2169,25 +2078,19 @@ export default function App() {
                               Circuit: {ACC_TRACKS[setup.trackKey] || setup.parsedData.trackName || "Unknown Track"}
                             </div>
                             {/* Line 3: Filename / Path */}
-                            <div className="text-[9px] text-zinc-400 font-mono truncate max-w-[280px] mt-0.5" title={setup.relativePath || setup.fileName}>
+                            <div className="text-[10px] text-zinc-400 font-mono truncate max-w-[280px] mt-0.5" title={setup.relativePath || setup.fileName}>
                               File: {setup.relativePath || setup.fileName}
                             </div>
                             
                             <div className="flex gap-1.5 mt-1.5 flex-wrap">
                               {hasTrackUnknown && (
-                                <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold">
-                                  ⚠️ Circuit Unspecified
-                                </span>
+                                <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">Circuit Unspecified</span>
                               )}
                               {hasCarUnknown && (
-                                <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold">
-                                  ⚠️ Car Unspecified
-                                </span>
+                                <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">Car Unspecified</span>
                               )}
                               {!hasTrackUnknown && !hasCarUnknown && (
-                                <span className="bg-red-50 border border-red-200 text-red-655 text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
-                                  ✓ Identified
-                                </span>
+                                <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">Identified</span>
                               )}
                             </div>
                           </div>
@@ -2207,7 +2110,7 @@ export default function App() {
                         {/* Edit Form Fields */}
                         <div className="grid grid-cols-1 gap-2 bg-zinc-50 p-2.5 rounded border border-zinc-200 text-xs">
                           <div>
-                            <label className="text-zinc-500 text-[9px] font-mono block uppercase">Friendly Setup Name</label>
+                            <label className="text-zinc-500 text-[10px] font-mono block uppercase">Friendly Setup Name</label>
                             <input
                               type="text"
                               value={setup.customName}
@@ -2215,14 +2118,14 @@ export default function App() {
                                 const val = e.target.value;
                                 setPendingSetups(prev => prev.map(item => item.id === setup.id ? { ...item, customName: val } : item));
                               }}
-                              className="bg-white border border-zinc-350 text-[11px] p-1.5 mt-0.5 rounded text-zinc-900 focus:outline-none focus:border-red-600 w-full"
+                              className="bg-white border border-zinc-350 text-xs p-1.5 mt-0.5 rounded text-zinc-900 focus:outline-none focus:border-red-600 w-full"
                               placeholder="Setup Name"
                             />
                           </div>
 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="text-zinc-500 text-[9px] font-mono block uppercase">Car Model</label>
+                              <label className="text-zinc-500 text-[10px] font-mono block uppercase">Car Model</label>
                               <select
                                 value={setup.carKey}
                                 onChange={(e) => {
@@ -2239,7 +2142,7 @@ export default function App() {
                             </div>
 
                             <div>
-                              <label className="text-zinc-500 text-[9px] font-mono block uppercase">Track / Circuit</label>
+                              <label className="text-zinc-500 text-[10px] font-mono block uppercase">Track / Circuit</label>
                               <select
                                 value={setup.trackKey}
                                 onChange={(e) => {
@@ -2257,7 +2160,7 @@ export default function App() {
                           </div>
 
                           <div>
-                            <label className="text-zinc-500 text-[9px] font-mono block uppercase">Individual Notes</label>
+                            <label className="text-zinc-500 text-[10px] font-mono block uppercase">Individual Notes</label>
                             <input
                               type="text"
                               value={setup.notes}
@@ -2277,7 +2180,7 @@ export default function App() {
 
                 {uploadError && (
                   <div className="text-xs bg-red-50 border border-red-200 text-red-700 p-2.5 rounded flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-red-650 shrink-0" />
+                    <AlertTriangle className="w-4 h-4 text-brand shrink-0" />
                     <span>{uploadError}</span>
                   </div>
                 )}
@@ -2302,7 +2205,7 @@ export default function App() {
                 onClick={() => setActiveGarageTab("github")}
                 className={`flex-1 text-center py-3 font-mono text-[10px] sm:text-xs font-bold tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   activeGarageTab === "github"
-                    ? "bg-white text-red-655 border-b-2 border-red-600 font-extrabold"
+                    ? "bg-white text-brand border-b-2 border-red-600 font-extrabold"
                     : "text-zinc-550 hover:text-zinc-900 font-semibold"
                 }`}
               >
@@ -2314,7 +2217,7 @@ export default function App() {
                 onClick={() => setActiveGarageTab("team")}
                 className={`flex-1 text-center py-3 font-mono text-[10px] sm:text-xs font-bold tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   activeGarageTab === "team"
-                    ? "bg-white text-red-655 border-b-2 border-red-600 font-extrabold"
+                    ? "bg-white text-brand border-b-2 border-red-600 font-extrabold"
                     : "text-zinc-550 hover:text-zinc-900 font-semibold"
                 }`}
               >
@@ -2324,7 +2227,28 @@ export default function App() {
             </div>
 
             {activeGarageTab === "team" ? (
-              <div id="setup-registry-list" className="md:max-h-[380px] md:overflow-y-auto divide-y divide-zinc-150">
+              <div
+                id="setup-registry-list"
+                role="listbox"
+                aria-label="Setup registry"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (filteredSetups.length === 0) return;
+                  const currentIndex = filteredSetups.findIndex((s) => s.id === activeSetup?.id);
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    const nextIndex = currentIndex < filteredSetups.length - 1 ? currentIndex + 1 : 0;
+                    handleSetupClick(filteredSetups[nextIndex]);
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    const prevIndex = currentIndex > 0 ? currentIndex - 1 : filteredSetups.length - 1;
+                    handleSetupClick(filteredSetups[prevIndex]);
+                  } else if (e.key === "Enter" && activeSetup) {
+                    if (isMobile) setMobileView("inspection");
+                  }
+                }}
+                className="md:max-h-[380px] md:overflow-y-auto divide-y divide-zinc-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 rounded-b-lg"
+              >
                 {filteredSetups.length === 0 ? (
                   <div className="p-6 text-center text-zinc-500 text-xs">
                     <FileText className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -2336,25 +2260,34 @@ export default function App() {
                     return (
                       <div
                         key={setup.id}
+                        role="option"
+                        aria-selected={isActive}
+                        tabIndex={isActive ? 0 : -1}
                         onClick={() => handleSetupClick(setup)}
-                        className={`p-3.5 hover:bg-zinc-50 transition-all cursor-pointer flex items-start justify-between gap-2 group ${isActive ? "bg-red-50/60 border-l-4 border-red-600" : "bg-white"}`}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handleSetupClick(setup);
+                          }
+                        }}
+                        className={`p-3.5 hover:bg-zinc-50 transition-all cursor-pointer flex items-start justify-between gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${isActive ? "bg-red-50/60 border-l-4 border-red-600" : "bg-white"}`}
                       >
                         <div className="min-w-0 flex-1">
                           {/* Line 1: Identified Car Name Header */}
-                          <div className={`font-bold text-xs truncate max-w-[280px] tracking-tight group-hover:text-red-650 ${isActive ? "text-red-750 font-black" : "text-zinc-900"}`}>
-                            {ACC_CARS[setup.car] || setup.car || "Unknown Car"}
+                          <div className={`font-bold text-xs truncate max-w-[280px] tracking-tight group-hover:text-brand-hover ${isActive ? "text-brand font-black" : "text-zinc-900"}`}>
+                            {ACC_CARS[setup.car] || setup.car || "—"}
                           </div>
                           {/* Line 2: Track / Circuit */}
                           <div className={`text-[10px] font-semibold truncate max-w-[280px] mt-0.5 ${isActive ? "text-zinc-700" : "text-zinc-500"}`}>
-                            Circuit: {ACC_TRACKS[setup.track] || setup.track || "Unknown Track"}
+                            {ACC_TRACKS[setup.track] || setup.track || "—"}
                           </div>
-                          {/* Line 3: Filename / Name */}
-                          <div className={`text-[9px] font-mono truncate max-w-[280px] mt-0.5 ${isActive ? "text-zinc-500" : "text-zinc-400"}`}>
-                            Setup: {setup.name}
+                          {/* Line 3: Filename / Name & Author */}
+                          <div className={`text-[10px] font-mono truncate max-w-[280px] mt-0.5 ${isActive ? "text-zinc-500" : "text-zinc-400"}`}>
+                            {setup.uploadedByName ? `${setup.uploadedByName} · ` : ""}{setup.name || "—"}
                           </div>
                           {(setup.notes?.includes('[Adapted from') || setup.versionNote?.includes('[Adapted from')) && (
                             <div className="mt-1 flex">
-                              <span className="font-mono text-[8px] uppercase tracking-wider text-amber-650 bg-amber-100/60 font-black px-1.5 py-0.5 rounded border border-amber-250/30">
+                              <span className="font-mono text-[10px] uppercase tracking-wider text-amber-700 bg-amber-100/60 font-black px-1.5 py-0.5 rounded border border-amber-250/30">
                                 Adapted
                               </span>
                             </div>
@@ -2369,7 +2302,7 @@ export default function App() {
                               handleDownloadOriginalJson(setup);
                             }}
                             title="Download source JSON"
-                            className="p-1.5 rounded hover:bg-zinc-200 text-zinc-500 hover:text-red-650 cursor-pointer"
+                            className="p-1.5 rounded hover:bg-zinc-200 text-zinc-500 hover:text-brand-hover cursor-pointer"
                           >
                             <Download className="w-3.5 h-3.5" />
                           </button>
@@ -2405,16 +2338,15 @@ export default function App() {
 
                 {githubStatus === "error" && githubError && (
                   <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3.5 rounded-lg font-mono font-medium shadow-xs">
-                    <div className="font-bold uppercase tracking-wider text-[9px] text-red-800 mb-1">⚠️ Community Sync Failed</div>
+                    <div className="font-bold uppercase tracking-wider text-[10px] text-red-800 mb-1">⚠️ Community Sync Failed</div>
                     {githubError}
                   </div>
                 )}
 
                 {/* Scanned Setup Files list */}
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 border-b border-zinc-200 pb-2">
-                    <span className="flex items-center gap-1.5 font-bold uppercase text-[9px] text-zinc-600 tracking-wider">
-                      🌍 Remote Community Search Results
+                  <div className="flex items-center justify-between text-xs font-mono text-zinc-400 border-b border-zinc-200 pb-2">
+                    <span className="flex items-center gap-1.5 font-bold uppercase text-[10px] text-zinc-600 tracking-wider">🔍 Remote Community Search Results
                       {githubStatus === "connected" && (
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Synchronized Live" />
                       )}
@@ -2424,8 +2356,8 @@ export default function App() {
 
                   {githubTree.length === 0 && githubStatus !== "loading" ? (
                     <div className="p-6 text-center text-zinc-500 border border-dashed border-zinc-200 rounded-lg bg-zinc-50/50">
-                      <Terminal className="w-6 h-6 mx-auto mb-2 opacity-35 text-red-650 animate-pulse" />
-                      <p className="text-[11px] leading-relaxed max-w-[240px] mx-auto font-medium text-zinc-600">
+                      <Terminal className="w-6 h-6 mx-auto mb-2 opacity-35 text-brand animate-pulse" />
+                      <p className="text-xs leading-relaxed max-w-[240px] mx-auto font-medium text-zinc-600">
                         Select this tab to automatically sync ACC setups across all leading racing registries!
                       </p>
                     </div>
@@ -2446,24 +2378,24 @@ export default function App() {
                             <div className="min-w-0 flex-1">
                               {/* 1. Header Line: Car Name parsed or from Path & Rating Display */}
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-bold text-zinc-900 text-[11px] truncate group-hover:text-red-655 tracking-tight">
+                                <span className="font-bold text-zinc-900 text-xs truncate group-hover:text-brand-hover tracking-tight">
                                   {ACC_CARS[item.carKey] || (item.carKey !== "unknown" ? item.carKey : "Unsorted Car")}
                                 </span>
                                 
                                 {hasGrade && (
                                   <span
-                                    className="font-mono text-[8px] sm:text-[9px] px-1.5 py-0.2 rounded bg-zinc-950 font-bold flex items-center gap-1 text-amber-500 shrink-0"
+                                    className="font-mono text-[10px] sm:text-[10px] px-1.5 py-0.2 rounded bg-zinc-950 font-bold flex items-center gap-1 text-amber-500 shrink-0"
                                     title={item.meta.gradeLabel}
                                   >
-                                    {item.meta.grade === 3 && "⭐⭐⭐ [LGE]"}
-                                    {item.meta.grade === 2 && "⭐⭐☆ [WIP]"}
-                                    {item.meta.grade === 1 && "⭐☆☆ [BAS]"}
+                                    {item.meta.grade === 3 && "★★★ [LGE]"}
+                                    {item.meta.grade === 2 && "★★☆ [WIP]"}
+                                    {item.meta.grade === 1 && "★☆☆ [BAS]"}
                                     {item.meta.grade === 0 && "☆☆☆ [PRE]"}
                                   </span>
                                 )}
 
                                 {item.repo && (
-                                  <span className={`font-mono text-[8.5px] px-1 rounded font-bold shrink-0 ${
+                                  <span className={`font-mono text-[10px] px-1 rounded font-bold shrink-0 ${
                                     item.repo.toLowerCase().includes("temetias") 
                                       ? "bg-emerald-950/40 text-emerald-400 border border-emerald-900/35" 
                                       : item.repo.toLowerCase().includes("lon3035") 
@@ -2481,7 +2413,7 @@ export default function App() {
                               </div>
 
                               {/* 3. Filename & Metadata badging */}
-                              <div className="flex items-center gap-1 mx-0 flex-wrap mt-1 text-[9px]">
+                              <div className="flex items-center gap-1 mx-0 flex-wrap mt-1 text-[10px]">
                                 {item.meta.patch && (
                                   <span className="bg-zinc-850 text-zinc-400 font-mono px-1 rounded">
                                     v{item.meta.patch}
@@ -2515,7 +2447,7 @@ export default function App() {
                               <button
                                 disabled={!!isImportingFromGithub}
                                 onClick={() => handleImportGithubSetup(item.path, true, item.repo, item.branch)}
-                                className="px-2 py-1 rounded bg-zinc-850 hover:bg-zinc-800 font-mono text-[9px] font-bold text-zinc-350 hover:text-white transition-all cursor-pointer flex items-center gap-1 disabled:opacity-40"
+                                className="px-2 py-1 rounded bg-zinc-850 hover:bg-zinc-800 font-mono text-[10px] font-bold text-zinc-350 hover:text-white transition-all cursor-pointer flex items-center gap-1 disabled:opacity-40"
                               >
                                 {isThisImporting ? (
                                   <RefreshCw className="w-2.5 h-2.5 animate-spin" />
@@ -2529,7 +2461,7 @@ export default function App() {
                               <button
                                 disabled={!!isImportingFromGithub}
                                 onClick={() => handleImportGithubSetup(item.path, false, item.repo, item.branch)}
-                                className="px-2 py-1 rounded bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-950/40 font-mono text-[9px] font-bold text-emerald-400 hover:text-emerald-300 transition-all cursor-pointer flex items-center gap-1 disabled:opacity-40"
+                                className="px-2 py-1 rounded bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-950/40 font-mono text-[10px] font-bold text-emerald-400 hover:text-emerald-300 transition-all cursor-pointer flex items-center gap-1 disabled:opacity-40"
                               >
                                 {isThisImporting ? (
                                   <RefreshCw className="w-2.5 h-2.5 animate-spin" />
@@ -2606,7 +2538,7 @@ export default function App() {
                   <button
                     id="btn-save-workbook"
                     onClick={handleSaveCustomGuide}
-                    className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-mono text-[11px] py-2 rounded font-bold cursor-pointer transition-colors"
+                    className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-mono text-xs py-2 rounded font-bold cursor-pointer transition-colors"
                   >
                     Commit Workbook
                   </button>
@@ -2616,7 +2548,7 @@ export default function App() {
                         setCustomGuideText("");
                         dbSaveGuide("", user?.uid || "guest");
                       }}
-                      className="bg-red-950/25 hover:bg-red-950/60 border border-red-900/40 text-red-300 font-mono text-[11px] px-3 py-2 rounded transition-colors"
+                      className="bg-red-950/25 hover:bg-red-950/60 border border-red-900/40 text-red-300 font-mono text-xs px-3 py-2 rounded transition-colors"
                     >
                       Reset
                     </button>
@@ -2632,7 +2564,11 @@ export default function App() {
           <div className="lg:hidden col-span-full bg-white border border-zinc-200 rounded-lg px-4 py-3 flex items-center gap-3 shadow-sm">
             <button
               onClick={() => {
-                setMobileView('registry');
+                if (window.history.length > 1) {
+                  window.history.back();
+                } else {
+                  setMobileView('registry');
+                }
                 window.scrollTo({ top: 0 });
               }}
               className="flex items-center gap-1 text-red-600 font-bold text-sm -ml-1 px-2 py-1.5 rounded-lg active:bg-red-50 transition-colors min-h-[44px]"
@@ -2642,7 +2578,7 @@ export default function App() {
             </button>
             {activeSetup && (
               <div className="flex-1 min-w-0 text-right">
-                <p className="text-[11px] font-mono text-zinc-400 truncate">
+                <p className="text-xs font-mono text-zinc-400 truncate">
                   {ACC_CARS[activeSetup.car] || activeSetup.car} · {ACC_TRACKS[activeSetup.track] || activeSetup.track}
                 </p>
               </div>
@@ -2671,7 +2607,7 @@ export default function App() {
                 <h2 className="text-xl md:text-2xl font-black text-zinc-950 tracking-tight leading-snug break-words">
                   {activeSetup ? activeSetup.name : "Select an ACC Setup to inspect"}
                 </h2>
-                <div className="text-[11.5px] text-zinc-650 font-mono font-semibold flex items-center flex-wrap gap-x-2.5 gap-y-1">
+                <div className="text-xs text-zinc-650 font-mono font-semibold flex items-center flex-wrap gap-x-2.5 gap-y-1">
                   {activeSetup ? (
                     <>
                       <span className="text-zinc-500">Car: <strong className="text-zinc-900 font-extrabold">{ACC_CARS[activeSetup.car] || activeSetup.car}</strong></span>
@@ -2689,7 +2625,7 @@ export default function App() {
                   <div className="flex items-center gap-2 bg-white border border-zinc-250 px-3 py-1.5 rounded-lg shadow-3xs hover:border-zinc-350 transition-colors w-full sm:w-auto">
                     <span className="text-[10px] font-mono text-zinc-500 font-extrabold uppercase shrink-0">REF VEHICLE:</span>
                     <select
-                      className="bg-transparent border-none text-zinc-905 font-mono font-bold text-[11px] cursor-pointer focus:ring-0 outline-none p-0 pr-6 w-full shadow-none"
+                      className="bg-transparent border-none text-zinc-905 font-mono font-bold text-xs cursor-pointer focus:ring-0 outline-none p-0 pr-6 w-full shadow-none"
                       value={activeSetup.car}
                       onChange={(e) => handleSelectReferenceCar(e.target.value)}
                     >
@@ -2707,9 +2643,6 @@ export default function App() {
                         if (!isTuneMode) {
                           const cloned = JSON.parse(JSON.stringify(activeSetup.rawData || {}));
                           setTunedRawData(cloned);
-                          setTuneVersionNote("");
-                          setTuneIsTeamWorkspace(false);
-                          setSaveModalTargetTrack(activeSetup.track);
                           setIsTuneMode(true);
                           showToast("Tune mode active", "info");
                         } else {
@@ -2717,7 +2650,7 @@ export default function App() {
                           setTunedRawData(null);
                         }
                       }}
-                      className={`flex items-center justify-center gap-1.5 px-4 py-2 sm:px-3.5 sm:py-2 rounded-lg border text-[11px] font-mono font-black shadow-3xs transition-all cursor-pointer h-10 w-full sm:w-auto ${
+                      className={`flex items-center justify-center gap-1.5 px-4 py-2 sm:px-3.5 sm:py-2 rounded-lg border text-xs font-mono font-black shadow-3xs transition-all cursor-pointer h-10 w-full sm:w-auto ${
                         isTuneMode 
                           ? "bg-amber-600 border-amber-700 text-white hover:bg-amber-700" 
                           : "bg-white border-zinc-250 text-amber-700 hover:border-amber-300 hover:bg-amber-50/20"
@@ -2730,7 +2663,7 @@ export default function App() {
                   <button
                     id="active-setup-download-original"
                     onClick={() => handleDownloadOriginalJson(activeSetup)}
-                    className="flex items-center justify-center gap-1.5 bg-zinc-50 text-zinc-700 hover:text-red-655 px-4 py-2 sm:px-3.5 sm:py-2 rounded-lg border border-zinc-250 hover:border-red-350 text-[11px] font-mono font-black shadow-3xs transition-all cursor-pointer h-10 w-full sm:w-auto"
+                    className="flex items-center justify-center gap-1.5 bg-zinc-50 text-zinc-700 hover:text-brand-hover px-4 py-2 sm:px-3.5 sm:py-2 rounded-lg border border-zinc-250 hover:border-red-350 text-xs font-mono font-black shadow-3xs transition-all cursor-pointer h-10 w-full sm:w-auto"
                   >
                     <Download className="w-3.5 h-3.5 mr-0.5" />
                     Extract Setup .json
@@ -2744,74 +2677,17 @@ export default function App() {
                 
                 {/* Active Tuning Workshop Save Banner */}
                 {isTuneMode && (
-                  <div className="bg-amber-500/10 border-b border-amber-500/30 p-4 shrink-0 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 text-xs font-mono">
-                    <div className="flex items-center gap-2.5">
-                      <div className="bg-amber-500 text-black p-2 rounded-md shrink-0">
-                        <Wrench className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h4 className="font-extrabold text-amber-600 uppercase tracking-wider text-[11px]">Active Tuning Workshop Mode</h4>
-                        <p className="text-[10px] text-zinc-650 mt-0.5 leading-tight">Modify values using +/- controls inside the Tyre pressures, Electronics, and Mechanical sections.</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                      <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
-                        <input
-                          type="text"
-                          placeholder="Version note (e.g. Sunset cooling adjustment)"
-                          value={tuneVersionNote}
-                          onChange={(e) => setTuneVersionNote(e.target.value)}
-                          className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-1.5 rounded text-base md:text-[11.5px] min-h-[44px] md:min-h-0 placeholder-zinc-400 outline-none focus:border-amber-500"
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-1 shrink-0 min-w-[150px]">
-                        <select
-                          value={saveModalTargetTrack || activeSetup?.track || "monza"}
-                          onChange={(e) => setSaveModalTargetTrack(e.target.value)}
-                          className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-1.5 rounded text-base md:text-[11.5px] min-h-[44px] md:min-h-0 outline-none focus:border-amber-500 cursor-pointer font-sans"
-                        >
-                          {Object.entries(ACC_TRACKS).map(([key, name]) => (
-                            <option key={key} value={key}>
-                              {key === activeSetup?.track ? `${name} (Current Track)` : name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      
-                      <label className="flex items-center gap-1.5 text-[10.5px] text-zinc-650 cursor-pointer select-none font-bold">
-                        <input
-                          type="checkbox"
-                          checked={tuneIsTeamWorkspace}
-                          onChange={(e) => setTuneIsTeamWorkspace(e.target.checked)}
-                          className="accent-amber-500 w-3.5 h-3.5 rounded border-zinc-300 focus:ring-amber-550"
-                        />
-                        Share to Team Workspace
-                      </label>
-                      
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          onClick={async () => {
-                            const finalNotes = tuneVersionNote.trim() || "Tweaked custom parameters.";
-                            await handleSaveCustomTunedSetup(finalNotes, saveModalTargetTrack || activeSetup?.track);
-                          }}
-                          className="bg-amber-600 hover:bg-amber-750 text-white font-extrabold px-3 py-1.5 rounded cursor-pointer transition-colors text-[10.5px] uppercase tracking-wider shadow-md active:scale-95 text-center"
-                        >
-                          Save Variant
-                        </button>
-                        <button
-                          onClick={() => {
-                            setIsTuneMode(false);
-                            setTunedRawData(null);
-                          }}
-                          className="bg-zinc-200 hover:bg-zinc-300 text-zinc-705 font-extrabold px-3 py-1.5 rounded cursor-pointer transition-colors text-[10.5px] active:scale-95 text-center"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <TuningWorkshopBanner
+                    currentTrack={activeSetup?.track}
+                    variant="top"
+                    onSave={async (notes, targetTrack, isTeam) => {
+                      await handleSaveCustomTunedSetup(notes, targetTrack, isTeam);
+                    }}
+                    onCancel={() => {
+                      setIsTuneMode(false);
+                      setTunedRawData(null);
+                    }}
+                  />
                 )}
                 
                 {/* Custom Uploader Notes Accordion */}
@@ -2822,9 +2698,9 @@ export default function App() {
                       className="w-full flex items-center justify-between px-4 sm:px-5 py-3 hover:bg-zinc-100/50 transition-colors text-left outline-none cursor-pointer select-none"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <FileText className={`w-4 h-4 text-red-650 shrink-0 ${isCrewNotesOpen ? "animate-pulse" : ""}`} />
+                        <FileText className={`w-4 h-4 text-brand shrink-0 ${isCrewNotesOpen ? "animate-pulse" : ""}`} />
                         <span className="text-zinc-550 font-extrabold font-mono uppercase tracking-wider text-[10px] truncate">
-                          Uploaded by <strong className="text-zinc-800 font-extrabold">{activeSetup.uploadedByName || "Team Lead"}</strong> • Crew Notes
+                          Uploaded by <strong className="text-zinc-800 font-extrabold">{activeSetup.uploadedByName || "Team Lead"}</strong> · Crew Notes
                         </span>
                       </div>
                       <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-200 shrink-0 ${isCrewNotesOpen ? "rotate-180" : ""}`} />
@@ -2844,7 +2720,7 @@ export default function App() {
                   <div className="flex flex-wrap gap-4 items-center">
                     {/* Aggregate rating */}
                     <div className="flex flex-col">
-                      <span className="text-zinc-500 font-semibold font-mono uppercase tracking-wider text-[9px] mb-1 leading-none font-bold">Community Rating</span>
+                      <span className="text-zinc-500 font-semibold font-mono uppercase tracking-wider text-[10px] mb-1 leading-none font-bold">Community Rating</span>
                       {activeSetupRatings.length > 0 ? (
                         <div className="flex items-center gap-2">
                           <div className="flex items-center text-amber-500">
@@ -2860,17 +2736,17 @@ export default function App() {
                           </div>
                           <strong className="text-zinc-[850] font-extrabold text-sm font-mono text-zinc-900">
                             {(activeSetupRatings.reduce((acc, r) => acc + r.rating, 0) / activeSetupRatings.length).toFixed(1)} 
-                            <span className="text-zinc-550 font-medium text-[11px] font-sans"> ({activeSetupRatings.length} reviews)</span>
+                            <span className="text-zinc-550 font-medium text-xs font-sans"> ({activeSetupRatings.length} reviews)</span>
                           </strong>
                         </div>
                       ) : (
-                        <span className="text-zinc-500 font-semibold italic text-[11px] block mt-0.5">Unrated</span>
+                        <span className="text-zinc-500 font-semibold italic text-xs block mt-0.5">Unrated</span>
                       )}
                     </div>
                     
                     {/* Computed Active Tags */}
                     <div className="flex flex-col">
-                      <span className="text-zinc-500 font-semibold font-mono uppercase tracking-wider text-[9px] mb-1 leading-none font-bold">Active Handling Tags</span>
+                      <span className="text-zinc-500 font-semibold font-mono uppercase tracking-wider text-[10px] mb-1 leading-none font-bold">Active Handling Tags</span>
                       <div className="flex flex-wrap gap-1 mt-0.5 min-h-[22px]">
                         {(() => {
                           const tagCounts: { [key: string]: number } = {};
@@ -2884,13 +2760,13 @@ export default function App() {
                           
                           const uniqueTags = Object.keys(tagCounts);
                           if (uniqueTags.length === 0) {
-                            return <span className="text-zinc-400 italic text-[11px] mt-0.5 block font-medium">No community tags submitted yet</span>;
+                            return <span className="text-zinc-400 italic text-xs mt-0.5 block font-medium">No community tags submitted yet</span>;
                           }
                           
                           return uniqueTags.map((tag) => (
                             <span key={tag} className="bg-zinc-100 text-zinc-805 px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase flex items-center gap-1 border border-zinc-200">
                               {tag}
-                              <strong className="text-red-700 bg-zinc-200/80 px-1 rounded-sm text-[9px] font-black">{tagCounts[tag]}</strong>
+                              <strong className="text-red-700 bg-zinc-200/80 px-1 rounded-sm text-[10px] font-black">{tagCounts[tag]}</strong>
                             </span>
                           ));
                         })()}
@@ -2903,13 +2779,17 @@ export default function App() {
                     <div className="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-zinc-50 border border-zinc-250 p-2 rounded-md shadow-3xs">
                       {/* Star Picker */}
                       <div className="flex items-center gap-1.5 shrink-0 px-1">
-                        <span className="text-zinc-505 font-extrabold font-mono uppercase text-[9px] tracking-wider block shrink-0">Your Assessment:</span>
-                        <div className="flex items-center gap-0.5">
+                        <span className="text-zinc-505 font-extrabold font-mono uppercase text-[10px] tracking-wider block shrink-0">Your Assessment:</span>
+                        <div className="flex items-center gap-0.5" role="radiogroup" aria-label="Rate setup handling quality">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <button
                               key={star}
+                              type="button"
+                              role="radio"
+                              aria-checked={userRating >= star}
+                              aria-label={`${star} star${star > 1 ? "s" : ""}`}
                               onClick={() => setUserRating(star)}
-                              className="text-zinc-350 hover:text-amber-500 cursor-pointer transition-all select-none focus:outline-none"
+                              className="text-zinc-350 hover:text-amber-500 cursor-pointer transition-all select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-amber-500 rounded p-0.5"
                             >
                               <Star className={`w-4 h-4 ${star <= userRating ? "text-amber-500 fill-amber-500" : "text-zinc-300"}`} />
                             </button>
@@ -2931,8 +2811,8 @@ export default function App() {
                                   setSelectedReviewTags([...selectedReviewTags, tag]);
                                 }
                               }}
-                              className={`px-1.5 py-0.5 rounded text-[9.5px] font-mono font-bold uppercase transition-all cursor-pointer ${
-                                isSelected ? "bg-red-650 text-white" : "bg-white border border-zinc-250 hover:bg-zinc-100 text-zinc-700 font-semibold"
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
+                                isSelected ? "bg-brand text-white" : "bg-white border border-zinc-250 hover:bg-zinc-100 text-zinc-700 font-semibold"
                               }`}
                             >
                               {tag}
@@ -2945,7 +2825,7 @@ export default function App() {
                       <button
                         onClick={handleSaveRating}
                         disabled={isSavingRating || userRating === 0}
-                        className="bg-zinc-900 hover:bg-red-650 text-white font-extrabold px-3 py-1 rounded transition-all cursor-pointer text-[10px] uppercase tracking-wider disabled:opacity-50 inline-flex items-center justify-center gap-1"
+                        className="bg-zinc-900 hover:bg-brand-hover text-white font-extrabold px-3 py-1 rounded transition-all cursor-pointer text-[10px] uppercase tracking-wider disabled:opacity-50 inline-flex items-center justify-center gap-1"
                       >
                         {isSavingRating ? (
                           <RefreshCw className="w-3 h-3 animate-spin" />
@@ -2956,7 +2836,7 @@ export default function App() {
                       </button>
                     </div>
                   ) : (
-                    <div className="text-zinc-455 font-bold font-mono text-[9px] uppercase border border-dashed border-zinc-250 p-2 rounded shrink-0">
+                    <div className="text-zinc-455 font-bold font-mono text-[10px] uppercase border border-dashed border-zinc-250 p-2 rounded shrink-0">
                       Sign in to rate or tag this setup
                     </div>
                   )}
@@ -2970,7 +2850,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "tyres"}
                     aria-controls="tabpanel-tyres"
-                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "tyres" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "tyres" ? "border-red-600 text-brand bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Tyres & Alignment
                   </button>
@@ -2980,7 +2860,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "electronics"}
                     aria-controls="tabpanel-electronics"
-                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "electronics" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "electronics" ? "border-red-600 text-brand bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Electronics
                   </button>
@@ -2990,7 +2870,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "fuel"}
                     aria-controls="tabpanel-fuel"
-                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "fuel" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "fuel" ? "border-red-600 text-brand bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Fuel Strategy
                   </button>
@@ -3000,7 +2880,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "mechanical"}
                     aria-controls="tabpanel-mechanical"
-                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "mechanical" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "mechanical" ? "border-red-600 text-brand bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Mechanical Grip
                   </button>
@@ -3010,7 +2890,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "dampers"}
                     aria-controls="tabpanel-dampers"
-                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "dampers" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "dampers" ? "border-red-600 text-brand bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Suspension Dampers
                   </button>
@@ -3020,7 +2900,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "aero"}
                     aria-controls="tabpanel-aero"
-                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "aero" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "aero" ? "border-red-600 text-brand bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Aero & Ducts
                   </button>
@@ -3040,7 +2920,7 @@ export default function App() {
                           </div>
                           <div>
                             <h4 className="text-xs font-mono font-black text-zinc-900 uppercase tracking-wider">Tyre Operating Window Upgraded</h4>
-                            <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">
+                            <p className="text-xs text-zinc-600 mt-0.5 font-medium">
                               Optimal pressure targets has been adjusted to <strong className="text-emerald-700 font-extrabold">26.5 - 27.5 PSI</strong>. Target Racing Hot: <strong className="text-zinc-900 font-extrabold">27.0 PSI</strong>.
                             </p>
                           </div>
@@ -3050,13 +2930,13 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-4 items-stretch">
+                      <div className="flex flex-col gap-4 items-stretch" role="group" aria-label="Tyre Pressures & Wheel Alignment">
                         
                         {/* Front tyres aligning card */}
-                        <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
+                        <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm" role="group" aria-label="Front Tyres & Alignment">
                           <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">FRONT TYRES & ALIGNMENT (LF/RF)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">PRESSURE & CAR OUTLINES</span>
+                            <span className="text-[10px] text-zinc-400 font-mono font-bold">PRESSURE & CAR OUTLINES</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">
@@ -3065,7 +2945,7 @@ export default function App() {
                               const basePSI = parsedActiveSetup.tyrePressures[0];
                               const displayPSI = showCompensated ? (basePSI - coolingData.compensationPSI) : basePSI;
                               return (
-                                <div className={`p-4 rounded-lg border hover:border-red-650 transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
+                                <div role="group" aria-label="Front Left Wheel" className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">LF Front Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
                                     <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
@@ -3074,18 +2954,20 @@ export default function App() {
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", -1, 0)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Decrease front left pressure by 0.1 PSI"
                                           title="Decrease Pressure 0.1 PSI"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
+                                      <strong aria-live="polite" className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
                                         {displayPSI.toFixed(1)} PSI
                                       </strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", 1, 0)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Increase front left pressure by 0.1 PSI"
                                           title="Increase Pressure 0.1 PSI"
                                         >
                                           +
@@ -3099,16 +2981,18 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", -1, 0)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Decrease front left toe"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[0]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.toes[0])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 0)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Increase front left toe"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3121,16 +3005,18 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", -1, 0)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Decrease front left camber"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[0]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.cambers[0])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 0)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Increase front left camber"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3143,16 +3029,18 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", -1, 0)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Decrease front left caster"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[0]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.casters[0])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 0)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Increase front left caster"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3168,7 +3056,7 @@ export default function App() {
                               const basePSI = parsedActiveSetup.tyrePressures[1];
                               const displayPSI = showCompensated ? (basePSI - coolingData.compensationPSI) : basePSI;
                               return (
-                                <div className={`p-4 rounded-lg border hover:border-red-650 transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
+                                <div role="group" aria-label="Front Right Wheel" className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">RF Front Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
                                     <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
@@ -3177,18 +3065,20 @@ export default function App() {
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", -1, 1)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Decrease front right pressure by 0.1 PSI"
                                           title="Decrease Pressure 0.1 PSI"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
+                                      <strong aria-live="polite" className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
                                         {displayPSI.toFixed(1)} PSI
                                       </strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", 1, 1)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Increase front right pressure by 0.1 PSI"
                                           title="Increase Pressure 0.1 PSI"
                                         >
                                           +
@@ -3202,16 +3092,18 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", -1, 1)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Decrease front right toe"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[1]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.toes[1])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 1)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Increase front right toe"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3224,16 +3116,18 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", -1, 1)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Decrease front right camber"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[1]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.cambers[1])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 1)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Increase front right camber"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3246,16 +3140,18 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", -1, 1)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Decrease front right caster"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[1]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.casters[1])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 1)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Increase front right caster"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3269,10 +3165,10 @@ export default function App() {
                         </div>
 
                         {/* Rear tyres aligning card */}
-                        <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
+                        <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm" role="group" aria-label="Rear Tyres & Alignment">
                           <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">REAR TYRES & ALIGNMENT (LR/RR)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">PRESSURE & CAR OUTLINES</span>
+                            <span className="text-[10px] text-zinc-400 font-mono font-bold">PRESSURE & CAR OUTLINES</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">
@@ -3281,7 +3177,7 @@ export default function App() {
                               const basePSI = parsedActiveSetup.tyrePressures[2];
                               const displayPSI = showCompensated ? (basePSI - coolingData.compensationPSI) : basePSI;
                               return (
-                                <div className={`p-4 rounded-lg border hover:border-red-650 transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
+                                <div role="group" aria-label="Rear Left Wheel" className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">LR Rear Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
                                     <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
@@ -3290,18 +3186,20 @@ export default function App() {
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", -1, 2)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Decrease rear left pressure by 0.1 PSI"
                                           title="Decrease Pressure 0.1 PSI"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
+                                      <strong aria-live="polite" className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
                                         {displayPSI.toFixed(1)} PSI
                                       </strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", 1, 2)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Increase rear left pressure by 0.1 PSI"
                                           title="Increase Pressure 0.1 PSI"
                                         >
                                           +
@@ -3315,16 +3213,18 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", -1, 2)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Decrease rear left toe"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[2]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.toes[2])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 2)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Increase rear left toe"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3337,16 +3237,18 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", -1, 2)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Decrease rear left camber"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[2]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.cambers[2])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 2)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Increase rear left camber"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3362,7 +3264,7 @@ export default function App() {
                               const basePSI = parsedActiveSetup.tyrePressures[3];
                               const displayPSI = showCompensated ? (basePSI - coolingData.compensationPSI) : basePSI;
                               return (
-                                <div className={`p-4 rounded-lg border hover:border-red-650 transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
+                                <div role="group" aria-label="Rear Right Wheel" className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">RR Rear Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
                                     <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
@@ -3371,18 +3273,20 @@ export default function App() {
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", -1, 3)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Decrease rear right pressure by 0.1 PSI"
                                           title="Decrease Pressure 0.1 PSI"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
+                                      <strong aria-live="polite" className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
                                         {displayPSI.toFixed(1)} PSI
                                       </strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", 1, 3)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Increase rear right pressure by 0.1 PSI"
                                           title="Increase Pressure 0.1 PSI"
                                         >
                                           +
@@ -3396,16 +3300,18 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", -1, 3)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Decrease rear right toe"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[3]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.toes[3])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 3)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Increase rear right toe"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3418,16 +3324,18 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", -1, 3)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Decrease rear right camber"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[3]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.cambers[3])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 3)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          aria-label="Increase rear right camber"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3455,8 +3363,7 @@ export default function App() {
                           </button>
 
                           {showCompensated && (
-                            <div className="text-[10px] text-center text-amber-900 mt-2 p-2 bg-amber-50/80 rounded border border-amber-200 font-mono font-semibold">
-                              ⚠ Thermal pressure loss simulated. Notice tyres falling into the <strong className="text-sky-700">blue/underinflated</strong> zone as track temperature cools down.
+                            <div className="text-[10px] text-center text-amber-900 mt-2 p-2 bg-amber-50/80 rounded border border-amber-200 font-mono font-semibold">⚠️ Thermal pressure loss simulated. Notice tyres falling into the <strong className="text-sky-700">blue/underinflated</strong> zone as track temperature cools down.
                             </div>
                           )}
                         </div>
@@ -3470,8 +3377,8 @@ export default function App() {
                                 Transitional Sunset & Night Calculator
                               </h3>
                             </div>
-                            <span className="text-[9px] font-mono bg-zinc-50 px-2 py-0.5 rounded text-zinc-600 border border-zinc-200 font-bold">
-                              THERMAL BEHAVIOR ENGINE v1.9
+                            <span className="text-[10px] font-mono bg-zinc-50 px-2 py-0.5 rounded text-zinc-600 border border-zinc-200 font-bold">
+                              THERMAL BEHAVIOR ENGINE v2.0
                             </span>
                           </div>
 
@@ -3479,7 +3386,7 @@ export default function App() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* Column 1: Time of Day Selector */}
                             <div>
-                              <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 font-bold">
+                              <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 font-bold">
                                 Race Starting Time Of Day
                               </label>
                               <select
@@ -3495,7 +3402,7 @@ export default function App() {
                                   const isSunset = i === 17 || i === 18 || i === 19;
                                   return (
                                     <option key={hourStr} value={hourStr}>
-                                      {hourStr} {isSunset ? "🌇 (Sunset Transition)" : ""}
+                                      {hourStr} {isSunset ? "🌅 (Sunset Transition)" : ""}
                                     </option>
                                   );
                                 })}
@@ -3504,7 +3411,7 @@ export default function App() {
 
                             {/* Column 2: Race Duration */}
                             <div>
-                              <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 font-bold">
+                              <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 font-bold">
                                 Race Duration (Hours and Minutes)
                               </label>
                               <div className="grid grid-cols-2 gap-2">
@@ -3546,7 +3453,7 @@ export default function App() {
 
                           {/* Race Start Temperatures Section Header */}
                           <div className="pt-2.5 border-t border-zinc-200">
-                            <span className="text-[9.5px] font-mono font-extrabold text-zinc-550 uppercase tracking-wider block mb-2">
+                            <span className="text-[10px] font-mono font-extrabold text-zinc-550 uppercase tracking-wider block mb-2">
                               Race Start Temperatures
                             </span>
                           </div>
@@ -3554,7 +3461,7 @@ export default function App() {
                           {/* Interactive Ambient/Track Temp Modifiers */}
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 flex items-center gap-1 font-bold whitespace-nowrap">
+                              <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 flex items-center gap-1 font-bold whitespace-nowrap">
                                 <Thermometer className="w-3 h-3 text-red-600" />
                                 Ambient Temp
                               </label>
@@ -3565,13 +3472,13 @@ export default function App() {
                                     setTransitionAmbientTemp(prev => Math.max(10, prev - 1));
                                     setShowCompensated(true);
                                   }}
-                                  className="px-2.5 py-2 hover:bg-zinc-100 text-zinc-500 hover:text-red-650 transition-colors border-r border-zinc-200 cursor-pointer focus:outline-none flex items-center justify-center h-full"
+                                  className="px-2.5 py-2 hover:bg-zinc-100 text-zinc-500 hover:text-brand-hover transition-colors border-r border-zinc-200 cursor-pointer focus:outline-none flex items-center justify-center h-full"
                                   title="Decrease ambient temperature"
                                 >
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="flex-1 text-center font-mono text-xs font-bold text-zinc-900 select-none">
-                                  {transitionAmbientTemp}°C
+                                  {formatCelsius(transitionAmbientTemp)}
                                 </span>
                                 <button
                                   type="button"
@@ -3579,7 +3486,7 @@ export default function App() {
                                     setTransitionAmbientTemp(prev => Math.min(40, prev + 1));
                                     setShowCompensated(true);
                                   }}
-                                  className="px-2.5 py-2 hover:bg-zinc-105 text-zinc-500 hover:text-red-650 transition-colors border-l border-zinc-200 cursor-pointer focus:outline-none flex items-center justify-center h-full"
+                                  className="px-2.5 py-2 hover:bg-zinc-105 text-zinc-500 hover:text-brand-hover transition-colors border-l border-zinc-200 cursor-pointer focus:outline-none flex items-center justify-center h-full"
                                   title="Increase ambient temperature"
                                 >
                                   <Plus className="w-3.5 h-3.5" />
@@ -3588,7 +3495,7 @@ export default function App() {
                             </div>
 
                             <div>
-                              <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 flex items-center gap-1 font-bold whitespace-nowrap">
+                              <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 flex items-center gap-1 font-bold whitespace-nowrap">
                                 <Thermometer className="w-3 h-3 text-blue-600" />
                                 Track Temp
                               </label>
@@ -3605,7 +3512,7 @@ export default function App() {
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="flex-1 text-center font-mono text-xs font-bold text-zinc-900 select-none">
-                                  {transitionTrackTemp}°C
+                                  {formatCelsius(transitionTrackTemp)}
                                 </span>
                                 <button
                                   type="button"
@@ -3625,8 +3532,8 @@ export default function App() {
                           {/* Calculator Results Board */}
                           <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3.5 space-y-3.5">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-zinc-200 pb-2">
-                              <span className="text-[9.5px] font-mono text-zinc-650 uppercase font-bold">Session Thermal Evolution</span>
-                              <span className="text-[10.5px] font-mono text-amber-800 font-extrabold flex items-center gap-1">
+                              <span className="text-[10px] font-mono text-zinc-650 uppercase font-bold">Session Thermal Evolution</span>
+                              <span className="text-xs font-mono text-amber-800 font-extrabold flex items-center gap-1">
                                 {parseInt(transitionTimeStart.split(":")[0]) >= 16 && parseInt(transitionTimeStart.split(":")[0]) < 21 ? (
                                   <>🌅 {coolingData.coolingType}</>
                                 ) : parseInt(transitionTimeStart.split(":")[0]) >= 21 || parseInt(transitionTimeStart.split(":")[0]) < 5 ? (
@@ -3643,14 +3550,14 @@ export default function App() {
                                 const isLoss = val >= 0;
                                 return (
                                   <div className="bg-white p-2.5 rounded border border-zinc-200 shadow-xs">
-                                    <span className="text-[8.5px] font-mono text-zinc-550 uppercase block tracking-wider font-bold">
+                                    <span className="text-[10px] font-mono text-zinc-550 uppercase block tracking-wider font-bold">
                                       {isLoss ? "Est. Ambient Drop" : "Est. Ambient Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-emerald-700" : "text-amber-600"}`}>
-                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}°C
+                                      {isLoss ? "-" : "+"}{formatCelsius(Math.abs(val).toFixed(1))}
                                     </span>
-                                    <span className="text-[8.5px] font-mono text-zinc-500 block mt-0.5">
-                                      Finish: {(transitionAmbientTemp - val).toFixed(1)}°C
+                                    <span className="text-[10px] font-mono text-zinc-500 block mt-0.5">
+                                      Finish: {formatCelsius((transitionAmbientTemp - val).toFixed(1))}
                                     </span>
                                   </div>
                                 );
@@ -3661,14 +3568,14 @@ export default function App() {
                                 const isLoss = val >= 0;
                                 return (
                                   <div className="bg-white p-2.5 rounded border border-zinc-200 shadow-xs">
-                                    <span className="text-[8.5px] font-mono text-zinc-550 uppercase block tracking-wider font-bold">
+                                    <span className="text-[10px] font-mono text-zinc-550 uppercase block tracking-wider font-bold">
                                       {isLoss ? "Est. Track Drop" : "Est. Track Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-blue-700" : "text-orange-600"}`}>
-                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}°C
+                                      {isLoss ? "-" : "+"}{formatCelsius(Math.abs(val).toFixed(1))}
                                     </span>
-                                    <span className="text-[8.5px] font-mono text-zinc-500 block mt-0.5">
-                                      Finish: {(transitionTrackTemp - val).toFixed(1)}°C
+                                    <span className="text-[10px] font-mono text-zinc-500 block mt-0.5">
+                                      Finish: {formatCelsius((transitionTrackTemp - val).toFixed(1))}
                                     </span>
                                   </div>
                                 );
@@ -3677,19 +3584,14 @@ export default function App() {
 
                             {/* Prescribed Action Block */}
                             {(() => {
-                              const isWarming = coolingData.trackDrop < 0 || coolingData.ambientDrop < 0;
                               const isPositiveComp = coolingData.compensationPSI >= 0;
                               const compensationSign = isPositiveComp ? "+" : "-";
                               const absCompValue = Math.abs(coolingData.compensationPSI);
-                              const absClicks = Math.round(absCompValue * 10);
+                              const absClicks = Math.abs(coolingData.compensationClicks);
                               
                               const actionWord = isPositiveComp ? "INCREASE" : "DECREASE";
-                              const actionColorClass = isPositiveComp ? "text-red-655" : "text-blue-655";
-                              
-                              const trendTerm = isWarming ? "warm" : "cool";
-                              const thermalEffect = isWarming 
-                                ? "thermal expansion increases active tyre pressures" 
-                                : "cold air contraction reduces dynamic thermal inflation";
+                              const actionColorClass = isPositiveComp ? "text-brand" : "text-blue-655";
+                              const trendTerm = coolingData.trend === "warming" ? "warm" : "cool";
                               
                               return (
                                 <div className="bg-amber-50 border border-amber-250 rounded-md p-3.5">
@@ -3700,7 +3602,7 @@ export default function App() {
                                     </h4>
                                   </div>
                                   <p className="text-[10px] text-zinc-805 leading-normal font-mono">
-                                    In {transitionDuration}m races under {trendTerm}-trending track conditions, {thermalEffect}. To hit the optimal <strong className="text-emerald-700 font-extrabold text-[10.5px]">26.5 - 27.5 PSI</strong> sweet spot, you must <strong className={`${actionColorClass} font-black underline`}>{actionWord} cold inflations by {compensationSign}{absCompValue.toFixed(1)} PSI</strong> (or <strong className="text-zinc-900 font-black">{compensationSign}{absClicks} garage clicks</strong>) per tyre!
+                                    In {transitionDuration}m races under {trendTerm}-trending track conditions, {coolingData.thermalEffectDescription}. To hit the optimal <strong className="text-emerald-700 font-extrabold text-xs">26.0 - 27.0 PSI</strong> sweet spot (ACC v1.9 DHF), you must <strong className={`${actionColorClass} font-black underline`}>{actionWord} cold inflations by {compensationSign}{absCompValue.toFixed(1)} PSI</strong> (or <strong className="text-zinc-900 font-black">{compensationSign}{absClicks} garage clicks</strong>) per tyre!
                                   </p>
                                 </div>
                               );
@@ -3709,38 +3611,21 @@ export default function App() {
 
                           {/* Comparative Wheel Table */}
                           <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3">
-                            <div className="text-[9.5px] font-mono text-zinc-600 font-bold uppercase mb-2 px-1">
+                            <div className="text-[10px] font-mono text-zinc-600 font-bold uppercase mb-2 px-1">
                               Starting Cold Garage Card Pressures (Transitional Adjusted)
                             </div>
                             
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center font-mono text-xs sm:text-[10px]">
-                              <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
-                                <div className="text-[8px] text-zinc-500 font-black uppercase">LF Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[0].toFixed(1)}</span>
-                                <div className="text-emerald-700 font-black mt-0.5 text-[11px]">Set: {(parsedActiveSetup.tyrePressures[0] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-red-655 text-[8.5px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
-                              </div>
-
-                              <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
-                                <div className="text-[8px] text-zinc-500 font-black uppercase">RF Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[1].toFixed(1)}</span>
-                                <div className="text-emerald-700 font-black mt-0.5 text-[11px]">Set: {(parsedActiveSetup.tyrePressures[1] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-red-655 text-[8.5px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
-                              </div>
-
-                              <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
-                                <div className="text-[8px] text-zinc-500 font-black uppercase">LR Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[2].toFixed(1)}</span>
-                                <div className="text-emerald-700 font-black mt-0.5 text-[11px]">Set: {(parsedActiveSetup.tyrePressures[2] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-red-655 text-[8.5px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
-                              </div>
-
-                              <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
-                                <div className="text-[8px] text-zinc-500 font-black uppercase">RR Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[3].toFixed(1)}</span>
-                                <div className="text-emerald-700 font-black mt-0.5 text-[11px]">Set: {(parsedActiveSetup.tyrePressures[3] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-red-655 text-[8.5px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
-                              </div>
+                              {["LF Tyre", "RF Tyre", "LR Tyre", "RR Tyre"].map((label, idx) => (
+                                <div key={label} className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
+                                  <div className="text-[10px] text-zinc-500 font-black uppercase">{label}</div>
+                                  <span className="text-zinc-400 mt-1 block text-[10px] line-through">Def: {parsedActiveSetup.tyrePressures[idx].toFixed(1)}</span>
+                                  <div className="text-emerald-700 font-black mt-0.5 text-xs">Set: {(parsedActiveSetup.tyrePressures[idx] + coolingData.compensationPSI).toFixed(1)}</div>
+                                  <div className="text-brand text-[10px] font-bold mt-0.5">
+                                    {coolingData.compensationClicks >= 0 ? `+${coolingData.compensationClicks}` : `${coolingData.compensationClicks}`} Clicks
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </div>
@@ -3752,9 +3637,9 @@ export default function App() {
                   {selectedTab === "electronics" && (
                     <div id="tabpanel-electronics" role="tabpanel" aria-labelledby="tab-btn-electronics" className="space-y-4 py-2">
                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-white border border-zinc-200 rounded-lg p-5 text-center shadow-sm hover:border-red-655 transition-all">
+                        <div className="bg-white border border-zinc-200 rounded-lg p-5 text-center shadow-sm hover:border-brand transition-all">
                           <span className="text-zinc-500 font-mono text-[10px] tracking-wider uppercase block font-bold">Traction Control 1 (TC1)</span>
-                          <div className="text-4xl font-mono font-black text-red-650 mt-2 flex items-center justify-center gap-4">
+                          <div className="text-4xl font-mono font-black text-brand mt-2 flex items-center justify-center gap-4">
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("tc1", -1)}
@@ -3884,461 +3769,12 @@ export default function App() {
 
                   {/* TAB 3: FUEL STRATEGY */}
                   {selectedTab === "fuel" && (
-                    <div id="tabpanel-fuel" role="tabpanel" aria-labelledby="tab-btn-fuel" className="space-y-5 py-2">
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
-                        
-                        {/* Current Load display (4 cols) */}
-                        <div className="md:col-span-4 bg-white border border-zinc-200 p-5 rounded-lg flex flex-col justify-between shadow-sm text-zinc-900">
-                          <div>
-                            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">Core Loaded Fuel</span>
-                             <div className="text-3xl sm:text-4xl font-mono font-black text-emerald-700 mt-3 flex items-center gap-3">
-                              {isTuneMode && (
-                                <button
-                                  onClick={() => handleAdjustSetupValue("fuel", -2)}
-                                  className="w-11 h-11 flex items-center justify-center bg-zinc-150 hover:bg-zinc-250 border border-zinc-250 rounded-lg text-base font-black cursor-pointer active:scale-95 text-zinc-900 select-none text-center"
-                                  title="Decrease Fuel 2L"
-                                >
-                                  -
-                                </button>
-                              )}
-                              <span>{parsedActiveSetup.fuel} L</span>
-                              {isTuneMode && (
-                                <button
-                                  onClick={() => handleAdjustSetupValue("fuel", 2)}
-                                  className="w-11 h-11 flex items-center justify-center bg-zinc-150 hover:bg-zinc-250 border border-zinc-250 rounded-lg text-base font-black cursor-pointer active:scale-95 text-zinc-900 select-none text-center"
-                                  title="Increase Fuel 2L"
-                                >
-                                  +
-                                </button>
-                              )}
-                            </div>
-                            <p className="text-xs text-zinc-600 mt-4 leading-relaxed font-medium">
-                              This setup has standard <strong className="text-zinc-900 font-bold">{parsedActiveSetup.fuel} Litres</strong> saved in the config file. (ACC defaults simple setups to 20L).
-                            </p>
-                          </div>
-                          <div className="mt-4 pt-4 border-t border-zinc-200 text-xs text-zinc-500 font-mono flex items-center gap-1.5 flex-wrap">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse shrink-0"></span>
-                            Maximum Tank: ~120L (GT3 average)
-                          </div>
-                        </div>
-
-                        {/* Race Fuel Tool calculator console (8 cols) */}
-                        <div className="md:col-span-8 bg-white border border-zinc-200 p-5 rounded-lg shadow-sm space-y-4 text-zinc-900">
-                          <div className="flex justify-between items-center border-b border-zinc-200 pb-2">
-                            <h4 className="text-xs font-mono font-bold tracking-widest text-red-655 uppercase flex items-center gap-1.5">
-                              <Sparkles className="w-3.5 h-3.5 text-red-600 shrink-0" />
-                              Interactive Race Fuel Tool
-                            </h4>
-                            <span className="text-[10px] font-mono text-zinc-550 font-bold">DYNAMIC CALCULATOR</span>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Left sliders */}
-                            <div className="space-y-3.5">
-                              <div>
-                                <div className="flex justify-between text-xs mb-1 font-mono">
-                                  <span className="text-zinc-550 font-bold">Race Duration</span>
-                                  <span className="text-zinc-900 font-extrabold">{fuelRaceTime} Mins</span>
-                                </div>
-                                <input
-                                  type="range"
-                                  min={5}
-                                  max={180}
-                                  step={5}
-                                  value={fuelRaceTime}
-                                  onChange={(e) => setFuelRaceTime(parseInt(e.target.value))}
-                                  className="w-full accent-red-600 h-1 bg-zinc-100 rounded-lg cursor-pointer animate-none"
-                                />
-                              </div>
-
-                              <div>
-                                <div className="flex justify-between text-xs mb-1 font-mono">
-                                  <span className="text-zinc-550 font-bold">Average Lap Time</span>
-                                  <span className="text-zinc-900 font-extrabold">
-                                    {fuelLapTimeMin === "" ? 0 : fuelLapTimeMin}m {fuelLapTimeSec === "" ? 0 : fuelLapTimeSec < 10 ? `0${fuelLapTimeSec}` : fuelLapTimeSec}s
-                                  </span>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="flex items-center gap-1.5 bg-zinc-50 px-2 py-1 rounded border border-zinc-200 focus-within:border-red-250">
-                                    <span className="text-[10px] font-mono text-zinc-500 font-bold">MIN:</span>
-                                    <input
-                                      type="number"
-                                      min={0}
-                                      max={5}
-                                      value={fuelLapTimeMin}
-                                      onChange={(e) => {
-                                        const val = e.target.value;
-                                        if (val === "") {
-                                          setFuelLapTimeMin("");
-                                        } else {
-                                          const parsed = parseInt(val, 10);
-                                          if (!isNaN(parsed)) {
-                                            setFuelLapTimeMin(Math.max(0, parsed));
-                                          }
-                                        }
-                                      }}
-                                      onBlur={() => {
-                                        if (fuelLapTimeMin === "") {
-                                          setFuelLapTimeMin(1);
-                                        }
-                                      }}
-                                      className="bg-transparent text-zinc-900 font-mono w-full text-xs text-center font-bold focus:outline-none placeholder-zinc-350"
-                                    />
-                                  </div>
-                                  <div className="flex items-center gap-1.5 bg-zinc-50 px-2 py-1 rounded border border-zinc-200 focus-within:border-red-250">
-                                    <span className="text-[10px] font-mono text-zinc-500 font-bold">SEC:</span>
-                                    <input
-                                      type="number"
-                                      min={0}
-                                      max={59}
-                                      value={fuelLapTimeSec}
-                                      onChange={(e) => {
-                                        const val = e.target.value;
-                                        if (val === "") {
-                                          setFuelLapTimeSec("");
-                                        } else {
-                                          const parsed = parseInt(val, 10);
-                                          if (!isNaN(parsed)) {
-                                            setFuelLapTimeSec(Math.max(0, Math.min(59, parsed)));
-                                          }
-                                        }
-                                      }}
-                                      onBlur={() => {
-                                        if (fuelLapTimeSec === "") {
-                                          setFuelLapTimeSec(45);
-                                        }
-                                      }}
-                                      className="bg-transparent text-zinc-900 font-mono w-full text-xs text-center font-bold focus:outline-none placeholder-zinc-350"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Right sliders */}
-                            <div className="space-y-3.5">
-                              <div>
-                                <div className="flex justify-between text-xs mb-1 font-mono">
-                                  <span className="text-zinc-550 font-bold">Consumption Per Lap</span>
-                                  <span className="text-emerald-700 font-extrabold">{fuelPerLap.toFixed(2)} L/Lap</span>
-                                </div>
-                                <input
-                                  type="range"
-                                  min={activeFuelRange.min}
-                                  max={activeFuelRange.max}
-                                  step={0.05}
-                                  value={fuelPerLap}
-                                  onChange={(e) => setFuelPerLap(parseFloat(e.target.value))}
-                                  className="w-full accent-red-600 h-1 bg-zinc-100 rounded-lg cursor-pointer"
-                                />
-                                <div className="flex justify-between text-[10px] text-zinc-400 font-mono mt-0.5">
-                                  <span>{activeFuelRange.min.toFixed(1)}L</span>
-                                  <span>{activeFuelRange.max.toFixed(1)}L</span>
-                                </div>
-                              </div>
-
-                              <div>
-                                <div className="flex justify-between text-xs mb-1 font-mono">
-                                  <span className="text-zinc-550 font-bold">Safety Buffer</span>
-                                  <span className="text-red-700 font-bold">+{fuelSafetyLaps} Laps</span>
-                                </div>
-                                <div className="flex gap-1.5">
-                                  {[0, 1, 2, 3].map((num) => (
-                                    <button
-                                      key={num}
-                                      onClick={() => setFuelSafetyLaps(num)}
-                                      className={`flex-1 py-1 rounded border text-xs font-mono font-bold transition-all cursor-pointer ${fuelSafetyLaps === num ? "bg-red-50 border-red-500 text-red-700 shadow-xs" : "bg-zinc-50 border-zinc-200 text-zinc-650 hover:text-zinc-900"}`}
-                                    >
-                                      {num} L
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Calculations outcome box */}
-                          <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-lg grid grid-cols-3 gap-2 text-center font-mono hover:border-zinc-300 transition-colors shadow-xs">
-                            <div className="border-r border-zinc-200 pr-1">
-                              <span className="text-[10px] text-zinc-500 uppercase block font-bold">Est Laps</span>
-                              <span className="text-sm sm:text-lg font-black text-zinc-900">{calculatedFuelLapTimeSec > 0 ? Math.ceil((fuelRaceTime * 60) / calculatedFuelLapTimeSec) : 0}</span>
-                            </div>
-                            <div className="border-r border-zinc-200 px-1">
-                              <span className="text-[10px] text-zinc-500 uppercase block font-bold">Total Laps</span>
-                              <span className="text-sm sm:text-lg font-black text-red-655">
-                                {(calculatedFuelLapTimeSec > 0 ? Math.ceil((fuelRaceTime * 60) / calculatedFuelLapTimeSec) : 0) + fuelSafetyLaps}
-                              </span>
-                            </div>
-                            <div className="pl-1">
-                              <span className="text-[10px] text-zinc-500 uppercase block font-bold">MIN FUEL REQ</span>
-                              <span className="text-sm sm:text-lg font-black text-emerald-700 tracking-tight">
-                                {(((calculatedFuelLapTimeSec > 0 ? Math.ceil((fuelRaceTime * 60) / calculatedFuelLapTimeSec) : 0) + fuelSafetyLaps) * fuelPerLap).toFixed(1)} L
-                              </span>
-                            </div>
-                          </div>
-
-                          <span className="text-[10px] block text-zinc-550 leading-relaxed italic text-center font-sans font-medium">
-                            *Pit strategy recommendation: {((((calculatedFuelLapTimeSec > 0 ? Math.ceil((fuelRaceTime * 60) / calculatedFuelLapTimeSec) : 0) + fuelSafetyLaps) * fuelPerLap) > pitMaxFuelCapacity) ? `⚠️ Refuel pitstop needed: Minimum load exceeds your customized ${pitMaxFuelCapacity}L tank limit.` : "✓ Optimal run capacity: No physical mid-session refuelling breaks strictly required by tank volume."}
-                          </span>
-                        </div>
-
-                      </div>
-
-                      {/* PIT & STINT STRATEGY PLANNER SECTION */}
-                      <div className="bg-white border border-zinc-200 rounded-lg p-5 shadow-sm space-y-5 text-zinc-905">
-                        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-zinc-200 pb-3">
-                          <div>
-                            <h3 className="text-xs font-mono font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
-                              <Wrench className="w-4 h-4 text-red-600 shrink-0" />
-                              ACC Pit & Stint Strategy Planner
-                            </h3>
-                            <p className="text-[11px] text-zinc-650 mt-0.5 font-medium">
-                              Optimize starting fuel weight loadouts, stint timing, and MFD presets for 45m - 2h endurance sessions.
-                            </p>
-                          </div>
-                          <div className="bg-emerald-50 px-3 py-1 text-emerald-700 border border-emerald-220 rounded font-mono text-[10px] uppercase font-bold tracking-wider shrink-0 flex items-center gap-1.5 self-start sm:self-center">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
-                            {pitStrategy.fuelWeightDifference > 0 ? `Est. Pace Advantage: -${pitStrategy.estimatedTimeGainPerLap.toFixed(2)}s/Lap` : "Optimized Fuel-Weight Profile"}
-                          </div>
-                        </div>
-
-                        {/* Interactive Pit Controls Grid */}
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                          {/* Config Controls (Col Span 5) */}
-                          <div className="lg:col-span-5 space-y-4 bg-zinc-50 p-4 rounded-lg border border-zinc-200">
-                            <h4 className="text-[10px] font-mono font-bold tracking-widest text-zinc-550 uppercase mb-2">Race Pit Rules & Settings</h4>
-
-                            <div className="grid grid-cols-2 gap-3">
-                              {/* Fuel capacity */}
-                              <div>
-                                <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block mb-1 font-bold">
-                                  Max Tank Capacity
-                                </label>
-                                <div className="flex items-center gap-1 bg-white border border-zinc-200 rounded px-2.5 py-1 focus-within:border-red-250">
-                                  <input
-                                    type="number"
-                                    min="20"
-                                    max="140"
-                                    value={pitMaxFuelCapacity}
-                                    onChange={(e) => setPitMaxFuelCapacity(Math.max(20, parseInt(e.target.value) || 120))}
-                                    className="w-full bg-transparent font-mono text-xs focus:outline-none text-zinc-900 text-center font-bold"
-                                  />
-                                  <span className="text-[10px] text-zinc-500 font-mono font-bold">L</span>
-                                </div>
-                              </div>
-
-                              {/* Strategy Preference */}
-                              <div>
-                                <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block mb-1 font-bold">
-                                  Stint Strategy Style
-                                </label>
-                                <select
-                                  value={pitStrategyPreference}
-                                  onChange={(e) => setPitStrategyPreference(e.target.value as any)}
-                                  className="w-full bg-white border border-zinc-200 rounded font-mono text-xs text-zinc-800 p-1.5 hover:border-zinc-350 focus:outline-none cursor-pointer font-bold shadow-xs"
-                                >
-                                  <option value="balanced">Balanced (Equal stints)</option>
-                                  <option value="undercut">Undercut (Early pitstop)</option>
-                                  <option value="overcut">Overcut (Late pitstop)</option>
-                                </select>
-                              </div>
-                            </div>
-
-                            {/* Mandatory Rules Toggles */}
-                            <div className="grid grid-cols-2 gap-3">
-                              <button
-                                onClick={() => setPitMandatoryFuel(!pitMandatoryFuel)}
-                                className={`py-1.5 px-3 rounded text-[10px] font-mono font-black uppercase transition-all border cursor-pointer text-center shadow-xs ${
-                                  pitMandatoryFuel
-                                    ? "bg-emerald-50 border-emerald-400 text-emerald-700"
-                                    : "bg-white border-zinc-200 text-zinc-500 hover:text-zinc-700"
-                                }`}
-                              >
-                                {pitMandatoryFuel ? "✓ Mandatory Fuel Stop" : "⚡ Refueling Optional"}
-                              </button>
-
-                              <button
-                                onClick={() => setPitMandatoryTyres(!pitMandatoryTyres)}
-                                className={`py-1.5 px-3 rounded text-[10px] font-mono font-black uppercase transition-all border cursor-pointer text-center shadow-xs ${
-                                  pitMandatoryTyres
-                                    ? "bg-emerald-50 border-emerald-400 text-emerald-700"
-                                    : "bg-white border-zinc-200 text-zinc-500 hover:text-zinc-700"
-                                }`}
-                              >
-                                {pitMandatoryTyres ? "✓ Mandatory Tyre Swap" : "⚡ Tyres Optional"}
-                              </button>
-                            </div>
-
-                            {/* Plan Pitstops Selection Tabs */}
-                            <div>
-                              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block mb-1.5 font-bold">
-                                Target Number of Pitstops
-                              </span>
-                              <div className="grid grid-cols-3 gap-1">
-                                {[
-                                  { label: "0 Stops", val: 0 },
-                                  { label: "1 Stop", val: 1 },
-                                  { label: "2 Stops", val: 2 },
-                                  { label: "3 Stops", val: 3 },
-                                ].map((tab) => {
-                                  const isSelected = pitNumberOfStops === tab.val;
-                                  return (
-                                    <button
-                                      key={tab.val}
-                                      onClick={() => setPitNumberOfStops(tab.val)}
-                                      className={`py-1.5 rounded text-[10px] font-mono font-black transition-all cursor-pointer ${
-                                        isSelected
-                                          ? "bg-red-600 text-white shadow-md shadow-red-500/10"
-                                          : "bg-white text-zinc-650 hover:text-zinc-900 border border-zinc-200 hover:border-zinc-350 shadow-xs"
-                                      }`}
-                                    >
-                                      {tab.val} Stop{tab.val !== 1 ? "s" : ""}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Visual Timeline and MFD Presets (Col Span 7) */}
-                          <div className="lg:col-span-7 space-y-4">
-                            {pitStrategy.alertMsg && (
-                              <div className="bg-red-55 px-3.5 py-2.5 rounded-lg border border-red-200 text-red-750 text-[11px] font-mono font-bold flex items-center gap-2.5 shadow-sm">
-                                <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
-                                <span>{pitStrategy.alertMsg}</span>
-                              </div>
-                            )}
-
-                            {/* Visual Timeline */}
-                            <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3.5 space-y-2.5 shadow-xs">
-                              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">Planned Session Timeline</span>
-                              
-                              <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
-                                {pitStrategy.stints.map((stint, sIdx) => {
-                                  const pct = (stint.durationMins / fuelRaceTime) * 100;
-                                  return (
-                                    <div key={stint.index} className="flex-1 flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full">
-                                      {/* One Stint Box */}
-                                      <div className={`flex-1 p-3 rounded-lg border text-left font-mono transition-all shadow-xs ${
-                                        stint.isOverfilled
-                                          ? "bg-red-50 border-red-300 text-red-800"
-                                          : "bg-emerald-50 border-emerald-200 text-emerald-850"
-                                      }`}>
-                                        <div className="flex items-center justify-between text-[8px] font-black tracking-widest uppercase">
-                                          <span>Stint {stint.index}</span>
-                                          <span className={stint.isOverfilled ? "text-red-700" : "text-emerald-700"}>
-                                            {pct.toFixed(0)}% of race
-                                          </span>
-                                        </div>
-                                        <div className="text-sm font-black text-zinc-900 mt-1">
-                                          {stint.durationMins.toFixed(0)} mins
-                                        </div>
-                                        <div className="text-[10px] text-zinc-600 mt-1 space-y-0.5 font-bold">
-                                          <div>Laps: <strong className="text-zinc-900">{stint.laps} Laps</strong></div>
-                                          <div>Fuel Onboard: <strong className={stint.isOverfilled ? "text-red-700 font-extrabold":"text-emerald-705 font-black"}>{stint.fuelNeeded.toFixed(1)} L</strong></div>
-                                        </div>
-                                      </div>
-
-                                      {/* Pitstop Marker (except after last stint) */}
-                                      {sIdx < pitStrategy.stints.length - 1 && (
-                                        <div className="flex flex-row md:flex-col items-center justify-center gap-1.5 px-3 py-2 bg-red-50 border border-red-200 text-red-700 text-[10px] font-mono rounded-lg font-black uppercase text-center tracking-wider max-w-xs mx-auto md:mx-0 shrink-0 select-none shadow-xs">
-                                          <span>Pitstop</span>
-                                          <span className="hidden md:inline">➔</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-
-                            {/* MFD / Pitstop Setup Dashboard */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              
-                              {/* Starting Settings Panel */}
-                              <div className="bg-zinc-50 p-3.5 rounded-lg border border-zinc-200 font-mono space-y-2 shadow-xs">
-                                <div className="text-[9.5px] font-bold text-zinc-500 uppercase tracking-wider pb-1.5 border-b border-zinc-200 flex items-center justify-between">
-                                  <span>GARAGE FUEL SETUP</span>
-                                  <span className="font-semibold text-emerald-700 text-[9px]">BEFORE GREEN LIGHT</span>
-                                </div>
-                                <div className="text-[11px] text-zinc-600 space-y-1.5 font-bold">
-                                  <div className="flex justify-between">
-                                    <span>Starting Fuel:</span>
-                                    <strong className="text-emerald-700 font-black text-xs">
-                                      {pitStrategy.stints.length > 0 ? pitStrategy.stints[0].fuelNeeded.toFixed(1) : pitStrategy.totalFuelNeeded.toFixed(1)} Litres
-                                    </strong>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span>Tyre Set Selector:</span>
-                                    <strong className="text-zinc-900">Tyre Set #1 (Fresh Slicks)</strong>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span>Starting Weight Saved:</span>
-                                    <strong className="text-red-600 font-bold">
-                                      {pitStrategy.fuelWeightDifference > 0 ? `-${pitStrategy.fuelWeightDifference.toFixed(1)} kg` : "N/A (Standard Tank)"}
-                                    </strong>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Multi-Functional Display Preset Profile */}
-                              <div className="bg-zinc-50 p-3.5 rounded-lg border border-zinc-200 font-mono space-y-2 shadow-xs">
-                                <div className="text-[9.5px] font-bold text-zinc-500 uppercase tracking-wider pb-1.5 border-b border-zinc-200 flex items-center justify-between">
-                                  <span>MFD PITSTOP PRESETS</span>
-                                  <span className="font-semibold text-red-600 text-[9px]">ACC IN-CAR PRESET</span>
-                                </div>
-                                <div className="text-[11px] text-zinc-600 space-y-1.5 font-bold">
-                                  <div className="flex justify-between">
-                                    <span>Refueling Strategy:</span>
-                                    {pitMandatoryFuel && pitNumberOfStops > 0 ? (
-                                      <strong className="text-emerald-700 font-black">
-                                        Refuel +{(pitStrategy.stints[1]?.fuelNeeded || 0).toFixed(1)} L
-                                      </strong>
-                                    ) : (
-                                      <strong className="text-zinc-450 italic">No Refuel (Sprint)</strong>
-                                    )}
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span>Tyres Strategy:</span>
-                                    {pitMandatoryTyres ? (
-                                      <strong className="text-red-600">Change Set #2</strong>
-                                    ) : (
-                                      <strong className="text-zinc-450 italic">No Tyre Swap</strong>
-                                    )}
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span>Brake Pads Choice:</span>
-                                    <strong className="text-zinc-900 font-bold">Pad #1 (Standard GT3)</strong>
-                                  </div>
-                                </div>
-                              </div>
-
-                            </div>
-
-                            {/* Pro Efficiency Advice Alert */}
-                            <div className="bg-emerald-50 border border-emerald-200 rounded-md p-3.5 shadow-xs">
-                              <div className="flex items-start gap-2.5">
-                                <Gauge className="text-emerald-755 w-4.5 h-4.5 shrink-0 mt-0.5 animate-pulse" />
-                                <div className="text-[10.5px] font-mono leading-relaxed space-y-1 text-zinc-700">
-                                  <h5 className="font-black text-emerald-805 uppercase tracking-widest text-[9.5px]">
-                                    ENDURANCE FUEL-WEIGHT PACE DIVIDEND
-                                  </h5>
-                                  <p className="font-medium">
-                                    {pitStrategy.fuelWeightDifference > 0 ? (
-                                      <>By splitting your race fuel into multiple stints, you avoid carrying a completely full tank of fuel. This saves <strong className="text-zinc-900 font-extrabold">{pitStrategy.fuelWeightDifference.toFixed(1)} kg</strong> of load, increasing corner roll speeds, lowering brake wear, and shaving up to <strong className="text-emerald-705 font-black">-{pitStrategy.estimatedTimeGainPerLap.toFixed(2)}s per lap</strong> off your base lap time!</>
-                                    ) : (
-                                      <>For short sessions or when running without pitstops, fill the tank completely with a comfort-led safety cushion. But for races 45m - 2h, selecting the 1-Stop Strategy will unleash immediate pace gains!</>
-                                    )}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
+                    <FuelStrategyTab
+                      fuel={parsedActiveSetup.fuel}
+                      activeTrack={activeSetup?.track}
+                      isTuneMode={isTuneMode}
+                      onAdjustSetupValue={handleAdjustSetupValue}
+                    />
                   )}
 
                   {/* TAB 4: MECHANICAL GRIP */}
@@ -4352,7 +3788,7 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("arbFront", -1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 -
                               </button>
@@ -4361,13 +3797,13 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("arbFront", 1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 +
                               </button>
                             )}
                           </div>
-                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Anti-Roll Bar Steps</span>
+                          <span className="text-[10px] text-zinc-500 font-mono block mt-0.5 font-medium">Anti-Roll Bar Steps</span>
                         </div>
                         <div className="border-r border-zinc-200 last:border-0 px-2 flex flex-col items-center justify-center">
                           <span className="text-zinc-500 font-mono text-[10px] uppercase block tracking-wider font-bold">Brake Power</span>
@@ -4375,7 +3811,7 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("brakePower", -1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 -
                               </button>
@@ -4384,13 +3820,13 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("brakePower", 1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 +
                               </button>
                             )}
                           </div>
-                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Typically 100% but can try above figure if running no ABS</span>
+                          <span className="text-[10px] text-zinc-500 font-mono block mt-0.5 font-medium">Typically 100% but can try above figure if running no ABS</span>
                         </div>
                         <div className="border-r border-zinc-200 last:border-0 px-2 flex flex-col items-center justify-center">
                           <span className="text-zinc-500 font-mono text-[10px] uppercase block tracking-wider font-bold">Brake Bias</span>
@@ -4398,7 +3834,7 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("brakeBias", -1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 -
                               </button>
@@ -4407,13 +3843,13 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("brakeBias", 1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 +
                               </button>
                             )}
                           </div>
-                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Towards the front of the car</span>
+                          <span className="text-[10px] text-zinc-500 font-mono block mt-0.5 font-medium">Towards the front of the car</span>
                         </div>
                         <div className="px-2 flex flex-col items-center justify-center">
                           <span className="text-zinc-500 font-mono text-[10px] uppercase block tracking-wider font-bold">Steer Ratio</span>
@@ -4421,7 +3857,7 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("steerRatio", -1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-205 border hover:bg-zinc-350 rounded text-xs font-black cursor-pointer text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-205 border hover:bg-zinc-350 rounded text-xs font-black cursor-pointer text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 -
                               </button>
@@ -4430,14 +3866,14 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("steerRatio", 1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-205 border hover:bg-zinc-350 rounded text-xs font-black cursor-pointer text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-205 border hover:bg-zinc-350 rounded text-xs font-black cursor-pointer text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 +
                               </button>
                             )}
                           </div>
-                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Low = Faster & Sharper</span>
-                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">High = Smoother & Slower</span>
+                          <span className="text-[10px] text-zinc-500 font-mono block mt-0.5 font-medium">Low = Faster & Sharper</span>
+                          <span className="text-[10px] text-zinc-500 font-mono block mt-0.5 font-medium">High = Smoother & Slower</span>
                         </div>
                       </div>
 
@@ -4446,7 +3882,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">FRONT WHEELS (LF/RF)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">FRONT AXLE SPRING RATES</span>
+                            <span className="text-[10px] text-zinc-400 font-mono font-bold">FRONT AXLE SPRING RATES</span>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -4459,7 +3895,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", -1, 0)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4468,7 +3904,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", 1, 0)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4481,7 +3917,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", -1, 0)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4490,7 +3926,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", 1, 0)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4503,7 +3939,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", -1, 0)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4512,7 +3948,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", 1, 0)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4530,7 +3966,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", -1, 1)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4539,7 +3975,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", 1, 1)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4552,7 +3988,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", -1, 1)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4561,7 +3997,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", 1, 1)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4574,7 +4010,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", -1, 1)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4583,7 +4019,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", 1, 1)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4598,7 +4034,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">REAR WHEELS (LR/RR)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">REAR AXLE SPRING RATES</span>
+                            <span className="text-[10px] text-zinc-400 font-mono font-bold">REAR AXLE SPRING RATES</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -4611,7 +4047,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", -1, 2)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4620,7 +4056,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", 1, 2)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4633,7 +4069,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", -1, 2)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4642,7 +4078,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", 1, 2)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4655,7 +4091,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", -1, 2)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4664,7 +4100,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", 1, 2)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4682,7 +4118,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", -1, 3)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4691,7 +4127,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", 1, 3)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4704,7 +4140,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", -1, 3)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4713,7 +4149,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", 1, 3)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4726,7 +4162,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", -1, 3)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4735,7 +4171,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", 1, 3)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4757,7 +4193,7 @@ export default function App() {
                               {isTuneMode && (
                                 <button
                                   onClick={() => handleAdjustSetupValue("arbRear", -1)}
-                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                 >
                                   -
                                 </button>
@@ -4766,7 +4202,7 @@ export default function App() {
                               {isTuneMode && (
                                 <button
                                   onClick={() => handleAdjustSetupValue("arbRear", 1)}
-                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                 >
                                   +
                                 </button>
@@ -4782,7 +4218,7 @@ export default function App() {
                               {isTuneMode && (
                                 <button
                                   onClick={() => handleAdjustSetupValue("preloadDifferential", -10)}
-                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                   title="Decrease Preload 10 Nm"
                                 >
                                   -
@@ -4792,7 +4228,7 @@ export default function App() {
                               {isTuneMode && (
                                 <button
                                   onClick={() => handleAdjustSetupValue("preloadDifferential", 10)}
-                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                   title="Increase Preload 10 Nm"
                                 >
                                   +
@@ -4825,7 +4261,7 @@ export default function App() {
                               </div>
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-semibold items-center">
                                 <span className="text-zinc-500 font-sans font-medium">Front Splitter:</span>
-                                <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.splitter}°</strong>
+                                <strong className="text-zinc-900 text-sm font-extrabold">{formatDegrees(parsedActiveSetup.splitter)}</strong>
                               </div>
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-bold items-center">
                                 <span className="text-zinc-500 font-sans font-medium">Front Brake Duct:</span>
@@ -4833,7 +4269,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("brakeDuctFront", -1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4842,7 +4278,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("brakeDuctFront", 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4874,16 +4310,16 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("rearWing", -1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
                                   )}
-                                  <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.rearWing}°</strong>
+                                  <strong className="text-zinc-900 text-sm font-extrabold">{formatDegrees(parsedActiveSetup.rearWing)}</strong>
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("rearWing", 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4896,7 +4332,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("brakeDuctRear", -1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4905,7 +4341,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("brakeDuctRear", 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4937,7 +4373,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">FRONT DAMPERS (LF/RF)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">BUMP / REBOUND</span>
+                            <span className="text-[10px] text-zinc-400 font-mono font-bold">BUMP / REBOUND</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">
@@ -4949,7 +4385,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", -1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4958,7 +4394,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", 1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4971,7 +4407,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", -1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4980,7 +4416,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", 1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4993,7 +4429,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", -1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -5002,7 +4438,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", 1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -5015,7 +4451,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", -1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -5024,7 +4460,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", 1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -5040,7 +4476,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", -1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -5049,7 +4485,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", 1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -5062,7 +4498,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", -1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -5071,7 +4507,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", 1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -5084,7 +4520,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", -1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -5093,7 +4529,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", 1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -5106,7 +4542,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", -1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -5115,7 +4551,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", 1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -5130,7 +4566,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">REAR DAMPERS (LR/RR)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">BUMP / REBOUND</span>
+                            <span className="text-[10px] text-zinc-400 font-mono font-bold">BUMP / REBOUND</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">
@@ -5142,7 +4578,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", -1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -5151,7 +4587,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", 1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -5164,7 +4600,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", -1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -5173,7 +4609,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", 1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -5186,7 +4622,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", -1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -5195,7 +4631,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", 1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -5208,7 +4644,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", -1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -5217,7 +4653,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", 1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -5233,7 +4669,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", -1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -5242,7 +4678,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", 1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -5255,7 +4691,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", -1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -5264,7 +4700,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", 1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -5277,7 +4713,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", -1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -5286,7 +4722,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", 1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -5299,7 +4735,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", -1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -5308,7 +4744,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", 1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -5325,63 +4761,13 @@ export default function App() {
                   )}
 
                   {isTuneMode && (
-                    <div className="mt-6 p-4 md:p-5 bg-amber-500/5 border border-amber-500/25 rounded-xl flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center text-zinc-950 shrink-0 mt-0.5">
-                          <Wrench className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-black text-zinc-900 font-sans tracking-wider uppercase">Active Tuning Sandbox Modded</p>
-                          <p className="text-[10.5px] text-zinc-600 leading-normal mt-1 font-medium max-w-xl">
-                            Parameters edited in Tyre pressures, Alignment, Electronics, Mechanical, or Dampers. Save variant to preserve changes.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto lg:justify-end">
-                        <div className="w-full sm:w-64">
-                          <input
-                            type="text"
-                            placeholder="Version note (e.g. Sunset cooling adjustment)"
-                            value={tuneVersionNote}
-                            onChange={(e) => setTuneVersionNote(e.target.value)}
-                            className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-2.5 rounded-lg text-[11px] placeholder-zinc-400 outline-none focus:border-amber-500 h-11"
-                          />
-                        </div>
-
-                        <select
-                          value={saveModalTargetTrack || activeSetup?.track || "monza"}
-                          onChange={(e) => setSaveModalTargetTrack(e.target.value)}
-                          className="bg-white border border-zinc-200 text-zinc-900 text-[11px] px-3 py-2 rounded-lg cursor-pointer font-sans focus:outline-none focus:border-amber-500 h-11 shrink-0 w-full sm:w-auto font-mono text-zinc-800"
-                        >
-                          {Object.entries(ACC_TRACKS).map(([key, name]) => (
-                            <option key={key} value={key}>
-                              {key === activeSetup?.track ? `${name} (Current Track)` : name}
-                            </option>
-                          ))}
-                        </select>
-
-                        <label className="flex items-center justify-center sm:justify-start gap-2.5 text-[11px] text-zinc-700 bg-white/60 hover:bg-white border border-zinc-200 hover:border-zinc-300 px-3.5 py-2 rounded-lg cursor-pointer select-none font-bold shadow-3xs transition-all active:scale-[0.98] h-11 shrink-0 w-full sm:w-auto">
-                          <input
-                            type="checkbox"
-                            checked={tuneIsTeamWorkspace}
-                            onChange={(e) => setTuneIsTeamWorkspace(e.target.checked)}
-                            className="accent-amber-600 w-4.5 h-4.5 rounded border-zinc-300 focus:ring-amber-500 cursor-pointer"
-                          />
-                          <span>Share to Team Workspace</span>
-                        </label>
-
-                        <button
-                          onClick={async () => {
-                            const finalNotes = tuneVersionNote.trim() || "Tweaked custom parameters.";
-                            await handleSaveCustomTunedSetup(finalNotes, saveModalTargetTrack || activeSetup?.track);
-                          }}
-                          className="bg-amber-600 hover:bg-amber-700 text-white font-black px-5 py-2.5 rounded-lg text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer shrink-0 h-11 w-full sm:w-auto"
-                        >
-                          <span>💾 Save Custom Variant</span>
-                        </button>
-                      </div>
-                    </div>
+                    <TuningWorkshopBanner
+                      currentTrack={activeSetup?.track}
+                      variant="bottom"
+                      onSave={async (notes, targetTrack, isTeam) => {
+                        await handleSaveCustomTunedSetup(notes, targetTrack, isTeam);
+                      }}
+                    />
                   )}
 
                 </div>
@@ -5428,6 +4814,7 @@ export default function App() {
           <GaragePage
             tunedSetupsList={tunedSetupsList}
             profile={profile}
+            isLoading={isLoadingTunedSetups}
             onInspect={(setupRep) => {
               setActiveSetup(setupRep);
               setCurrentView("telemetry");
@@ -5441,7 +4828,7 @@ export default function App() {
                 loadTunedSetups();
               } catch (err) {
                 console.error(err);
-                showToast("Delete failed — try again", "error");
+                showToast("Delete failed - try again", "error");
               }
             }}
             onRefresh={async () => {
@@ -5467,7 +4854,7 @@ export default function App() {
       {/* 3. Footer indicator metadata */}
       <footer id="visual-garage-footer" className="bg-zinc-950 border-t border-zinc-900 py-4 px-6 text-center mt-auto font-mono text-[10px] text-zinc-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
-          <span>PITWALL COMPANION APP V1.9 • POWERED BY JAXTUNE</span>
+          <span>PITWALL COMPANION APP V1.9 · POWERED BY JAXTUNE</span>
           <span>CRAFTED FOR ACC AND LATE NIGHT RACING</span>
         </div>
       </footer>
@@ -5483,225 +4870,20 @@ export default function App() {
           >
             <div className={`w-2 h-2 rounded-full shrink-0 ${toast.type === "success" ? "bg-emerald-500" : toast.type === "error" ? "bg-red-500" : "bg-cyan-500"}`} />
             <span className="text-xs font-semibold leading-relaxed text-zinc-200">{toast.message}</span>
-            <button onClick={() => setToast(null)} className="ml-2 hover:text-white text-zinc-400 text-sm font-bold cursor-pointer transition-colors shrink-0">×</button>
+            <button onClick={() => setToast(null)} aria-label="Close notification" className="ml-2 hover:text-white text-zinc-400 text-sm font-bold cursor-pointer transition-colors shrink-0">✕</button>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Full Screen Onboarding Interceptor Modal */}
-      <AnimatePresence>
-        {needsOnboarding && user && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-zinc-950/85 backdrop-blur-md z-[150] flex items-center justify-center p-4 font-sans"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              className="bg-white border border-zinc-200 rounded-xl max-w-xl w-full p-6 sm:p-8 shadow-2xl relative text-zinc-900 max-h-[90vh] overflow-y-auto"
-            >
-              <div className="text-center mb-6">
-                <span className="text-[10px] font-mono font-black text-red-650 bg-red-50 px-2.5 py-1 rounded-full uppercase tracking-widest inline-block mb-2 animate-pulse">
-                  Driver Onboarding Required
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-950 mt-1">
-                  Connect Driver Profile
-                </h2>
-                <p className="text-zinc-650 text-xs sm:text-sm mt-2 max-w-md mx-auto">
-                  Hi <strong className="text-zinc-800 font-bold">{user.displayName || user.email}</strong>, let's configure your central Sim Racing telemetry handle and class rules.
-                </p>
-              </div>
-
-              <div className="space-y-5">
-                {/* 1. Username Input with real-time validation */}
-                <div>
-                  <label className="block text-zinc-650 text-xs font-mono uppercase font-black tracking-wider mb-2">
-                    Sim Racing Username <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-2 text-zinc-400 font-mono text-sm">@</span>
-                    <input
-                      type="text"
-                      placeholder="e.g. Apex_Driver"
-                      value={onboardingUsername}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^a-zA-Z0-9_\-]/g, "");
-                        handleCheckUsername(val);
-                      }}
-                      className={`w-full bg-zinc-50 text-zinc-950 pl-8 pr-12 py-2.5 md:py-2 border rounded font-semibold text-base md:text-sm min-h-[44px] md:min-h-0 focus:outline-none focus:ring-1 transition-all ${
-                        onboardingUsernameAvailable === true
-                          ? "border-emerald-500 focus:border-emerald-600 focus:ring-emerald-500"
-                          : onboardingUsernameAvailable === false
-                          ? "border-red-500 focus:border-red-600 focus:ring-red-500"
-                          : "border-zinc-250 focus:border-red-650 focus:ring-red-650"
-                      }`}
-                    />
-                    <div className="absolute right-3.5 top-2 flex items-center gap-1.5">
-                      {onboardingCheckingUsername ? (
-                        <RefreshCw className="w-4 h-4 animate-spin text-zinc-400" />
-                      ) : onboardingUsernameAvailable === true ? (
-                        <CheckCircle className="w-4 h-4 text-emerald-500" />
-                      ) : onboardingUsernameAvailable === false ? (
-                        <AlertTriangle className="w-4 h-4 text-red-500" />
-                      ) : null}
-                    </div>
-                  </div>
-                  
-                  {/* Status explanation line */}
-                  <span className="text-[10px] mt-1.5 block font-medium leading-normal">
-                    {onboardingUsername.trim().length === 0 ? (
-                      <span className="text-zinc-500 italic">Usernames can contain letters, numbers, underscores, and dashes.</span>
-                    ) : onboardingUsername.trim().length < 3 ? (
-                      <span className="text-amber-600 font-bold">Username must be at least 3 characters long.</span>
-                    ) : onboardingCheckingUsername ? (
-                      <span className="text-zinc-500">Checking registry database...</span>
-                    ) : onboardingUsernameAvailable === true ? (
-                      <span className="text-emerald-600 font-bold">✓ This handle is clear and authentic!</span>
-                    ) : onboardingUsernameAvailable === false ? (
-                      <span className="text-red-500 font-black">✗ This handle is already registered by another driver.</span>
-                    ) : (
-                      <span className="text-zinc-500 italic font-bold">Perfect fit.</span>
-                    )}
-                  </span>
-                </div>
-
-{/* 2. Pinned Series Cars Multi-Select Selector */}
-<div>
-  <div className="flex justify-between items-center mb-1">
-    <label className="block text-zinc-650 text-xs font-mono uppercase font-black tracking-wider">
-      Pinned Series Cars
-    </label>
-    <span className="text-[9px] text-zinc-450 font-semibold font-mono font-bold">OPTIONAL FILTER</span>
-  </div>
-  <p className="text-[11px] text-zinc-500 leading-tight mb-3 font-medium">
-    Select your current racing series cars to automatically pin them. Checking the "Series Only" toggle in the Main Registry will filter the setup list only to these choices!
-  </p>
-
-  <div className="space-y-3">
-    {(() => {
-      // 1. Group cars by class dynamically based on their underlying data properties or naming keys
-      const groups: Record<string, Array<[string, string]>> = {
-        "GT3 Class": [],
-        "GT4 Class": [],
-        "GT2 / GTC / Cup / Other": []
-      };
-
-      Object.entries(ACC_CARS).forEach(([carKey, carName]) => {
-        const lowerKey = carKey.toLowerCase();
-        if (lowerKey.includes("gt4")) {
-          groups["GT4 Class"].push([carKey, carName]);
-        } else if (lowerKey.includes("gt3") || lowerKey.includes("vantage") || lowerKey.includes("huracan") || lowerKey.includes("r8_lms") || lowerKey.includes("m6") || lowerKey.includes("991") || lowerKey.includes("992")) {
-          // Catching standard GT3 variants that lack explicit "gt3" strings in legacy keys
-          if (!lowerKey.includes("cup") && !lowerKey.includes("gt2") && !lowerKey.includes("challenge") && !lowerKey.includes("supertrofeo")) {
-            groups["GT3 Class"].push([carKey, carName]);
-          } else {
-            groups["GT2 / GTC / Cup / Other"].push([carKey, carName]);
-          }
-        } else {
-          groups["GT2 / GTC / Cup / Other"].push([carKey, carName]);
-        }
-      });
-
-      // 2. Alphabetically sort cars inside each category
-      Object.keys(groups).forEach(key => {
-        groups[key].sort((a, b) => a[1].localeCompare(b[1]));
-      });
-
-      return Object.entries(groups).map(([groupName, items]) => {
-        if (items.length === 0) return null;
-
-        return (
-          <div key={groupName} className="bg-zinc-50 border border-zinc-200 rounded-lg p-3">
-            <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 mb-2 pb-1 border-b border-zinc-200">
-              {groupName} ({items.length})
-            </h4>
-            
-            {/* Responsive grid: 1 column on mobile, 2 columns on small screens/tablets */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-sans">
-              {items.map(([carKey, carName]) => {
-                const isChecked = onboardingPinnedCars.includes(carKey);
-                return (
-                  <label
-                    key={carKey}
-                    className={`flex items-center gap-2 p-2 rounded border cursor-pointer select-none transition-all ${
-                      isChecked
-                        ? "bg-red-50 border-red-200 text-red-700 font-bold"
-                        : "bg-white border-zinc-200 hover:bg-zinc-100 text-zinc-800"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={() => {
-                        if (isChecked) {
-                          setOnboardingPinnedCars(onboardingPinnedCars.filter((k) => k !== carKey));
-                        } else {
-                          setOnboardingPinnedCars([...onboardingPinnedCars, carKey]);
-                        }
-                      }}
-                      className="accent-red-650 w-3.5 h-3.5 cursor-pointer shrink-0"
-                    />
-                    <span className="truncate pr-1 text-[11px] font-sans font-semibold" title={carName}>
-                      {carName}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        );
-      });
-    })()}
-  </div>
-</div>
-
-                {/* Onboarding buttons */}
-                <div className="pt-3 flex gap-3">
-                  <button
-                    onClick={async () => {
-                      await handleLogout();
-                    }}
-                    className="flex-1 bg-zinc-100 hover:bg-zinc-200 border border-zinc-250 text-zinc-700 font-bold py-2.5 rounded cursor-pointer text-xs uppercase tracking-wider font-mono text-center shadow-3xs"
-                  >
-                    Disconnect Profile
-                  </button>
-                  <button
-                    disabled={
-                      isSubmittingOnboarding ||
-                      onboardingCheckingUsername ||
-                      onboardingUsernameAvailable !== true ||
-                      onboardingUsername.trim().length < 3
-                    }
-                    onClick={async () => {
-                      setIsSubmittingOnboarding(true);
-                      try {
-                        await saveProfileData(onboardingUsername.trim(), onboardingPinnedCars);
-                        showToast(`Welcome, @${onboardingUsername.trim()}`, "success");
-                      } catch (err: any) {
-                        console.error(err);
-                        const msg = err.message || err.toString() || "Server write failed.";
-                        showToast(`Connection failed: ${msg}`, "error");
-                      } finally {
-                        setIsSubmittingOnboarding(false);
-                      }
-                    }}
-                    className="flex-1 bg-red-600 hover:bg-red-750 disabled:opacity-50 disabled:hover:bg-red-600 text-white font-extrabold py-2.5 rounded cursor-pointer text-xs uppercase tracking-wider font-mono text-center flex items-center justify-center gap-2 shadow-md shadow-red-600/15 active:scale-95 select-none"
-                  >
-                    {isSubmittingOnboarding ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
-                    ) : (
-                      "Initialize Pilot Profile"
-                    )}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <OnboardingModal
+        isOpen={!!(needsOnboarding && user)}
+        user={user}
+        onDisconnect={handleLogout}
+        onSaveProfile={saveProfileData}
+        onSuccess={(cleanUsername) => showToast(`Welcome, @${cleanUsername}`, "success")}
+        onError={(msg) => showToast(`Connection failed: ${msg}`, "error")}
+      />
 
       {/* Settings / Edit Profile Modal */}
       <AnimatePresence>
@@ -5720,13 +4902,14 @@ export default function App() {
             >
               <button
                 onClick={() => setShowProfileModal(false)}
+                aria-label="Close profile modal"
                 className="absolute right-4 top-4 hover:text-zinc-800 text-zinc-400 text-xl font-bold cursor-pointer transition-colors p-1"
               >
-                ×
+                ✕
               </button>
 
               <div className="text-center mb-6">
-                <span className="text-[10px] font-mono font-black text-red-650 bg-red-50 px-2.5 py-1 rounded-full uppercase tracking-widest inline-block mb-1">
+                <span className="text-[10px] font-mono font-black text-brand bg-red-50 px-2.5 py-1 rounded-full uppercase tracking-widest inline-block mb-1">
                   Edit Crew Profile
                 </span>
                 <h2 className="text-2xl font-extrabold tracking-tight text-zinc-950 mt-1">
@@ -5796,7 +4979,7 @@ export default function App() {
                     ) : editUsernameAvailable === true ? (
                       <span className="text-emerald-600 font-bold">✓ This handle is clear and authentic!</span>
                     ) : editUsernameAvailable === false ? (
-                      <span className="text-red-500 font-black">✗ This handle is already registered by another driver.</span>
+                      <span className="text-red-500 font-black">✕ This handle is already registered by another driver.</span>
                     ) : null}
                   </span>
                 </div>
@@ -5807,9 +4990,9 @@ export default function App() {
     <label className="block text-zinc-650 text-xs font-mono uppercase font-black tracking-wider">
       Pinned Series Cars
     </label>
-    <span className="text-[9px] text-zinc-450 font-semibold font-mono font-bold">OPTIONAL FILTER</span>
+    <span className="text-[10px] text-zinc-450 font-semibold font-mono font-bold">OPTIONAL FILTER</span>
   </div>
-  <p className="text-[11px] text-zinc-500 leading-tight mb-3 font-medium">
+  <p className="text-xs text-zinc-500 leading-tight mb-3 font-medium">
     Select your current racing series cars to automatically pin them. Checking the "Series Only" toggle in the Main Registry will filter the setup list only to these choices!
   </p>
 
@@ -5875,9 +5058,9 @@ export default function App() {
                           setEditPinnedCars([...editPinnedCars, carKey]);
                         }
                       }}
-                      className="accent-red-650 w-3.5 h-3.5 cursor-pointer shrink-0"
+                      className="accent-brand w-3.5 h-3.5 cursor-pointer shrink-0"
                     />
-                    <span className="truncate pr-1 text-[11px] font-sans font-semibold" title={carName}>
+                    <span className="truncate pr-1 text-xs font-sans font-semibold" title={carName}>
                       {carName}
                     </span>
                   </label>
@@ -5946,144 +5129,10 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* 4. Custom Variant Tuning Notes Overlay Dialog Modal */}
-      {isSaveModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-fade-in">
-          <div className="bg-zinc-950 border border-zinc-850 rounded-xl w-full max-w-md p-6 text-white shadow-2xl relative">
-            <h3 className="text-lg font-black font-sans tracking-tight text-white mb-2 flex items-center gap-2">
-              <Folder className="w-5 h-5 text-amber-500" />
-              <span>Label Your Tuning Variant</span>
-            </h3>
-            <p className="text-xs text-zinc-400 mb-4 leading-relaxed font-mono">
-              Saved custom variant is stored in your private garage and synchronizes automatically on the cloud.
-            </p>
-
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase">Version Note / Changelog</label>
-                <textarea
-                  placeholder="e.g., Softer rear ARB for better curb stability..."
-                  value={saveModalNote}
-                  onChange={(e) => setSaveModalNote(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-xs text-white placeholder-zinc-550 font-medium focus:outline-none focus:border-amber-550 focus:ring-1 focus:ring-amber-550 min-h-[90px]"
-                  autoFocus
-                />
-              </div>
-
-              {/* Target Track Mapping Selector */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase">Target Circuit / Track Mapping</label>
-                <select
-                  value={saveModalTargetTrack}
-                  onChange={(e) => setSaveModalTargetTrack(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-xs text-white placeholder-zinc-550 font-medium focus:outline-none focus:border-amber-550 focus:ring-1 focus:ring-amber-550 min-h-[44px] md:min-h-0 cursor-pointer"
-                >
-                  {Object.entries(ACC_TRACKS).map(([key, name]) => (
-                    <option key={key} value={key} className="bg-zinc-900 text-white">
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Target Circuit Note Preview Pane (Enhancement 1) */}
-              {(() => {
-                const mapping: Record<string, string> = {
-                  barcelona: "Barcelona",
-                  brands_hatch: "Brands Hatch",
-                  cota: "COTA",
-                  donington: "Donington Park",
-                  hungaroring: "Hungaroring",
-                  imola: "Imola",
-                  indianapolis: "Indianapolis",
-                  kyalami: "Kyalami",
-                  laguna_seca: "Laguna Seca",
-                  misano: "Misano",
-                  monza: "Monza",
-                  mount_panorama: "Mount Panorama",
-                  nurburgring: "Nürburgring",
-                  nurburgring_24h: "Nordschleife",
-                  oulton_park: "Oulton Park",
-                  paul_ricard: "Paul Ricard",
-                  red_bull_ring: "Red Bull Ring",
-                  silverstone: "Silverstone",
-                  snetterton: "Snetterton",
-                  spa: "Spa",
-                  suzuka: "Suzuka",
-                  valencia: "Valencia",
-                  watkins_glen: "Watkins Glen",
-                  zandvoort: "Zandvoort",
-                  zolder: "Zolder",
-                };
-                const matchedKey = mapping[saveModalTargetTrack] || saveModalTargetTrack;
-                const note = CIRCUIT_NOTES[matchedKey];
-                if (!note) return null;
-                return (
-                  <div className="bg-amber-500/5 border border-amber-500/10 p-3 rounded-lg text-xs leading-relaxed font-sans text-zinc-300 space-y-1">
-                    <div className="font-extrabold text-amber-400 font-mono uppercase tracking-wider text-[10px] flex items-center gap-1">
-                      <span>🏁 Target Notes: {ACC_TRACKS[saveModalTargetTrack] || saveModalTargetTrack}</span>
-                    </div>
-                    <p className="text-[11px] text-zinc-200">{note.circuit_notes.length > 120 ? note.circuit_notes.substring(0, 120) + "..." : note.circuit_notes}</p>
-                    <div className="text-[10px] font-mono text-zinc-400 pt-0.5 space-y-0.5">
-                      <div><span className="font-extrabold text-zinc-300">Aero Config:</span> {note.setup_notes?.downforce}</div>
-                      <div><span className="font-extrabold text-zinc-300">Tyre Load:</span> {note.setup_notes?.tyres}</div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Redundant workspace info label */}
-              <div className="bg-zinc-900/65 border border-zinc-850 p-3 rounded-lg text-[10.5px] font-mono text-zinc-400 leading-normal flex gap-2">
-                <Wrench className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-bold text-zinc-200">Workspace Status: </span>
-                  {tuneIsTeamWorkspace ? (
-                    <span className="text-emerald-400 font-extrabold uppercase">SHARED - WILL MAP TO TEAM PANEL</span>
-                  ) : (
-                    <span className="text-zinc-500 font-bold uppercase">PRIVATE PILOT GARAGE ONLY</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsSaveModalOpen(false)}
-                  className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-mono font-bold tracking-wider cursor-pointer transition-colors"
-                >
-                  CANCEL
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const finalNotes = saveModalNote.trim() || "Tweaked custom parameters.";
-                    await handleSaveCustomTunedSetup(finalNotes, saveModalTargetTrack);
-                    setIsSaveModalOpen(false);
-                  }}
-                  className="px-4.5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-mono font-bold tracking-wider cursor-pointer transition-all active:scale-95 shadow-md uppercase"
-                >
-                  CONFIRM SAVE
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
-// Visual helper helper functions
-function getPressureColor(psi: number): string {
-  // Optimal range in dry slick tyres is updated to 26.5 - 27.5 PSI for transition races
-  if (psi >= 26.5 && psi <= 27.5) return "text-emerald-400";
-  // Rain setups are standard between 29.5 - 30.5
-  if (psi >= 29.5 && psi <= 30.5) return "text-cyan-400";
-  // Cold tyres underinflated
-  if (psi < 26.5) return "text-sky-400 shadow-sm shadow-sky-500/10";
-  // Hot/overinflated blistered tyres
-  return "text-red-400 shadow-sm shadow-red-500/10";
-}
 
 // Clean mapping of raw track values
 function setupFilterTrack(t: string): string {
