@@ -1280,7 +1280,7 @@ export const CAR_NOTES_DATA: Record<string, CarNote> = {
     "meta_note": "The GT2 equivalent of the AMG GT3 Evo — a technical circuit specialist with outstanding braking. A strong choice for drivers who already know the AMG GT3 and want to step up within the same manufacturer."
   },
   "Porsche 935 (2019)": {
-    "car_notes": "The Porsche 935 is the most historically distinctive car in the ACC GT2 class — a modern interpretation of the legendary 935 racing car with a rear-engine layout and dramatic bodywork. It combines the Porsche rear-engine philosophy with GT2-level performance, creating a car that demands the same entry patience and exit aggression of the 992/991 GT3 R variants but with considerably more power. The 935 is a specialist choice that rewards drivers who have already mastered the Porsche rear-engine technique in GT3 before attempting GT2. Its caster range (0.1° step, 7.3–10.3°) is narrower than most GT2 cars, limiting front-end setup options.",
+    "car_notes": "The Porsche 935 is the most historically distinctive car in the ACC GT2 class — a modern interpretation of the legendary 935 racing car with a rear-engine layout and dramatic bodywork. It combines the Porsche rear-engine philosophy with GT2-level performance, creating a car that demands the same entry patience and exit aggression of the 992/991 GT3 R variants but with considerably more power. The 935 is a specialist choice that rewards drivers who have already mastered the Porsche rear-engine technique in GT3 before attempting GT2. Its caster range (0.1 deg step, 7.3-10.3 deg) is narrower than most GT2 cars, limiting front-end setup options.",
     "engine_layout": "rear",
     "driving_style": [
       "patient entry",

@@ -236,7 +236,7 @@ function SetupSlider({ label, value, min, max, step, unit = "", discreteArray }:
       <div className="flex justify-between items-start gap-1 pb-1.5 border-b border-zinc-150">
         <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">{label}</span>
         <span className="text-xs font-mono font-black text-brand bg-zinc-100/80 px-1.5 py-0.5 rounded border border-zinc-150">
-          {value.toFixed(unit === "°" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
+          {value.toFixed(unit === "\u00B0" || unit === "&deg;" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
           <span className="text-[10px] font-bold text-zinc-400 ml-0.5">{unit}</span>
         </span>
       </div>
@@ -758,13 +758,13 @@ export default function App() {
       console.error(err);
       // Rollback to previous state on error
       setActiveSetupRatings(prevRatings);
-      showToast("Review failed — try again", "error");
+      showToast("Review failed - try again", "error");
     } finally {
       setIsSavingRating(false);
     }
   };
 
-  // Memoized handler for registry list item clicks — prevents N function allocations per render
+  // Memoized handler for registry list item clicks - prevents N function allocations per render
   const handleSetupClick = useCallback((setup: SetupItem) => {
     setActiveSetup(setup);
     if (isMobile) setMobileView('inspection');
@@ -1044,7 +1044,7 @@ export default function App() {
       loadTunedSetups();
     } catch (err) {
       console.error(err);
-      showToast("Save failed â€” try again", "error");
+      showToast("Save failed - try again", "error");
     }
   };
 
@@ -1289,7 +1289,7 @@ export default function App() {
       const reader = new FileReader();
       reader.onload = (event) => {
         setCustomGuideText(event.target?.result as string);
-        showToast("Workbook imported — commit to save", "info");
+        showToast("Workbook imported - commit to save", "info");
       };
       reader.readAsText(file);
     }
@@ -1533,8 +1533,8 @@ export default function App() {
     const startHour = parseInt(transitionTimeStart.split(":")[0]) || 17;
     const durationHrs = transitionDuration / 60;
     
-    let trackCoolingRate = 0; // °C per hour
-    let ambientCoolingRate = 0; // °C per hour
+    let trackCoolingRate = 0; // deg C per hour
+    let ambientCoolingRate = 0; // deg C per hour
     let coolingType = "Stable Ambient";
     
     if (startHour >= 12 && startHour < 16) {
@@ -1563,7 +1563,7 @@ export default function App() {
     const ambientDrop = ambientCoolingRate * durationHrs;
     
     // In ACC, base cold pressures need to increase as temps drop
-    // Factor: ~ +0.1 PSI for every 1°C of track drop, ~ +0.12 PSI for every 1°C of ambient drop
+    // Factor: ~ +0.1 PSI for every 1 deg C of track drop, ~ +0.12 PSI for every 1 deg C of ambient drop
     const rawOffset = (trackDrop * 0.1) + (ambientDrop * 0.12);
     // Keep offset representation clean and rounded
     const compensationPSI = Math.round(rawOffset * 10) / 10;
@@ -3014,7 +3014,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[0]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[0]}&deg;</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 0)}
@@ -3038,7 +3038,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[0]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[0]}&deg;</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 0)}
@@ -3062,7 +3062,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[0]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[0]}&deg;</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 0)}
@@ -3125,7 +3125,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[1]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[1]}&deg;</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 1)}
@@ -3149,7 +3149,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[1]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[1]}&deg;</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 1)}
@@ -3173,7 +3173,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[1]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[1]}&deg;</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 1)}
@@ -3246,7 +3246,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[2]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[2]}&deg;</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 2)}
@@ -3270,7 +3270,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[2]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[2]}&deg;</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 2)}
@@ -3333,7 +3333,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[3]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[3]}&deg;</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 3)}
@@ -3357,7 +3357,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[3]}°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[3]}&deg;</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 3)}
@@ -3505,7 +3505,7 @@ export default function App() {
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="flex-1 text-center font-mono text-xs font-bold text-zinc-900 select-none">
-                                  {transitionAmbientTemp}°C
+                                  {transitionAmbientTemp}&deg;C
                                 </span>
                                 <button
                                   type="button"
@@ -3539,7 +3539,7 @@ export default function App() {
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="flex-1 text-center font-mono text-xs font-bold text-zinc-900 select-none">
-                                  {transitionTrackTemp}°C
+                                  {transitionTrackTemp}&deg;C
                                 </span>
                                 <button
                                   type="button"
@@ -3581,10 +3581,10 @@ export default function App() {
                                       {isLoss ? "Est. Ambient Drop" : "Est. Ambient Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-emerald-700" : "text-amber-600"}`}>
-                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}°C
+                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}&deg;C
                                     </span>
                                     <span className="text-[10px] font-mono text-zinc-500 block mt-0.5">
-                                      Finish: {(transitionAmbientTemp - val).toFixed(1)}°C
+                                      Finish: {(transitionAmbientTemp - val).toFixed(1)}&deg;C
                                     </span>
                                   </div>
                                 );
@@ -3599,10 +3599,10 @@ export default function App() {
                                       {isLoss ? "Est. Track Drop" : "Est. Track Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-blue-700" : "text-orange-600"}`}>
-                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}°C
+                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}&deg;C
                                     </span>
                                     <span className="text-[10px] font-mono text-zinc-500 block mt-0.5">
-                                      Finish: {(transitionTrackTemp - val).toFixed(1)}°C
+                                      Finish: {(transitionTrackTemp - val).toFixed(1)}&deg;C
                                     </span>
                                   </div>
                                 );
@@ -4310,7 +4310,7 @@ export default function App() {
                               </div>
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-semibold items-center">
                                 <span className="text-zinc-500 font-sans font-medium">Front Splitter:</span>
-                                <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.splitter}°</strong>
+                                <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.splitter}&deg;</strong>
                               </div>
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-bold items-center">
                                 <span className="text-zinc-500 font-sans font-medium">Front Brake Duct:</span>
@@ -4364,7 +4364,7 @@ export default function App() {
                                       -
                                     </button>
                                   )}
-                                  <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.rearWing}°</strong>
+                                  <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.rearWing}&deg;</strong>
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("rearWing", 1)}
@@ -4877,7 +4877,7 @@ export default function App() {
                 loadTunedSetups();
               } catch (err) {
                 console.error(err);
-                showToast("Delete failed — try again", "error");
+                showToast("Delete failed - try again", "error");
               }
             }}
             onRefresh={async () => {

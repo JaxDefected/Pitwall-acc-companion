@@ -77,7 +77,7 @@ interface FallbackResponse {
 const RESPONSES: Record<ScenarioKey, FallbackResponse> = {
   tyre_pressure: {
     title: "Tyre Pressure Compensation",
-    technique: "For every 1°C difference between your setup's baseline ambient temperature and the current conditions, adjust cold starting pressures by ±0.1 PSI. Decrease pressures if current ambient is warmer, increase if cooler. Run 1 careful out-lap and 2 consistent laps, then check hot pressures at the finish line of lap 3.",
+    technique: "For every 1 deg C difference between your setup's baseline ambient temperature and the current conditions, adjust cold starting pressures by +/-0.1 PSI. Decrease pressures if current ambient is warmer, increase if cooler. Run 1 careful out-lap and 2 consistent laps, then check hot pressures at the finish line of lap 3.",
     mechanical: ["Normal tracks: target 26.5–26.7 PSI hot", "High-speed tracks (Monza, Spa, Paul Ricard): target 26.7–26.9 PSI hot", "High-kerb tracks (Imola, Oulton Park): target 26.9–27.0 PSI hot", "If any tyre is outside the target window, adjust that corner's cold starting pressure by the exact delta required"],
     note: "Set correct tyre pressures before addressing any handling issue. Everything else changes with incorrect pressures.",
     setupFields: ['tyrePressures']
@@ -194,13 +194,13 @@ const RESPONSES: Record<ScenarioKey, FallbackResponse> = {
   tyre_overheat: {
     title: "Tyres Overheating",
     technique: "Identify which part of the tyre is hot. Inner edge overheating means too much negative camber. Outer edge overheating means insufficient negative camber. Overheating across the full tyre means pressures are too low — the full contact patch is generating too much heat.",
-    mechanical: ["Inner edge overheating: reduce negative camber by 0.1°", "Outer edge overheating: increase negative camber by 0.1°", "All over / middle overheating: increase tyre pressures by 0.2–0.3 PSI"],
+    mechanical: ["Inner edge overheating: reduce negative camber by 0.1 deg", "Outer edge overheating: increase negative camber by 0.1 deg", "All over / middle overheating: increase tyre pressures by 0.2–0.3 PSI"],
     setupFields: ['tyrePressures', 'cambers']
   },
   tyre_cold: {
     title: "Tyres Not Warming Up",
     technique: "More aggressive out-lap driving style will generate heat faster. Weaving on the out-lap, heavy braking and acceleration, and loading the tyres through medium-speed corners all contribute to faster warm-up.",
-    mechanical: ["Decrease cold tyre pressure by 0.2–0.3 PSI to increase contact patch size", "Increase toe value slightly (by 0.01°) to generate heat through scrub"],
+    mechanical: ["Decrease cold tyre pressure by 0.2–0.3 PSI to increase contact patch size", "Increase toe value slightly (by 0.01 deg) to generate heat through scrub"],
     setupFields: ['tyrePressures', 'toes']
   },
   bouncing_kerbs: {
@@ -256,7 +256,7 @@ export function getLocalResponse(
       parts.push(`ABS: ${setup.abs}`);
     }
     if (response.setupFields.includes('cambers')) {
-      parts.push(`Camber: FL ${setup.cambers[0]}° | FR ${setup.cambers[1]}° | RL ${setup.cambers[2]}° | RR ${setup.cambers[3]}°`);
+      parts.push(`Camber: FL ${setup.cambers[0]} deg | FR ${setup.cambers[1]} deg | RL ${setup.cambers[2]} deg | RR ${setup.cambers[3]} deg`);
     }
     if (response.setupFields.includes('bumpFast') || response.setupFields.includes('reboundFast')) {
       parts.push(`Fast bump: FL ${setup.bumpFast[0]} | FR ${setup.bumpFast[1]} | Fast rebound: RL ${setup.reboundFast[2]} | RR ${setup.reboundFast[3]}`);
@@ -265,7 +265,7 @@ export function getLocalResponse(
       parts.push(`Diff preload: ${setup.preloadDifferential} Nm`);
     }
     if (response.setupFields.includes('toes')) {
-      parts.push(`Toe: FL ${setup.toes[0]}° | FR ${setup.toes[1]}° | RL ${setup.toes[2]}° | RR ${setup.toes[3]}°`);
+      parts.push(`Toe: FL ${setup.toes[0]} deg | FR ${setup.toes[1]} deg | RL ${setup.toes[2]} deg | RR ${setup.toes[3]} deg`);
     }
     if (response.setupFields.includes('bumpstopRates') || response.setupFields.includes('bumpstopRanges')) {
       parts.push(`Bumpstop rates: [${setup.bumpstopRates.join(', ')}] | Bumpstop ranges: [${setup.bumpstopRanges.join(', ')}]`);
