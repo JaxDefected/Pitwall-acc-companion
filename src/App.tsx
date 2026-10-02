@@ -66,7 +66,7 @@ import {
 } from "./firebase";
 import { useAuth } from "./hooks/useAuth";
 import { useGitHubSync, parseGithubPath } from "./hooks/useGitHubSync";
-import { parseAccSetup, NormalizedAccSetup, ACC_CARS, ACC_TRACKS, TRACK_FUEL_RANGES, DEFAULT_FUEL_RANGE } from "./utils/accParser";
+import { parseAccSetup, NormalizedAccSetup, ACC_CARS, ACC_TRACKS } from "./utils/accParser";
 import { fetchWithRetry } from "./utils/fetchWithRetry";
 import { CIRCUIT_NOTES } from "./data/circuitNotes";
 import { cars } from "./data/cars";
@@ -74,6 +74,7 @@ import { getLapTimesText } from "./data/carNameMap";
 import LapTimesPage from "./components/LapTimesPage";
 import GaragePage from "./components/GaragePage";
 import AiRaceEngineer from "./components/AiRaceEngineer";
+import FuelStrategyTab from "./components/FuelStrategyTab";
 import SectionErrorBoundary from "./components/SectionErrorBoundary";
 
 export interface PendingSetup {
@@ -233,7 +234,7 @@ function SetupSlider({ label, value, min, max, step, unit = "", discreteArray }:
       <div className="flex justify-between items-start gap-1 pb-1.5 border-b border-zinc-150">
         <span className="text-[9.5px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">{label}</span>
         <span className="text-[11.5px] font-mono font-black text-red-655 bg-zinc-100/80 px-1.5 py-0.5 rounded border border-zinc-150">
-          {value.toFixed(unit === "Ã‚Â°" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
+          {value.toFixed(unit === "Ãƒâ€šÃ‚Â°" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
           <span className="text-[8px] font-bold text-zinc-400 ml-0.5">{unit}</span>
         </span>
       </div>
@@ -324,11 +325,11 @@ export default function App() {
   useEffect(() => {
     const titles: Record<string, string> = {
       telemetry: activeSetup
-        ? `${ACC_CARS[activeSetup.car] || activeSetup.car} Ã‚Â· Pitwall`
+        ? `${ACC_CARS[activeSetup.car] || activeSetup.car} Ãƒâ€šÃ‚Â· Pitwall`
         : 'Pitwall ACC Setup Lab',
-      laptimes: 'Lap Times Ã‚Â· Pitwall',
-      garage: 'Garage Ã‚Â· Pitwall',
-      engineer: 'Race Engineer Ã‚Â· Pitwall',
+      laptimes: 'Lap Times Ãƒâ€šÃ‚Â· Pitwall',
+      garage: 'Garage Ãƒâ€šÃ‚Â· Pitwall',
+      engineer: 'Race Engineer Ãƒâ€šÃ‚Â· Pitwall',
     };
     document.title = titles[currentView] || 'Pitwall ACC Setup Lab';
   }, [currentView, activeSetup]);
@@ -412,9 +413,6 @@ export default function App() {
     refreshSetupsList: setSetupsList,
   });
   
-  // Interactive Race Fuel Calculator states
-  const [fuelRaceTime, setFuelRaceTime] = useState<number>(20); // race duration in mins
-  
   // Time of Day & Track Temperature Transition States
   const [transitionTimeStart, setTransitionTimeStart] = useState<string>("17:00");
   const [transitionDuration, setTransitionDuration] = useState<number>(45);
@@ -423,31 +421,6 @@ export default function App() {
   const [transitionTrackTemp, setTransitionTrackTemp] = useState<number>(32);
   const [transitionAmbientTemp, setTransitionAmbientTemp] = useState<number>(24);
   const [showCompensated, setShowCompensated] = useState<boolean>(false);
-  const [fuelLapTimeMin, setFuelLapTimeMin] = useState<number | "">(1);
-  const [fuelLapTimeSec, setFuelLapTimeSec] = useState<number | "">(45);
-  const [fuelPerLap, setFuelPerLap] = useState<number>(3.2); // litres consumed per lap
-  const [fuelSafetyLaps, setFuelSafetyLaps] = useState<number>(2); // safety buffer laps
-
-  // Derive fuel consumption range from the active setup's track
-  const activeFuelRange = useMemo(() => {
-    const trackKey = activeSetup?.track || "";
-    return TRACK_FUEL_RANGES[trackKey] || DEFAULT_FUEL_RANGE;
-  }, [activeSetup?.track]);
-
-  // Auto-update fuelPerLap to the track-appropriate default when setup changes
-  useEffect(() => {
-    if (activeSetup?.track) {
-      const range = TRACK_FUEL_RANGES[activeSetup.track] || DEFAULT_FUEL_RANGE;
-      setFuelPerLap(range.default);
-    }
-  }, [activeSetup?.track]);
-  
-  // Interactive Pit & Stint Strategy Planner states
-  const [pitMandatoryFuel, setPitMandatoryFuel] = useState<boolean>(true);
-  const [pitMandatoryTyres, setPitMandatoryTyres] = useState<boolean>(true);
-  const [pitMaxFuelCapacity, setPitMaxFuelCapacity] = useState<number>(120);
-  const [pitNumberOfStops, setPitNumberOfStops] = useState<number>(1);
-  const [pitStrategyPreference, setPitStrategyPreference] = useState<"balanced" | "undercut" | "overcut">("balanced");
   
   const [isUploaderPanelOpen, setIsUploaderPanelOpen] = useState<boolean>(false);
   const [isGuidePanelOpen, setIsGuidePanelOpen] = useState<boolean>(false);
@@ -651,13 +624,13 @@ export default function App() {
       loadActiveRatings(activeSetup.id);
     } catch (err) {
       console.error(err);
-      showToast("Review failed Ã¢â‚¬â€ try again", "error");
+      showToast("Review failed ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â try again", "error");
     } finally {
       setIsSavingRating(false);
     }
   };
 
-  // Memoized handler for registry list item clicks Ã¢â‚¬â€ prevents N function allocations per render
+  // Memoized handler for registry list item clicks ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â prevents N function allocations per render
   const handleSetupClick = useCallback((setup: SetupItem) => {
     setActiveSetup(setup);
     if (isMobile) setMobileView('inspection');
@@ -938,7 +911,7 @@ export default function App() {
       loadTunedSetups();
     } catch (err) {
       console.error(err);
-      showToast("Save failed Ã¢â‚¬â€ try again", "error");
+      showToast("Save failed ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â try again", "error");
     }
   };
 
@@ -1154,7 +1127,7 @@ export default function App() {
         setActiveSetup(lastSavedItem);
         const carName = ACC_CARS[lastSavedItem.car] || lastSavedItem.car || "GT3 Car";
         const trackName = ACC_TRACKS[lastSavedItem.track] || lastSavedItem.track || "Circuit";
-        showToast(`${carName} Ã‚Â· ${trackName} loaded`, "success");
+        showToast(`${carName} Ãƒâ€šÃ‚Â· ${trackName} loaded`, "success");
       }
 
       setPendingSetups([]);
@@ -1201,7 +1174,7 @@ export default function App() {
       const reader = new FileReader();
       reader.onload = (event) => {
         setCustomGuideText(event.target?.result as string);
-        showToast("Workbook imported Ã¢â‚¬â€ commit to save", "info");
+        showToast("Workbook imported ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â commit to save", "info");
       };
       reader.readAsText(file);
     }
@@ -1244,7 +1217,7 @@ export default function App() {
       if (data.error) {
         setChatMessages((prev) => [
           ...prev,
-          { role: "model", content: `Ã¢Å¡Â Ã¯Â¸Â **Engineering Radio Down:** ${data.error}` }
+          { role: "model", content: `ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â **Engineering Radio Down:** ${data.error}` }
         ]);
       } else {
         setChatMessages((prev) => [...prev, { role: "model", content: data.reply }]);
@@ -1252,7 +1225,7 @@ export default function App() {
     } catch (err) {
       setChatMessages((prev) => [
         ...prev,
-        { role: "model", content: "Ã¢Å¡Â Ã¯Â¸Â **Timeout Error:** Could not contact the pitwall. Ensure your dev server is active on Port 3000." }
+        { role: "model", content: "ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â **Timeout Error:** Could not contact the pitwall. Ensure your dev server is active on Port 3000." }
       ]);
     }
     setIsChatAnalyzing(false);
@@ -1445,8 +1418,8 @@ export default function App() {
     const startHour = parseInt(transitionTimeStart.split(":")[0]) || 17;
     const durationHrs = transitionDuration / 60;
     
-    let trackCoolingRate = 0; // Ã‚Â°C per hour
-    let ambientCoolingRate = 0; // Ã‚Â°C per hour
+    let trackCoolingRate = 0; // Ãƒâ€šÃ‚Â°C per hour
+    let ambientCoolingRate = 0; // Ãƒâ€šÃ‚Â°C per hour
     let coolingType = "Stable Ambient";
     
     if (startHour >= 12 && startHour < 16) {
@@ -1475,7 +1448,7 @@ export default function App() {
     const ambientDrop = ambientCoolingRate * durationHrs;
     
     // In ACC, base cold pressures need to increase as temps drop
-    // Factor: ~ +0.1 PSI for every 1Ã‚Â°C of track drop, ~ +0.12 PSI for every 1Ã‚Â°C of ambient drop
+    // Factor: ~ +0.1 PSI for every 1Ãƒâ€šÃ‚Â°C of track drop, ~ +0.12 PSI for every 1Ãƒâ€šÃ‚Â°C of ambient drop
     const rawOffset = (trackDrop * 0.1) + (ambientDrop * 0.12);
     // Keep offset representation clean and rounded
     const compensationPSI = Math.round(rawOffset * 10) / 10;
@@ -1491,152 +1464,6 @@ export default function App() {
   };
 
   const coolingData = getTransitionCoolingModel();
-
-  // Pit & Stint Strategy Model
-  const getPitStrategyModel = () => {
-    const minVal = fuelLapTimeMin === "" ? 0 : fuelLapTimeMin;
-    const secVal = fuelLapTimeSec === "" ? 0 : fuelLapTimeSec;
-    const lapTimeSec = (minVal * 60) + secVal;
-    const totalRaceSecs = fuelRaceTime * 60;
-    const estTotalLaps = lapTimeSec > 0 ? Math.ceil(totalRaceSecs / lapTimeSec) : 0;
-    const safetyBufferLaps = fuelSafetyLaps;
-    const totalLapsWithBuffer = estTotalLaps + safetyBufferLaps;
-    const totalFuelNeeded = totalLapsWithBuffer * fuelPerLap;
-    
-    interface Stint {
-      index: number;
-      durationMins: number;
-      laps: number;
-      fuelNeeded: number;
-      isOverfilled: boolean;
-    }
-    
-    const stintsCount = pitNumberOfStops + 1;
-    let stints: Stint[] = [];
-    let msg = "";
-    let alertMsg = "";
-    
-    if (pitNumberOfStops === 0) {
-      // 0 stops = 1 single stint
-      const overfill = totalFuelNeeded > pitMaxFuelCapacity;
-      stints.push({
-        index: 1,
-        durationMins: fuelRaceTime,
-        laps: estTotalLaps,
-        fuelNeeded: totalFuelNeeded,
-        isOverfilled: overfill
-      });
-      if (overfill) {
-        alertMsg = `Ã¢Å¡Â Ã¯Â¸Â Critical: Total fuel required (${totalFuelNeeded.toFixed(1)}L) exceeds max tank capacity (${pitMaxFuelCapacity}L). You MUST plan at least 1 pitstop!`;
-      } else {
-        msg = "Ã¢Å“â€œ Standard single stint. No pitstop required.";
-      }
-    } else if (pitNumberOfStops === 1) {
-      // 1 stop = 2 stints
-      let ratio1 = 0.5;
-      let ratio2 = 0.5;
-      
-      if (pitStrategyPreference === "undercut") {
-        ratio1 = 0.4;
-        ratio2 = 0.6;
-      } else if (pitStrategyPreference === "overcut") {
-        ratio1 = 0.6;
-        ratio2 = 0.4;
-      }
-      
-      const laps1 = Math.ceil(estTotalLaps * ratio1);
-      const laps2 = estTotalLaps - laps1;
-      
-      const stint1Fuel = (laps1 + Math.ceil(safetyBufferLaps / 2)) * fuelPerLap;
-      const stint2Fuel = (laps2 + Math.floor(safetyBufferLaps / 2)) * fuelPerLap;
-      
-      const stint1Overfilled = stint1Fuel > pitMaxFuelCapacity;
-      const stint2Overfilled = stint2Fuel > pitMaxFuelCapacity;
-      
-      stints.push({
-        index: 1,
-        durationMins: Math.round(fuelRaceTime * ratio1 * 10) / 10,
-        laps: laps1,
-        fuelNeeded: stint1Overfilled ? pitMaxFuelCapacity : stint1Fuel,
-        isOverfilled: stint1Overfilled
-      });
-      
-      stints.push({
-        index: 2,
-        durationMins: Math.round(fuelRaceTime * ratio2 * 10) / 10,
-        laps: laps2,
-        fuelNeeded: stint2Overfilled ? pitMaxFuelCapacity : stint2Fuel,
-        isOverfilled: stint2Overfilled
-      });
-      
-      if (stint1Overfilled || stint2Overfilled) {
-        alertMsg = `Ã¢Å¡Â Ã¯Â¸Â Tank limitation reached! One of your stints exceeds ${pitMaxFuelCapacity}L capacity. Consider planning 2 stops or shifting the stint balance.`;
-      }
-    } else if (pitNumberOfStops === 2) {
-      // 2 stops = 3 stints
-      let ratio1 = 0.33;
-      let ratio2 = 0.33;
-      let ratio3 = 0.34;
-      
-      if (pitStrategyPreference === "undercut") {
-        ratio1 = 0.25;
-        ratio2 = 0.35;
-        ratio3 = 0.4;
-      } else if (pitStrategyPreference === "overcut") {
-        ratio1 = 0.4;
-        ratio2 = 0.35;
-        ratio3 = 0.25;
-      }
-      
-      const laps1 = Math.ceil(estTotalLaps * ratio1);
-      const laps2 = Math.ceil(estTotalLaps * ratio2);
-      const laps3 = estTotalLaps - laps1 - laps2;
-      
-      const stint1Fuel = (laps1 + 1) * fuelPerLap;
-      const stint2Fuel = (laps2 + 1) * fuelPerLap;
-      const stint3Fuel = (laps3 + (safetyBufferLaps - 2)) * fuelPerLap;
-      
-      stints.push({
-        index: 1,
-        durationMins: Math.round(fuelRaceTime * ratio1 * 10) / 10,
-        laps: laps1,
-        fuelNeeded: stint1Fuel > pitMaxFuelCapacity ? pitMaxFuelCapacity : stint1Fuel,
-        isOverfilled: stint1Fuel > pitMaxFuelCapacity
-      });
-      stints.push({
-        index: 2,
-        durationMins: Math.round(fuelRaceTime * ratio2 * 10) / 10,
-        laps: laps2,
-        fuelNeeded: stint2Fuel > pitMaxFuelCapacity ? pitMaxFuelCapacity : stint2Fuel,
-        isOverfilled: stint2Fuel > pitMaxFuelCapacity
-      });
-      stints.push({
-        index: 3,
-        durationMins: Math.round(fuelRaceTime * ratio3 * 10) / 10,
-        laps: laps3,
-        fuelNeeded: stint3Fuel > pitMaxFuelCapacity ? pitMaxFuelCapacity : stint3Fuel,
-        isOverfilled: stint3Fuel > pitMaxFuelCapacity
-      });
-    }
-    
-    const standardMaxInitialFuel = Math.min(pitMaxFuelCapacity, totalFuelNeeded);
-    const splitStartingFuel = stints.length > 0 ? stintsCount > 1 ? stints[0].fuelNeeded : totalFuelNeeded : totalFuelNeeded;
-    const fuelWeightDifference = Math.max(0, (standardMaxInitialFuel - splitStartingFuel) * 0.74);
-    const estimatedTimeGainPerLap = (fuelWeightDifference / 10) * 0.08;
-    
-    return {
-      estTotalLaps,
-      totalFuelNeeded,
-      stints,
-      msg,
-      alertMsg,
-      fuelWeightDifference,
-      estimatedTimeGainPerLap
-    };
-  };
-
-  const pitStrategy = getPitStrategyModel();
-  const calculatedFuelLapTimeSec = (fuelLapTimeMin === "" ? 0 : fuelLapTimeMin) * 60 + (fuelLapTimeSec === "" ? 0 : fuelLapTimeSec);
 
   return (
     <div id="acc-app-root" className="min-h-screen bg-zinc-100/60 font-sans text-zinc-900 flex flex-col antialiased w-full max-w-full overflow-x-hidden">
@@ -1804,7 +1631,7 @@ export default function App() {
             }`}
           >
             <Wrench className="w-4 h-4 text-emerald-440" />
-            <span className="hidden md:inline">Ã°Å¸â€Â§ AI RACE ENGINEER</span>
+            <span className="hidden md:inline">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ AI RACE ENGINEER</span>
             <span className="md:hidden">ENGINEER</span>
           </button>
         </div>
@@ -2169,17 +1996,17 @@ export default function App() {
                             <div className="flex gap-1.5 mt-1.5 flex-wrap">
                               {hasTrackUnknown && (
                                 <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold">
-                                  Ã¢Å¡Â Ã¯Â¸Â Circuit Unspecified
+                                  ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Circuit Unspecified
                                 </span>
                               )}
                               {hasCarUnknown && (
                                 <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold">
-                                  Ã¢Å¡Â Ã¯Â¸Â Car Unspecified
+                                  ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Car Unspecified
                                 </span>
                               )}
                               {!hasTrackUnknown && !hasCarUnknown && (
                                 <span className="bg-red-50 border border-red-200 text-red-655 text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
-                                  Ã¢Å“â€œ Identified
+                                  ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Identified
                                 </span>
                               )}
                             </div>
@@ -2398,7 +2225,7 @@ export default function App() {
 
                 {githubStatus === "error" && githubError && (
                   <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3.5 rounded-lg font-mono font-medium shadow-xs">
-                    <div className="font-bold uppercase tracking-wider text-[9px] text-red-800 mb-1">Ã¢Å¡Â Ã¯Â¸Â Community Sync Failed</div>
+                    <div className="font-bold uppercase tracking-wider text-[9px] text-red-800 mb-1">ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Community Sync Failed</div>
                     {githubError}
                   </div>
                 )}
@@ -2407,7 +2234,7 @@ export default function App() {
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 border-b border-zinc-200 pb-2">
                     <span className="flex items-center gap-1.5 font-bold uppercase text-[9px] text-zinc-600 tracking-wider">
-                      Ã°Å¸Å’Â Remote Community Search Results
+                      ÃƒÂ°Ã…Â¸Ã…â€™Ã‚Â Remote Community Search Results
                       {githubStatus === "connected" && (
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Synchronized Live" />
                       )}
@@ -2448,10 +2275,10 @@ export default function App() {
                                     className="font-mono text-[8px] sm:text-[9px] px-1.5 py-0.2 rounded bg-zinc-950 font-bold flex items-center gap-1 text-amber-500 shrink-0"
                                     title={item.meta.gradeLabel}
                                   >
-                                    {item.meta.grade === 3 && "Ã¢Â­ÂÃ¢Â­ÂÃ¢Â­Â [LGE]"}
-                                    {item.meta.grade === 2 && "Ã¢Â­ÂÃ¢Â­ÂÃ¢Ëœâ€  [WIP]"}
-                                    {item.meta.grade === 1 && "Ã¢Â­ÂÃ¢Ëœâ€ Ã¢Ëœâ€  [BAS]"}
-                                    {item.meta.grade === 0 && "Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€  [PRE]"}
+                                    {item.meta.grade === 3 && "ÃƒÂ¢Ã‚Â­Ã‚ÂÃƒÂ¢Ã‚Â­Ã‚ÂÃƒÂ¢Ã‚Â­Ã‚Â [LGE]"}
+                                    {item.meta.grade === 2 && "ÃƒÂ¢Ã‚Â­Ã‚ÂÃƒÂ¢Ã‚Â­Ã‚ÂÃƒÂ¢Ã‹Å“Ã¢â‚¬Â  [WIP]"}
+                                    {item.meta.grade === 1 && "ÃƒÂ¢Ã‚Â­Ã‚ÂÃƒÂ¢Ã‹Å“Ã¢â‚¬Â ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â  [BAS]"}
+                                    {item.meta.grade === 0 && "ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â  [PRE]"}
                                   </span>
                                 )}
 
@@ -2620,7 +2447,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* MOBILE: Back navigation bar Ã¢â‚¬â€ visible only during mobile inspection view */}
+        {/* MOBILE: Back navigation bar ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â visible only during mobile inspection view */}
         {isMobile && mobileView === 'inspection' && (
           <div className="lg:hidden col-span-full bg-white border border-zinc-200 rounded-lg px-4 py-3 flex items-center gap-3 shadow-sm">
             <button
@@ -2636,7 +2463,7 @@ export default function App() {
             {activeSetup && (
               <div className="flex-1 min-w-0 text-right">
                 <p className="text-[11px] font-mono text-zinc-400 truncate">
-                  {ACC_CARS[activeSetup.car] || activeSetup.car} Ã‚Â· {ACC_TRACKS[activeSetup.track] || activeSetup.track}
+                  {ACC_CARS[activeSetup.car] || activeSetup.car} Ãƒâ€šÃ‚Â· {ACC_TRACKS[activeSetup.track] || activeSetup.track}
                 </p>
               </div>
             )}
@@ -2817,7 +2644,7 @@ export default function App() {
                       <div className="flex items-center gap-2.5 min-w-0">
                         <FileText className={`w-4 h-4 text-red-650 shrink-0 ${isCrewNotesOpen ? "animate-pulse" : ""}`} />
                         <span className="text-zinc-550 font-extrabold font-mono uppercase tracking-wider text-[10px] truncate">
-                          Uploaded by <strong className="text-zinc-800 font-extrabold">{activeSetup.uploadedByName || "Team Lead"}</strong> Ã¢â‚¬Â¢ Crew Notes
+                          Uploaded by <strong className="text-zinc-800 font-extrabold">{activeSetup.uploadedByName || "Team Lead"}</strong> ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Crew Notes
                         </span>
                       </div>
                       <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-200 shrink-0 ${isCrewNotesOpen ? "rotate-180" : ""}`} />
@@ -3097,7 +2924,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[0]}Ã‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[0]}Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 0)}
@@ -3119,7 +2946,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[0]}Ã‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[0]}Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 0)}
@@ -3141,7 +2968,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[0]}Ã‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[0]}Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 0)}
@@ -3200,7 +3027,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[1]}Ã‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[1]}Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 1)}
@@ -3222,7 +3049,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[1]}Ã‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[1]}Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 1)}
@@ -3244,7 +3071,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[1]}Ã‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[1]}Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 1)}
@@ -3313,7 +3140,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[2]}Ã‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[2]}Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 2)}
@@ -3335,7 +3162,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[2]}Ã‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[2]}Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 2)}
@@ -3394,7 +3221,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[3]}Ã‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[3]}Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 3)}
@@ -3416,7 +3243,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[3]}Ã‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[3]}Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 3)}
@@ -3449,7 +3276,7 @@ export default function App() {
 
                           {showCompensated && (
                             <div className="text-[10px] text-center text-amber-900 mt-2 p-2 bg-amber-50/80 rounded border border-amber-200 font-mono font-semibold">
-                              Ã¢Å¡Â  Thermal pressure loss simulated. Notice tyres falling into the <strong className="text-sky-700">blue/underinflated</strong> zone as track temperature cools down.
+                              ÃƒÂ¢Ã…Â¡Ã‚Â  Thermal pressure loss simulated. Notice tyres falling into the <strong className="text-sky-700">blue/underinflated</strong> zone as track temperature cools down.
                             </div>
                           )}
                         </div>
@@ -3488,7 +3315,7 @@ export default function App() {
                                   const isSunset = i === 17 || i === 18 || i === 19;
                                   return (
                                     <option key={hourStr} value={hourStr}>
-                                      {hourStr} {isSunset ? "Ã°Å¸Å’â€¡ (Sunset Transition)" : ""}
+                                      {hourStr} {isSunset ? "ÃƒÂ°Ã…Â¸Ã…â€™Ã¢â‚¬Â¡ (Sunset Transition)" : ""}
                                     </option>
                                   );
                                 })}
@@ -3564,7 +3391,7 @@ export default function App() {
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="flex-1 text-center font-mono text-xs font-bold text-zinc-900 select-none">
-                                  {transitionAmbientTemp}Ã‚Â°C
+                                  {transitionAmbientTemp}Ãƒâ€šÃ‚Â°C
                                 </span>
                                 <button
                                   type="button"
@@ -3598,7 +3425,7 @@ export default function App() {
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="flex-1 text-center font-mono text-xs font-bold text-zinc-900 select-none">
-                                  {transitionTrackTemp}Ã‚Â°C
+                                  {transitionTrackTemp}Ãƒâ€šÃ‚Â°C
                                 </span>
                                 <button
                                   type="button"
@@ -3621,11 +3448,11 @@ export default function App() {
                               <span className="text-[9.5px] font-mono text-zinc-650 uppercase font-bold">Session Thermal Evolution</span>
                               <span className="text-[10.5px] font-mono text-amber-800 font-extrabold flex items-center gap-1">
                                 {parseInt(transitionTimeStart.split(":")[0]) >= 16 && parseInt(transitionTimeStart.split(":")[0]) < 21 ? (
-                                  <>Ã°Å¸Å’â€¦ {coolingData.coolingType}</>
+                                  <>ÃƒÂ°Ã…Â¸Ã…â€™Ã¢â‚¬Â¦ {coolingData.coolingType}</>
                                 ) : parseInt(transitionTimeStart.split(":")[0]) >= 21 || parseInt(transitionTimeStart.split(":")[0]) < 5 ? (
-                                  <>Ã°Å¸Å’â„¢ {coolingData.coolingType}</>
+                                  <>ÃƒÂ°Ã…Â¸Ã…â€™Ã¢â€žÂ¢ {coolingData.coolingType}</>
                                 ) : (
-                                  <>Ã¢Ëœâ‚¬Ã¯Â¸Â {coolingData.coolingType}</>
+                                  <>ÃƒÂ¢Ã‹Å“Ã¢â€šÂ¬ÃƒÂ¯Ã‚Â¸Ã‚Â {coolingData.coolingType}</>
                                 )}
                               </span>
                             </div>
@@ -3640,10 +3467,10 @@ export default function App() {
                                       {isLoss ? "Est. Ambient Drop" : "Est. Ambient Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-emerald-700" : "text-amber-600"}`}>
-                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}Ã‚Â°C
+                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}Ãƒâ€šÃ‚Â°C
                                     </span>
                                     <span className="text-[8.5px] font-mono text-zinc-500 block mt-0.5">
-                                      Finish: {(transitionAmbientTemp - val).toFixed(1)}Ã‚Â°C
+                                      Finish: {(transitionAmbientTemp - val).toFixed(1)}Ãƒâ€šÃ‚Â°C
                                     </span>
                                   </div>
                                 );
@@ -3658,10 +3485,10 @@ export default function App() {
                                       {isLoss ? "Est. Track Drop" : "Est. Track Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-blue-700" : "text-orange-600"}`}>
-                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}Ã‚Â°C
+                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}Ãƒâ€šÃ‚Â°C
                                     </span>
                                     <span className="text-[8.5px] font-mono text-zinc-500 block mt-0.5">
-                                      Finish: {(transitionTrackTemp - val).toFixed(1)}Ã‚Â°C
+                                      Finish: {(transitionTrackTemp - val).toFixed(1)}Ãƒâ€šÃ‚Â°C
                                     </span>
                                   </div>
                                 );
@@ -3877,461 +3704,12 @@ export default function App() {
 
                   {/* TAB 3: FUEL STRATEGY */}
                   {selectedTab === "fuel" && (
-                    <div id="tabpanel-fuel" role="tabpanel" aria-labelledby="tab-btn-fuel" className="space-y-5 py-2">
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
-                        
-                        {/* Current Load display (4 cols) */}
-                        <div className="md:col-span-4 bg-white border border-zinc-200 p-5 rounded-lg flex flex-col justify-between shadow-sm text-zinc-900">
-                          <div>
-                            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">Core Loaded Fuel</span>
-                             <div className="text-3xl sm:text-4xl font-mono font-black text-emerald-700 mt-3 flex items-center gap-3">
-                              {isTuneMode && (
-                                <button
-                                  onClick={() => handleAdjustSetupValue("fuel", -2)}
-                                  className="w-11 h-11 flex items-center justify-center bg-zinc-150 hover:bg-zinc-250 border border-zinc-250 rounded-lg text-base font-black cursor-pointer active:scale-95 text-zinc-900 select-none text-center"
-                                  title="Decrease Fuel 2L"
-                                >
-                                  -
-                                </button>
-                              )}
-                              <span>{parsedActiveSetup.fuel} L</span>
-                              {isTuneMode && (
-                                <button
-                                  onClick={() => handleAdjustSetupValue("fuel", 2)}
-                                  className="w-11 h-11 flex items-center justify-center bg-zinc-150 hover:bg-zinc-250 border border-zinc-250 rounded-lg text-base font-black cursor-pointer active:scale-95 text-zinc-900 select-none text-center"
-                                  title="Increase Fuel 2L"
-                                >
-                                  +
-                                </button>
-                              )}
-                            </div>
-                            <p className="text-xs text-zinc-600 mt-4 leading-relaxed font-medium">
-                              This setup has standard <strong className="text-zinc-900 font-bold">{parsedActiveSetup.fuel} Litres</strong> saved in the config file. (ACC defaults simple setups to 20L).
-                            </p>
-                          </div>
-                          <div className="mt-4 pt-4 border-t border-zinc-200 text-xs text-zinc-500 font-mono flex items-center gap-1.5 flex-wrap">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse shrink-0"></span>
-                            Maximum Tank: ~120L (GT3 average)
-                          </div>
-                        </div>
-
-                        {/* Race Fuel Tool calculator console (8 cols) */}
-                        <div className="md:col-span-8 bg-white border border-zinc-200 p-5 rounded-lg shadow-sm space-y-4 text-zinc-900">
-                          <div className="flex justify-between items-center border-b border-zinc-200 pb-2">
-                            <h4 className="text-xs font-mono font-bold tracking-widest text-red-655 uppercase flex items-center gap-1.5">
-                              <Sparkles className="w-3.5 h-3.5 text-red-600 shrink-0" />
-                              Interactive Race Fuel Tool
-                            </h4>
-                            <span className="text-[10px] font-mono text-zinc-550 font-bold">DYNAMIC CALCULATOR</span>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Left sliders */}
-                            <div className="space-y-3.5">
-                              <div>
-                                <div className="flex justify-between text-xs mb-1 font-mono">
-                                  <span className="text-zinc-550 font-bold">Race Duration</span>
-                                  <span className="text-zinc-900 font-extrabold">{fuelRaceTime} Mins</span>
-                                </div>
-                                <input
-                                  type="range"
-                                  min={5}
-                                  max={180}
-                                  step={5}
-                                  value={fuelRaceTime}
-                                  onChange={(e) => setFuelRaceTime(parseInt(e.target.value))}
-                                  className="w-full accent-red-600 h-1 bg-zinc-100 rounded-lg cursor-pointer animate-none"
-                                />
-                              </div>
-
-                              <div>
-                                <div className="flex justify-between text-xs mb-1 font-mono">
-                                  <span className="text-zinc-550 font-bold">Average Lap Time</span>
-                                  <span className="text-zinc-900 font-extrabold">
-                                    {fuelLapTimeMin === "" ? 0 : fuelLapTimeMin}m {fuelLapTimeSec === "" ? 0 : fuelLapTimeSec < 10 ? `0${fuelLapTimeSec}` : fuelLapTimeSec}s
-                                  </span>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="flex items-center gap-1.5 bg-zinc-50 px-2 py-1 rounded border border-zinc-200 focus-within:border-red-250">
-                                    <span className="text-[10px] font-mono text-zinc-500 font-bold">MIN:</span>
-                                    <input
-                                      type="number"
-                                      min={0}
-                                      max={5}
-                                      value={fuelLapTimeMin}
-                                      onChange={(e) => {
-                                        const val = e.target.value;
-                                        if (val === "") {
-                                          setFuelLapTimeMin("");
-                                        } else {
-                                          const parsed = parseInt(val, 10);
-                                          if (!isNaN(parsed)) {
-                                            setFuelLapTimeMin(Math.max(0, parsed));
-                                          }
-                                        }
-                                      }}
-                                      onBlur={() => {
-                                        if (fuelLapTimeMin === "") {
-                                          setFuelLapTimeMin(1);
-                                        }
-                                      }}
-                                      className="bg-transparent text-zinc-900 font-mono w-full text-xs text-center font-bold focus:outline-none placeholder-zinc-350"
-                                    />
-                                  </div>
-                                  <div className="flex items-center gap-1.5 bg-zinc-50 px-2 py-1 rounded border border-zinc-200 focus-within:border-red-250">
-                                    <span className="text-[10px] font-mono text-zinc-500 font-bold">SEC:</span>
-                                    <input
-                                      type="number"
-                                      min={0}
-                                      max={59}
-                                      value={fuelLapTimeSec}
-                                      onChange={(e) => {
-                                        const val = e.target.value;
-                                        if (val === "") {
-                                          setFuelLapTimeSec("");
-                                        } else {
-                                          const parsed = parseInt(val, 10);
-                                          if (!isNaN(parsed)) {
-                                            setFuelLapTimeSec(Math.max(0, Math.min(59, parsed)));
-                                          }
-                                        }
-                                      }}
-                                      onBlur={() => {
-                                        if (fuelLapTimeSec === "") {
-                                          setFuelLapTimeSec(45);
-                                        }
-                                      }}
-                                      className="bg-transparent text-zinc-900 font-mono w-full text-xs text-center font-bold focus:outline-none placeholder-zinc-350"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Right sliders */}
-                            <div className="space-y-3.5">
-                              <div>
-                                <div className="flex justify-between text-xs mb-1 font-mono">
-                                  <span className="text-zinc-550 font-bold">Consumption Per Lap</span>
-                                  <span className="text-emerald-700 font-extrabold">{fuelPerLap.toFixed(2)} L/Lap</span>
-                                </div>
-                                <input
-                                  type="range"
-                                  min={activeFuelRange.min}
-                                  max={activeFuelRange.max}
-                                  step={0.05}
-                                  value={fuelPerLap}
-                                  onChange={(e) => setFuelPerLap(parseFloat(e.target.value))}
-                                  className="w-full accent-red-600 h-1 bg-zinc-100 rounded-lg cursor-pointer"
-                                />
-                                <div className="flex justify-between text-[10px] text-zinc-400 font-mono mt-0.5">
-                                  <span>{activeFuelRange.min.toFixed(1)}L</span>
-                                  <span>{activeFuelRange.max.toFixed(1)}L</span>
-                                </div>
-                              </div>
-
-                              <div>
-                                <div className="flex justify-between text-xs mb-1 font-mono">
-                                  <span className="text-zinc-550 font-bold">Safety Buffer</span>
-                                  <span className="text-red-700 font-bold">+{fuelSafetyLaps} Laps</span>
-                                </div>
-                                <div className="flex gap-1.5">
-                                  {[0, 1, 2, 3].map((num) => (
-                                    <button
-                                      key={num}
-                                      onClick={() => setFuelSafetyLaps(num)}
-                                      className={`flex-1 py-1 rounded border text-xs font-mono font-bold transition-all cursor-pointer ${fuelSafetyLaps === num ? "bg-red-50 border-red-500 text-red-700 shadow-xs" : "bg-zinc-50 border-zinc-200 text-zinc-650 hover:text-zinc-900"}`}
-                                    >
-                                      {num} L
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Calculations outcome box */}
-                          <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-lg grid grid-cols-3 gap-2 text-center font-mono hover:border-zinc-300 transition-colors shadow-xs">
-                            <div className="border-r border-zinc-200 pr-1">
-                              <span className="text-[10px] text-zinc-500 uppercase block font-bold">Est Laps</span>
-                              <span className="text-sm sm:text-lg font-black text-zinc-900">{calculatedFuelLapTimeSec > 0 ? Math.ceil((fuelRaceTime * 60) / calculatedFuelLapTimeSec) : 0}</span>
-                            </div>
-                            <div className="border-r border-zinc-200 px-1">
-                              <span className="text-[10px] text-zinc-500 uppercase block font-bold">Total Laps</span>
-                              <span className="text-sm sm:text-lg font-black text-red-655">
-                                {(calculatedFuelLapTimeSec > 0 ? Math.ceil((fuelRaceTime * 60) / calculatedFuelLapTimeSec) : 0) + fuelSafetyLaps}
-                              </span>
-                            </div>
-                            <div className="pl-1">
-                              <span className="text-[10px] text-zinc-500 uppercase block font-bold">MIN FUEL REQ</span>
-                              <span className="text-sm sm:text-lg font-black text-emerald-700 tracking-tight">
-                                {(((calculatedFuelLapTimeSec > 0 ? Math.ceil((fuelRaceTime * 60) / calculatedFuelLapTimeSec) : 0) + fuelSafetyLaps) * fuelPerLap).toFixed(1)} L
-                              </span>
-                            </div>
-                          </div>
-
-                          <span className="text-[10px] block text-zinc-550 leading-relaxed italic text-center font-sans font-medium">
-                            *Pit strategy recommendation: {((((calculatedFuelLapTimeSec > 0 ? Math.ceil((fuelRaceTime * 60) / calculatedFuelLapTimeSec) : 0) + fuelSafetyLaps) * fuelPerLap) > pitMaxFuelCapacity) ? `Ã¢Å¡Â Ã¯Â¸Â Refuel pitstop needed: Minimum load exceeds your customized ${pitMaxFuelCapacity}L tank limit.` : "Ã¢Å“â€œ Optimal run capacity: No physical mid-session refuelling breaks strictly required by tank volume."}
-                          </span>
-                        </div>
-
-                      </div>
-
-                      {/* PIT & STINT STRATEGY PLANNER SECTION */}
-                      <div className="bg-white border border-zinc-200 rounded-lg p-5 shadow-sm space-y-5 text-zinc-905">
-                        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-zinc-200 pb-3">
-                          <div>
-                            <h3 className="text-xs font-mono font-black text-zinc-900 uppercase tracking-wider flex items-center gap-2">
-                              <Wrench className="w-4 h-4 text-red-600 shrink-0" />
-                              ACC Pit & Stint Strategy Planner
-                            </h3>
-                            <p className="text-[11px] text-zinc-650 mt-0.5 font-medium">
-                              Optimize starting fuel weight loadouts, stint timing, and MFD presets for 45m - 2h endurance sessions.
-                            </p>
-                          </div>
-                          <div className="bg-emerald-50 px-3 py-1 text-emerald-700 border border-emerald-220 rounded font-mono text-[10px] uppercase font-bold tracking-wider shrink-0 flex items-center gap-1.5 self-start sm:self-center">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
-                            {pitStrategy.fuelWeightDifference > 0 ? `Est. Pace Advantage: -${pitStrategy.estimatedTimeGainPerLap.toFixed(2)}s/Lap` : "Optimized Fuel-Weight Profile"}
-                          </div>
-                        </div>
-
-                        {/* Interactive Pit Controls Grid */}
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                          {/* Config Controls (Col Span 5) */}
-                          <div className="lg:col-span-5 space-y-4 bg-zinc-50 p-4 rounded-lg border border-zinc-200">
-                            <h4 className="text-[10px] font-mono font-bold tracking-widest text-zinc-550 uppercase mb-2">Race Pit Rules & Settings</h4>
-
-                            <div className="grid grid-cols-2 gap-3">
-                              {/* Fuel capacity */}
-                              <div>
-                                <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block mb-1 font-bold">
-                                  Max Tank Capacity
-                                </label>
-                                <div className="flex items-center gap-1 bg-white border border-zinc-200 rounded px-2.5 py-1 focus-within:border-red-250">
-                                  <input
-                                    type="number"
-                                    min="20"
-                                    max="140"
-                                    value={pitMaxFuelCapacity}
-                                    onChange={(e) => setPitMaxFuelCapacity(Math.max(20, parseInt(e.target.value) || 120))}
-                                    className="w-full bg-transparent font-mono text-xs focus:outline-none text-zinc-900 text-center font-bold"
-                                  />
-                                  <span className="text-[10px] text-zinc-500 font-mono font-bold">L</span>
-                                </div>
-                              </div>
-
-                              {/* Strategy Preference */}
-                              <div>
-                                <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block mb-1 font-bold">
-                                  Stint Strategy Style
-                                </label>
-                                <select
-                                  value={pitStrategyPreference}
-                                  onChange={(e) => setPitStrategyPreference(e.target.value as any)}
-                                  className="w-full bg-white border border-zinc-200 rounded font-mono text-xs text-zinc-800 p-1.5 hover:border-zinc-350 focus:outline-none cursor-pointer font-bold shadow-xs"
-                                >
-                                  <option value="balanced">Balanced (Equal stints)</option>
-                                  <option value="undercut">Undercut (Early pitstop)</option>
-                                  <option value="overcut">Overcut (Late pitstop)</option>
-                                </select>
-                              </div>
-                            </div>
-
-                            {/* Mandatory Rules Toggles */}
-                            <div className="grid grid-cols-2 gap-3">
-                              <button
-                                onClick={() => setPitMandatoryFuel(!pitMandatoryFuel)}
-                                className={`py-1.5 px-3 rounded text-[10px] font-mono font-black uppercase transition-all border cursor-pointer text-center shadow-xs ${
-                                  pitMandatoryFuel
-                                    ? "bg-emerald-50 border-emerald-400 text-emerald-700"
-                                    : "bg-white border-zinc-200 text-zinc-500 hover:text-zinc-700"
-                                }`}
-                              >
-                                {pitMandatoryFuel ? "Ã¢Å“â€œ Mandatory Fuel Stop" : "Ã¢Å¡Â¡ Refueling Optional"}
-                              </button>
-
-                              <button
-                                onClick={() => setPitMandatoryTyres(!pitMandatoryTyres)}
-                                className={`py-1.5 px-3 rounded text-[10px] font-mono font-black uppercase transition-all border cursor-pointer text-center shadow-xs ${
-                                  pitMandatoryTyres
-                                    ? "bg-emerald-50 border-emerald-400 text-emerald-700"
-                                    : "bg-white border-zinc-200 text-zinc-500 hover:text-zinc-700"
-                                }`}
-                              >
-                                {pitMandatoryTyres ? "Ã¢Å“â€œ Mandatory Tyre Swap" : "Ã¢Å¡Â¡ Tyres Optional"}
-                              </button>
-                            </div>
-
-                            {/* Plan Pitstops Selection Tabs */}
-                            <div>
-                              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block mb-1.5 font-bold">
-                                Target Number of Pitstops
-                              </span>
-                              <div className="grid grid-cols-3 gap-1">
-                                {[
-                                  { label: "0 Stops", val: 0 },
-                                  { label: "1 Stop", val: 1 },
-                                  { label: "2 Stops", val: 2 },
-                                  { label: "3 Stops", val: 3 },
-                                ].map((tab) => {
-                                  const isSelected = pitNumberOfStops === tab.val;
-                                  return (
-                                    <button
-                                      key={tab.val}
-                                      onClick={() => setPitNumberOfStops(tab.val)}
-                                      className={`py-1.5 rounded text-[10px] font-mono font-black transition-all cursor-pointer ${
-                                        isSelected
-                                          ? "bg-red-600 text-white shadow-md shadow-red-500/10"
-                                          : "bg-white text-zinc-650 hover:text-zinc-900 border border-zinc-200 hover:border-zinc-350 shadow-xs"
-                                      }`}
-                                    >
-                                      {tab.val} Stop{tab.val !== 1 ? "s" : ""}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Visual Timeline and MFD Presets (Col Span 7) */}
-                          <div className="lg:col-span-7 space-y-4">
-                            {pitStrategy.alertMsg && (
-                              <div className="bg-red-55 px-3.5 py-2.5 rounded-lg border border-red-200 text-red-750 text-[11px] font-mono font-bold flex items-center gap-2.5 shadow-sm">
-                                <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
-                                <span>{pitStrategy.alertMsg}</span>
-                              </div>
-                            )}
-
-                            {/* Visual Timeline */}
-                            <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3.5 space-y-2.5 shadow-xs">
-                              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">Planned Session Timeline</span>
-                              
-                              <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
-                                {pitStrategy.stints.map((stint, sIdx) => {
-                                  const pct = (stint.durationMins / fuelRaceTime) * 100;
-                                  return (
-                                    <div key={stint.index} className="flex-1 flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full">
-                                      {/* One Stint Box */}
-                                      <div className={`flex-1 p-3 rounded-lg border text-left font-mono transition-all shadow-xs ${
-                                        stint.isOverfilled
-                                          ? "bg-red-50 border-red-300 text-red-800"
-                                          : "bg-emerald-50 border-emerald-200 text-emerald-850"
-                                      }`}>
-                                        <div className="flex items-center justify-between text-[8px] font-black tracking-widest uppercase">
-                                          <span>Stint {stint.index}</span>
-                                          <span className={stint.isOverfilled ? "text-red-700" : "text-emerald-700"}>
-                                            {pct.toFixed(0)}% of race
-                                          </span>
-                                        </div>
-                                        <div className="text-sm font-black text-zinc-900 mt-1">
-                                          {stint.durationMins.toFixed(0)} mins
-                                        </div>
-                                        <div className="text-[10px] text-zinc-600 mt-1 space-y-0.5 font-bold">
-                                          <div>Laps: <strong className="text-zinc-900">{stint.laps} Laps</strong></div>
-                                          <div>Fuel Onboard: <strong className={stint.isOverfilled ? "text-red-700 font-extrabold":"text-emerald-705 font-black"}>{stint.fuelNeeded.toFixed(1)} L</strong></div>
-                                        </div>
-                                      </div>
-
-                                      {/* Pitstop Marker (except after last stint) */}
-                                      {sIdx < pitStrategy.stints.length - 1 && (
-                                        <div className="flex flex-row md:flex-col items-center justify-center gap-1.5 px-3 py-2 bg-red-50 border border-red-200 text-red-700 text-[10px] font-mono rounded-lg font-black uppercase text-center tracking-wider max-w-xs mx-auto md:mx-0 shrink-0 select-none shadow-xs">
-                                          <span>Pitstop</span>
-                                          <span className="hidden md:inline">Ã¢Å¾â€</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-
-                            {/* MFD / Pitstop Setup Dashboard */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              
-                              {/* Starting Settings Panel */}
-                              <div className="bg-zinc-50 p-3.5 rounded-lg border border-zinc-200 font-mono space-y-2 shadow-xs">
-                                <div className="text-[9.5px] font-bold text-zinc-500 uppercase tracking-wider pb-1.5 border-b border-zinc-200 flex items-center justify-between">
-                                  <span>GARAGE FUEL SETUP</span>
-                                  <span className="font-semibold text-emerald-700 text-[9px]">BEFORE GREEN LIGHT</span>
-                                </div>
-                                <div className="text-[11px] text-zinc-600 space-y-1.5 font-bold">
-                                  <div className="flex justify-between">
-                                    <span>Starting Fuel:</span>
-                                    <strong className="text-emerald-700 font-black text-xs">
-                                      {pitStrategy.stints.length > 0 ? pitStrategy.stints[0].fuelNeeded.toFixed(1) : pitStrategy.totalFuelNeeded.toFixed(1)} Litres
-                                    </strong>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span>Tyre Set Selector:</span>
-                                    <strong className="text-zinc-900">Tyre Set #1 (Fresh Slicks)</strong>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span>Starting Weight Saved:</span>
-                                    <strong className="text-red-600 font-bold">
-                                      {pitStrategy.fuelWeightDifference > 0 ? `-${pitStrategy.fuelWeightDifference.toFixed(1)} kg` : "N/A (Standard Tank)"}
-                                    </strong>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Multi-Functional Display Preset Profile */}
-                              <div className="bg-zinc-50 p-3.5 rounded-lg border border-zinc-200 font-mono space-y-2 shadow-xs">
-                                <div className="text-[9.5px] font-bold text-zinc-500 uppercase tracking-wider pb-1.5 border-b border-zinc-200 flex items-center justify-between">
-                                  <span>MFD PITSTOP PRESETS</span>
-                                  <span className="font-semibold text-red-600 text-[9px]">ACC IN-CAR PRESET</span>
-                                </div>
-                                <div className="text-[11px] text-zinc-600 space-y-1.5 font-bold">
-                                  <div className="flex justify-between">
-                                    <span>Refueling Strategy:</span>
-                                    {pitMandatoryFuel && pitNumberOfStops > 0 ? (
-                                      <strong className="text-emerald-700 font-black">
-                                        Refuel +{(pitStrategy.stints[1]?.fuelNeeded || 0).toFixed(1)} L
-                                      </strong>
-                                    ) : (
-                                      <strong className="text-zinc-450 italic">No Refuel (Sprint)</strong>
-                                    )}
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span>Tyres Strategy:</span>
-                                    {pitMandatoryTyres ? (
-                                      <strong className="text-red-600">Change Set #2</strong>
-                                    ) : (
-                                      <strong className="text-zinc-450 italic">No Tyre Swap</strong>
-                                    )}
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span>Brake Pads Choice:</span>
-                                    <strong className="text-zinc-900 font-bold">Pad #1 (Standard GT3)</strong>
-                                  </div>
-                                </div>
-                              </div>
-
-                            </div>
-
-                            {/* Pro Efficiency Advice Alert */}
-                            <div className="bg-emerald-50 border border-emerald-200 rounded-md p-3.5 shadow-xs">
-                              <div className="flex items-start gap-2.5">
-                                <Gauge className="text-emerald-755 w-4.5 h-4.5 shrink-0 mt-0.5 animate-pulse" />
-                                <div className="text-[10.5px] font-mono leading-relaxed space-y-1 text-zinc-700">
-                                  <h5 className="font-black text-emerald-805 uppercase tracking-widest text-[9.5px]">
-                                    ENDURANCE FUEL-WEIGHT PACE DIVIDEND
-                                  </h5>
-                                  <p className="font-medium">
-                                    {pitStrategy.fuelWeightDifference > 0 ? (
-                                      <>By splitting your race fuel into multiple stints, you avoid carrying a completely full tank of fuel. This saves <strong className="text-zinc-900 font-extrabold">{pitStrategy.fuelWeightDifference.toFixed(1)} kg</strong> of load, increasing corner roll speeds, lowering brake wear, and shaving up to <strong className="text-emerald-705 font-black">-{pitStrategy.estimatedTimeGainPerLap.toFixed(2)}s per lap</strong> off your base lap time!</>
-                                    ) : (
-                                      <>For short sessions or when running without pitstops, fill the tank completely with a comfort-led safety cushion. But for races 45m - 2h, selecting the 1-Stop Strategy will unleash immediate pace gains!</>
-                                    )}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
+                    <FuelStrategyTab
+                      fuel={parsedActiveSetup.fuel}
+                      activeTrack={activeSetup?.track}
+                      isTuneMode={isTuneMode}
+                      onAdjustSetupValue={handleAdjustSetupValue}
+                    />
                   )}
 
                   {/* TAB 4: MECHANICAL GRIP */}
@@ -4818,7 +4196,7 @@ export default function App() {
                               </div>
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-semibold items-center">
                                 <span className="text-zinc-500 font-sans font-medium">Front Splitter:</span>
-                                <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.splitter}Ã‚Â°</strong>
+                                <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.splitter}Ãƒâ€šÃ‚Â°</strong>
                               </div>
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-bold items-center">
                                 <span className="text-zinc-500 font-sans font-medium">Front Brake Duct:</span>
@@ -4872,7 +4250,7 @@ export default function App() {
                                       -
                                     </button>
                                   )}
-                                  <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.rearWing}Ã‚Â°</strong>
+                                  <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.rearWing}Ãƒâ€šÃ‚Â°</strong>
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("rearWing", 1)}
@@ -5371,7 +4749,7 @@ export default function App() {
                           }}
                           className="bg-amber-600 hover:bg-amber-700 text-white font-black px-5 py-2.5 rounded-lg text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer shrink-0 h-11 w-full sm:w-auto"
                         >
-                          <span>Ã°Å¸â€™Â¾ Save Custom Variant</span>
+                          <span>ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¾ Save Custom Variant</span>
                         </button>
                       </div>
                     </div>
@@ -5434,7 +4812,7 @@ export default function App() {
                 loadTunedSetups();
               } catch (err) {
                 console.error(err);
-                showToast("Delete failed Ã¢â‚¬â€ try again", "error");
+                showToast("Delete failed ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â try again", "error");
               }
             }}
             onRefresh={async () => {
@@ -5460,7 +4838,7 @@ export default function App() {
       {/* 3. Footer indicator metadata */}
       <footer id="visual-garage-footer" className="bg-zinc-950 border-t border-zinc-900 py-4 px-6 text-center mt-auto font-mono text-[10px] text-zinc-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
-          <span>PITWALL COMPANION APP V1.9 Ã¢â‚¬Â¢ POWERED BY JAXTUNE</span>
+          <span>PITWALL COMPANION APP V1.9 ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ POWERED BY JAXTUNE</span>
           <span>CRAFTED FOR ACC AND LATE NIGHT RACING</span>
         </div>
       </footer>
@@ -5476,7 +4854,7 @@ export default function App() {
           >
             <div className={`w-2 h-2 rounded-full shrink-0 ${toast.type === "success" ? "bg-emerald-500" : toast.type === "error" ? "bg-red-500" : "bg-cyan-500"}`} />
             <span className="text-xs font-semibold leading-relaxed text-zinc-200">{toast.message}</span>
-            <button onClick={() => setToast(null)} className="ml-2 hover:text-white text-zinc-400 text-sm font-bold cursor-pointer transition-colors shrink-0">Ãƒâ€”</button>
+            <button onClick={() => setToast(null)} className="ml-2 hover:text-white text-zinc-400 text-sm font-bold cursor-pointer transition-colors shrink-0">ÃƒÆ’Ã¢â‚¬â€</button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -5552,9 +4930,9 @@ export default function App() {
                     ) : onboardingCheckingUsername ? (
                       <span className="text-zinc-500">Checking registry database...</span>
                     ) : onboardingUsernameAvailable === true ? (
-                      <span className="text-emerald-600 font-bold">Ã¢Å“â€œ This handle is clear and authentic!</span>
+                      <span className="text-emerald-600 font-bold">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ This handle is clear and authentic!</span>
                     ) : onboardingUsernameAvailable === false ? (
-                      <span className="text-red-500 font-black">Ã¢Å“â€” This handle is already registered by another driver.</span>
+                      <span className="text-red-500 font-black">ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ This handle is already registered by another driver.</span>
                     ) : (
                       <span className="text-zinc-500 italic font-bold">Perfect fit.</span>
                     )}
@@ -5715,7 +5093,7 @@ export default function App() {
                 onClick={() => setShowProfileModal(false)}
                 className="absolute right-4 top-4 hover:text-zinc-800 text-zinc-400 text-xl font-bold cursor-pointer transition-colors p-1"
               >
-                Ãƒâ€”
+                ÃƒÆ’Ã¢â‚¬â€
               </button>
 
               <div className="text-center mb-6">
@@ -5781,15 +5159,15 @@ export default function App() {
                   {/* Status explanation */}
                   <span className="text-[10px] mt-1.5 block font-medium leading-normal">
                     {editUsername.trim().toLowerCase() === profile.username.toLowerCase() ? (
-                      <span className="text-emerald-600 font-bold">Ã¢Å“â€œ This is your current active callsigned username.</span>
+                      <span className="text-emerald-600 font-bold">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ This is your current active callsigned username.</span>
                     ) : editUsername.trim().length < 3 ? (
                       <span className="text-amber-600 font-bold">Username must be at least 3 characters.</span>
                     ) : editCheckingUsername ? (
                       <span className="text-zinc-505">Checking username registry...</span>
                     ) : editUsernameAvailable === true ? (
-                      <span className="text-emerald-600 font-bold">Ã¢Å“â€œ This handle is clear and authentic!</span>
+                      <span className="text-emerald-600 font-bold">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ This handle is clear and authentic!</span>
                     ) : editUsernameAvailable === false ? (
-                      <span className="text-red-500 font-black">Ã¢Å“â€” This handle is already registered by another driver.</span>
+                      <span className="text-red-500 font-black">ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ This handle is already registered by another driver.</span>
                     ) : null}
                   </span>
                 </div>
@@ -5994,7 +5372,7 @@ export default function App() {
                   misano: "Misano",
                   monza: "Monza",
                   mount_panorama: "Mount Panorama",
-                  nurburgring: "NÃƒÂ¼rburgring",
+                  nurburgring: "NÃƒÆ’Ã‚Â¼rburgring",
                   nurburgring_24h: "Nordschleife",
                   oulton_park: "Oulton Park",
                   paul_ricard: "Paul Ricard",
@@ -6014,7 +5392,7 @@ export default function App() {
                 return (
                   <div className="bg-amber-500/5 border border-amber-500/10 p-3 rounded-lg text-xs leading-relaxed font-sans text-zinc-300 space-y-1">
                     <div className="font-extrabold text-amber-400 font-mono uppercase tracking-wider text-[10px] flex items-center gap-1">
-                      <span>Ã°Å¸ÂÂ Target Notes: {ACC_TRACKS[saveModalTargetTrack] || saveModalTargetTrack}</span>
+                      <span>ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â Target Notes: {ACC_TRACKS[saveModalTargetTrack] || saveModalTargetTrack}</span>
                     </div>
                     <p className="text-[11px] text-zinc-200">{note.circuit_notes.length > 120 ? note.circuit_notes.substring(0, 120) + "..." : note.circuit_notes}</p>
                     <div className="text-[10px] font-mono text-zinc-400 pt-0.5 space-y-0.5">
