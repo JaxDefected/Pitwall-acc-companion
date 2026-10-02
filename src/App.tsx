@@ -287,12 +287,21 @@ export default function App() {
   const [customGuideText, setCustomGuideText] = useState<string>("");
   const [activeSetup, setActiveSetup] = useState<SetupItem | null>(null);
   const [selectedTab, setSelectedTab] = useState<"tyres" | "electronics" | "fuel" | "mechanical" | "aero" | "dampers">("tyres");
-  const [currentView, setCurrentView] = useState<"telemetry" | "laptimes" | "garage" | "engineer">("telemetry");
+  const [currentView, setCurrentView] = useState<"telemetry" | "laptimes" | "garage" | "engineer">(() => {
+    if (typeof window === "undefined") return "telemetry";
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    if (tab === "laptimes" || tab === "garage" || tab === "engineer") return tab;
+    return "telemetry";
+  });
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [isCrewNotesOpen, setIsCrewNotesOpen] = useState<boolean>(true);
 
   // Mobile view switching state
-  const [mobileView, setMobileView] = useState<'registry' | 'inspection'>('registry');
+  const [mobileView, setMobileView] = useState<'registry' | 'inspection'>(() => {
+    if (typeof window === "undefined") return "registry";
+    const params = new URLSearchParams(window.location.search);
+    return params.get("view") === "inspection" || params.has("setup") ? "inspection" : "registry";
+  });
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -327,11 +336,11 @@ export default function App() {
   useEffect(() => {
     const titles: Record<string, string> = {
       telemetry: activeSetup
-        ? `${ACC_CARS[activeSetup.car] || activeSetup.car} ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Pitwall`
+        ? `${ACC_CARS[activeSetup.car] || activeSetup.car} · Pitwall`
         : 'Pitwall ACC Setup Lab',
-      laptimes: 'Lap Times ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Pitwall',
-      garage: 'Garage ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Pitwall',
-      engineer: 'Race Engineer ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Pitwall',
+      laptimes: 'Lap Times · Pitwall',
+      garage: 'Garage · Pitwall',
+      engineer: 'Race Engineer · Pitwall',
     };
     document.title = titles[currentView] || 'Pitwall ACC Setup Lab';
   }, [currentView, activeSetup]);
@@ -417,63 +426,7 @@ export default function App() {
   const [isGuidePanelOpen, setIsGuidePanelOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Sync state with browser physical back button and popstate events
-  useEffect(() => {
-    if (typeof window === "undefined") return;
 
-    const handlePopState = (event: PopStateEvent) => {
-      const state = event.state;
-      if (state && typeof state === "object") {
-        if ("view" in state) setCurrentView(state.view);
-        if ("showProfile" in state) setShowProfileModal(state.showProfile);
-        if ("showUploader" in state) setIsUploaderPanelOpen(state.showUploader);
-        if ("showGuide" in state) setIsGuidePanelOpen(state.showGuide);
-      } else {
-        // Safe fallback to original state when history is blank
-        setCurrentView("telemetry");
-        setShowProfileModal(false);
-        setIsUploaderPanelOpen(false);
-        setIsGuidePanelOpen(false);
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const currentState = {
-      view: currentView,
-      showProfile: showProfileModal,
-      showUploader: isUploaderPanelOpen,
-      showGuide: isGuidePanelOpen,
-    };
-
-    const isInitial = 
-      currentView === "telemetry" && 
-      !showProfileModal && 
-      !isUploaderPanelOpen && 
-      !isGuidePanelOpen;
-
-    if (isInitial) {
-      window.history.replaceState(currentState, "");
-    } else {
-      const historyState = window.history.state;
-      const isMatch = historyState && 
-        historyState.view === currentView &&
-        historyState.showProfile === showProfileModal &&
-        historyState.showUploader === isUploaderPanelOpen &&
-        historyState.showGuide === isGuidePanelOpen;
-
-      if (!isMatch) {
-        window.history.pushState(currentState, "");
-      }
-    }
-  }, [currentView, showProfileModal, isUploaderPanelOpen, isGuidePanelOpen]);
 
   // Drag and Drop files or parsing state
   const [parsedSetup, setParsedSetup] = useState<NormalizedAccSetup | null>(null);
@@ -490,10 +443,160 @@ export default function App() {
 
   // Search/Filters states
   const [searchText, setSearchText] = useState<string>("");
-  const [carFilter, setCarFilter] = useState<string>("all");
-  const [trackFilter, setTrackFilter] = useState<string>("all");
+  const [carFilter, setCarFilter] = useState<string>(() => {
+    if (typeof window === "undefined") return "all";
+    return new URLSearchParams(window.location.search).get("car") || "all";
+  });
+  const [trackFilter, setTrackFilter] = useState<string>(() => {
+    if (typeof window === "undefined") return "all";
+    return new URLSearchParams(window.location.search).get("track") || "all";
+  });
   const [githubGradeFilter, setGithubGradeFilter] = useState<string>("all");
   const [githubSessionFilter, setGithubSessionFilter] = useState<string>("all");
+
+  // ─── URL & Browser History Synchronization (P1.2) ───────────────────
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handlePopState = (event: PopStateEvent) => {
+      const params = new URLSearchParams(window.location.search);
+
+      // 1. Sync tab / view from URL
+      const tabParam = params.get("tab");
+      const validTab = (tabParam === "laptimes" || tabParam === "garage" || tabParam === "engineer")
+        ? tabParam
+        : "telemetry";
+      setCurrentView(validTab);
+
+      // 2. Sync active setup if specified in URL
+      const setupId = params.get("setup");
+      if (setupId) {
+        setSetupsList((currentList) => {
+          const match = currentList.find((s) => s.id === setupId);
+          if (match) setActiveSetup(match);
+          return currentList;
+        });
+      }
+
+      // 3. Sync filters
+      setCarFilter(params.get("car") || "all");
+      setTrackFilter(params.get("track") || "all");
+
+      // 4. Sync mobile view
+      const viewParam = params.get("view");
+      setMobileView(viewParam === "inspection" ? "inspection" : "registry");
+
+      // 5. Sync modals from state
+      const state = event.state;
+      if (state && typeof state === "object") {
+        setShowProfileModal(!!state.showProfile);
+        setIsUploaderPanelOpen(!!state.showUploader);
+        setIsGuidePanelOpen(!!state.showGuide);
+      } else {
+        setShowProfileModal(false);
+        setIsUploaderPanelOpen(false);
+        setIsGuidePanelOpen(false);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  const isInitialMount = useRef(true);
+  const prevNavRef = useRef({
+    view: currentView,
+    setupId: activeSetup?.id,
+    car: carFilter,
+    track: trackFilter,
+    mobileView,
+    showProfile: showProfileModal,
+    showUploader: isUploaderPanelOpen,
+    showGuide: isGuidePanelOpen,
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams();
+    if (currentView !== "telemetry") params.set("tab", currentView);
+    if (activeSetup?.id) params.set("setup", activeSetup.id);
+    if (carFilter && carFilter !== "all") params.set("car", carFilter);
+    if (trackFilter && trackFilter !== "all") params.set("track", trackFilter);
+    if (isMobile && mobileView === "inspection") params.set("view", "inspection");
+
+    const qs = params.toString();
+    const newSearch = qs ? `?${qs}` : "";
+    const newUrl = `${window.location.pathname}${newSearch}`;
+    const currentSearch = window.location.search;
+
+    const historyState = {
+      view: currentView,
+      setupId: activeSetup?.id,
+      car: carFilter,
+      track: trackFilter,
+      mobileView,
+      showProfile: showProfileModal,
+      showUploader: isUploaderPanelOpen,
+      showGuide: isGuidePanelOpen,
+    };
+
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      window.history.replaceState(historyState, "", newUrl);
+      prevNavRef.current = {
+        view: currentView,
+        setupId: activeSetup?.id,
+        car: carFilter,
+        track: trackFilter,
+        mobileView,
+        showProfile: showProfileModal,
+        showUploader: isUploaderPanelOpen,
+        showGuide: isGuidePanelOpen,
+      };
+      return;
+    }
+
+    const prev = prevNavRef.current;
+    const isMajorNav =
+      prev.view !== currentView ||
+      (activeSetup?.id && prev.setupId !== activeSetup.id) ||
+      (prev.mobileView !== mobileView && mobileView === "inspection") ||
+      (!prev.showProfile && showProfileModal) ||
+      (!prev.showUploader && isUploaderPanelOpen) ||
+      (!prev.showGuide && isGuidePanelOpen);
+
+    prevNavRef.current = {
+      view: currentView,
+      setupId: activeSetup?.id,
+      car: carFilter,
+      track: trackFilter,
+      mobileView,
+      showProfile: showProfileModal,
+      showUploader: isUploaderPanelOpen,
+      showGuide: isGuidePanelOpen,
+    };
+
+    if (newSearch !== currentSearch || isMajorNav) {
+      if (isMajorNav) {
+        window.history.pushState(historyState, "", newUrl);
+      } else {
+        window.history.replaceState(historyState, "", newUrl);
+      }
+    }
+  }, [
+    currentView,
+    activeSetup?.id,
+    carFilter,
+    trackFilter,
+    mobileView,
+    isMobile,
+    showProfileModal,
+    isUploaderPanelOpen,
+    isGuidePanelOpen,
+  ]);
 
   // Chat interface
   const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "model"; content: string }>>([
@@ -512,15 +615,27 @@ export default function App() {
       setIsLoading(true);
       try {
         const fetchedSetups = await fetchWithRetry(() => dbFetchSetups());
+        const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+        const requestedSetupId = urlParams?.get("setup");
+
         if (fetchedSetups.length > 0) {
           setSetupsList(fetchedSetups);
-          // Auto select first setup
-          setActiveSetup(fetchedSetups[0]);
+          const target = requestedSetupId ? fetchedSetups.find((s) => s.id === requestedSetupId) : null;
+          if (target) {
+            setActiveSetup(target);
+            if (isMobile) setMobileView("inspection");
+          } else {
+            setActiveSetup(fetchedSetups[0]);
+          }
         } else {
-          // If no setups in DB, use our visual demos so the UI looks active and fully formed!
-          // We do NOT write demo setups to the cloud database to honor security rules and prevent permission errors.
           setSetupsList(DEMO_SETUPS);
-          setActiveSetup(DEMO_SETUPS[0]);
+          const target = requestedSetupId ? DEMO_SETUPS.find((s) => s.id === requestedSetupId) : null;
+          if (target) {
+            setActiveSetup(target);
+            if (isMobile) setMobileView("inspection");
+          } else {
+            setActiveSetup(DEMO_SETUPS[0]);
+          }
         }
 
         const fetchedGuide = await fetchWithRetry(() => dbFetchGuide());
@@ -577,10 +692,19 @@ export default function App() {
     try {
       const list = await fetchWithRetry(() => dbFetchTunedSetups());
       setTunedSetupsList(list);
+      const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+      const requestedSetupId = urlParams?.get("setup");
+      if (requestedSetupId && list.length > 0) {
+        const match = list.find((s) => s.id === requestedSetupId);
+        if (match) {
+          setActiveSetup(match);
+          if (isMobile) setMobileView("inspection");
+        }
+      }
     } catch (err) {
       console.error("Error loading custom custom setups:", err);
     }
-  }, []);
+  }, [isMobile]);
 
   const handleSaveRating = async () => {
     if (!profile) {
@@ -2412,12 +2536,16 @@ export default function App() {
           </div>
         </section>
 
-        {/* MOBILE: Back navigation bar ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â visible only during mobile inspection view */}
+        {/* MOBILE: Back navigation bar — visible only during mobile inspection view */}
         {isMobile && mobileView === 'inspection' && (
           <div className="lg:hidden col-span-full bg-white border border-zinc-200 rounded-lg px-4 py-3 flex items-center gap-3 shadow-sm">
             <button
               onClick={() => {
-                setMobileView('registry');
+                if (window.history.length > 1) {
+                  window.history.back();
+                } else {
+                  setMobileView('registry');
+                }
                 window.scrollTo({ top: 0 });
               }}
               className="flex items-center gap-1 text-red-600 font-bold text-sm -ml-1 px-2 py-1.5 rounded-lg active:bg-red-50 transition-colors min-h-[44px]"
@@ -2428,7 +2556,7 @@ export default function App() {
             {activeSetup && (
               <div className="flex-1 min-w-0 text-right">
                 <p className="text-[11px] font-mono text-zinc-400 truncate">
-                  {ACC_CARS[activeSetup.car] || activeSetup.car} ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {ACC_TRACKS[activeSetup.track] || activeSetup.track}
+                  {ACC_CARS[activeSetup.car] || activeSetup.car} · {ACC_TRACKS[activeSetup.track] || activeSetup.track}
                 </p>
               </div>
             )}
