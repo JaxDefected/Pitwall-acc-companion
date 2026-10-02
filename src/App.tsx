@@ -718,25 +718,38 @@ export default function App() {
     if (!activeSetup) return;
     
     setIsSavingRating(true);
+    const ratingId = `${activeSetup.id}_${profile.username}`;
+    const newRatingItem: SetupRatingItem = {
+      id: ratingId,
+      setupId: activeSetup.id,
+      rating: userRating,
+      tags: selectedReviewTags,
+      username: profile.username,
+      userId: profile.uid,
+      uid: profile.uid,
+      createdAt: new Date().toISOString()
+    };
+
+    // Optimistic update
+    const prevRatings = [...activeSetupRatings];
+    setActiveSetupRatings((prev) => {
+      const existingIdx = prev.findIndex((r) => r.username === profile.username || r.userId === profile.uid);
+      if (existingIdx >= 0) {
+        const next = [...prev];
+        next[existingIdx] = newRatingItem;
+        return next;
+      }
+      return [...prev, newRatingItem];
+    });
+
     try {
-      const ratingId = `${activeSetup.id}_${profile.username}`;
-      const newRatingItem: SetupRatingItem = {
-        id: ratingId,
-        setupId: activeSetup.id,
-        rating: userRating,
-        tags: selectedReviewTags,
-        username: profile.username,
-        userId: profile.uid,
-        uid: profile.uid,
-        createdAt: new Date().toISOString()
-      };
-      
       await dbSaveSetupRating(newRatingItem);
       showToast("Review submitted", "success");
-      loadActiveRatings(activeSetup.id);
     } catch (err) {
       console.error(err);
-      showToast("Review failed ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â try again", "error");
+      // Rollback to previous state on error
+      setActiveSetupRatings(prevRatings);
+      showToast("Review failed — try again", "error");
     } finally {
       setIsSavingRating(false);
     }
