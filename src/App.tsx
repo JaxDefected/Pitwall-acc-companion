@@ -235,7 +235,7 @@ function SetupSlider({ label, value, min, max, step, unit = "", discreteArray }:
     <div className="bg-zinc-50 border border-zinc-200/60 rounded p-3 text-zinc-900 shadow-3xs hover:border-zinc-350 hover:bg-zinc-50/80 transition-all flex flex-col justify-between">
       <div className="flex justify-between items-start gap-1 pb-1.5 border-b border-zinc-150">
         <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">{label}</span>
-        <span className="text-xs font-mono font-black text-red-655 bg-zinc-100/80 px-1.5 py-0.5 rounded border border-zinc-150">
+        <span className="text-xs font-mono font-black text-brand bg-zinc-100/80 px-1.5 py-0.5 rounded border border-zinc-150">
           {value.toFixed(unit === "ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
           <span className="text-[10px] font-bold text-zinc-400 ml-0.5">{unit}</span>
         </span>
@@ -1649,7 +1649,7 @@ export default function App() {
             <button
               id="btn-google-sign-in"
               onClick={handleLogin}
-              className={`flex items-center gap-2 bg-red-650 hover:bg-red-700 transition-all duration-300 text-white rounded font-black cursor-pointer font-mono uppercase tracking-wider shadow-md shadow-red-600/10 active:scale-95 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
+              className={`flex items-center gap-2 bg-brand hover:bg-red-700 transition-all duration-300 text-white rounded font-black cursor-pointer font-mono uppercase tracking-wider shadow-md shadow-red-600/10 active:scale-95 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
                 isScrolled 
                   ? "px-2.5 py-1.5 text-[10px] max-w-[90px]" 
                   : "px-4 py-2.5 sm:py-1.5 text-xs max-w-[200px]"
@@ -1739,7 +1739,7 @@ export default function App() {
           {/* A. Search and Filters */}
           <div className="bg-white border border-zinc-250 shadow-sm rounded-lg p-4 flex flex-col gap-3 sticky top-[48px] md:relative md:top-auto z-30">
             <div className="flex items-center justify-between">
-              <label htmlFor="registry-search-input" className="text-xs font-mono font-bold tracking-widest text-red-655 uppercase">Registry Search</label>
+              <label htmlFor="registry-search-input" className="text-xs font-mono font-bold tracking-widest text-brand uppercase">Registry Search</label>
               <Activity className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
             </div>
 
@@ -1769,7 +1769,7 @@ export default function App() {
                     type="checkbox"
                     checked={onlyPinnedCarsFilter}
                     onChange={(e) => setOnlyPinnedCarsFilter(e.target.checked)}
-                    className="accent-red-650 w-4 h-4 cursor-pointer block shrink-0"
+                    className="accent-brand w-4 h-4 cursor-pointer block shrink-0"
                   />
                   <span className="font-mono text-[10px] font-black uppercase tracking-wider">Series Only</span>
                 </label>
@@ -1897,7 +1897,7 @@ export default function App() {
               id="drop-zone-setup"
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleFileDrop}
-              className="border-2 border-dashed border-zinc-300 hover:border-red-655 bg-white hover:bg-zinc-50 transition-all rounded-lg p-5 text-center flex flex-col items-center justify-center gap-2 group shadow-sm text-zinc-800"
+              className="border-2 border-dashed border-zinc-300 hover:border-brand bg-white hover:bg-zinc-50 transition-all rounded-lg p-5 text-center flex flex-col items-center justify-center gap-2 group shadow-sm text-zinc-800"
             >
               <div className="flex flex-col items-center justify-center">
                 <Upload className="w-8 h-8 text-zinc-400 group-hover:text-red-600 mb-2 transition-colors" />
@@ -1958,8 +1958,8 @@ export default function App() {
               >
                 <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
                   <div className="flex items-center gap-2">
-                    <FileCode className="text-red-650 w-4 h-4" />
-                    <h3 className="text-xs font-mono font-bold tracking-widest text-red-650 uppercase">
+                    <FileCode className="text-brand w-4 h-4" />
+                    <h3 className="text-xs font-mono font-bold tracking-widest text-brand uppercase">
                       Configure Setup Batch ({pendingSetups.length})
                     </h3>
                   </div>
@@ -1978,7 +1978,7 @@ export default function App() {
                 {/* Bulk Actions Panel */}
                 {pendingSetups.length > 1 && (
                   <div className="bg-zinc-50 p-3 rounded-md border border-zinc-200 space-y-2">
-                    <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-red-650">
+                    <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-brand">
                       Bulk Batch Settings (Apply to All in list)
                     </span>
                     <div className="grid grid-cols-2 gap-2 text-xs">
@@ -2098,7 +2098,7 @@ export default function App() {
                                 </span>
                               )}
                               {!hasTrackUnknown && !hasCarUnknown && (
-                                <span className="bg-red-50 border border-red-200 text-red-655 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">
+                                <span className="bg-red-50 border border-red-200 text-brand text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">
                                   ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ Identified
                                 </span>
                               )}
@@ -2190,7 +2190,7 @@ export default function App() {
 
                 {uploadError && (
                   <div className="text-xs bg-red-50 border border-red-200 text-red-700 p-2.5 rounded flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-red-650 shrink-0" />
+                    <AlertTriangle className="w-4 h-4 text-brand shrink-0" />
                     <span>{uploadError}</span>
                   </div>
                 )}
@@ -2215,7 +2215,7 @@ export default function App() {
                 onClick={() => setActiveGarageTab("github")}
                 className={`flex-1 text-center py-3 font-mono text-[10px] sm:text-xs font-bold tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   activeGarageTab === "github"
-                    ? "bg-white text-red-655 border-b-2 border-red-600 font-extrabold"
+                    ? "bg-white text-brand border-b-2 border-red-600 font-extrabold"
                     : "text-zinc-550 hover:text-zinc-900 font-semibold"
                 }`}
               >
@@ -2227,7 +2227,7 @@ export default function App() {
                 onClick={() => setActiveGarageTab("team")}
                 className={`flex-1 text-center py-3 font-mono text-[10px] sm:text-xs font-bold tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   activeGarageTab === "team"
-                    ? "bg-white text-red-655 border-b-2 border-red-600 font-extrabold"
+                    ? "bg-white text-brand border-b-2 border-red-600 font-extrabold"
                     : "text-zinc-550 hover:text-zinc-900 font-semibold"
                 }`}
               >
@@ -2254,7 +2254,7 @@ export default function App() {
                       >
                         <div className="min-w-0 flex-1">
                           {/* Line 1: Identified Car Name Header */}
-                          <div className={`font-bold text-xs truncate max-w-[280px] tracking-tight group-hover:text-red-650 ${isActive ? "text-red-750 font-black" : "text-zinc-900"}`}>
+                          <div className={`font-bold text-xs truncate max-w-[280px] tracking-tight group-hover:text-brand-hover ${isActive ? "text-red-750 font-black" : "text-zinc-900"}`}>
                             {ACC_CARS[setup.car] || setup.car || "Unknown Car"}
                           </div>
                           {/* Line 2: Track / Circuit */}
@@ -2282,7 +2282,7 @@ export default function App() {
                               handleDownloadOriginalJson(setup);
                             }}
                             title="Download source JSON"
-                            className="p-1.5 rounded hover:bg-zinc-200 text-zinc-500 hover:text-red-650 cursor-pointer"
+                            className="p-1.5 rounded hover:bg-zinc-200 text-zinc-500 hover:text-brand-hover cursor-pointer"
                           >
                             <Download className="w-3.5 h-3.5" />
                           </button>
@@ -2337,7 +2337,7 @@ export default function App() {
 
                   {githubTree.length === 0 && githubStatus !== "loading" ? (
                     <div className="p-6 text-center text-zinc-500 border border-dashed border-zinc-200 rounded-lg bg-zinc-50/50">
-                      <Terminal className="w-6 h-6 mx-auto mb-2 opacity-35 text-red-650 animate-pulse" />
+                      <Terminal className="w-6 h-6 mx-auto mb-2 opacity-35 text-brand animate-pulse" />
                       <p className="text-xs leading-relaxed max-w-[240px] mx-auto font-medium text-zinc-600">
                         Select this tab to automatically sync ACC setups across all leading racing registries!
                       </p>
@@ -2359,7 +2359,7 @@ export default function App() {
                             <div className="min-w-0 flex-1">
                               {/* 1. Header Line: Car Name parsed or from Path & Rating Display */}
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-bold text-zinc-900 text-xs truncate group-hover:text-red-655 tracking-tight">
+                                <span className="font-bold text-zinc-900 text-xs truncate group-hover:text-brand-hover tracking-tight">
                                   {ACC_CARS[item.carKey] || (item.carKey !== "unknown" ? item.carKey : "Unsorted Car")}
                                 </span>
                                 
@@ -2644,7 +2644,7 @@ export default function App() {
                   <button
                     id="active-setup-download-original"
                     onClick={() => handleDownloadOriginalJson(activeSetup)}
-                    className="flex items-center justify-center gap-1.5 bg-zinc-50 text-zinc-700 hover:text-red-655 px-4 py-2 sm:px-3.5 sm:py-2 rounded-lg border border-zinc-250 hover:border-red-350 text-xs font-mono font-black shadow-3xs transition-all cursor-pointer h-10 w-full sm:w-auto"
+                    className="flex items-center justify-center gap-1.5 bg-zinc-50 text-zinc-700 hover:text-brand-hover px-4 py-2 sm:px-3.5 sm:py-2 rounded-lg border border-zinc-250 hover:border-red-350 text-xs font-mono font-black shadow-3xs transition-all cursor-pointer h-10 w-full sm:w-auto"
                   >
                     <Download className="w-3.5 h-3.5 mr-0.5" />
                     Extract Setup .json
@@ -2679,7 +2679,7 @@ export default function App() {
                       className="w-full flex items-center justify-between px-4 sm:px-5 py-3 hover:bg-zinc-100/50 transition-colors text-left outline-none cursor-pointer select-none"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <FileText className={`w-4 h-4 text-red-650 shrink-0 ${isCrewNotesOpen ? "animate-pulse" : ""}`} />
+                        <FileText className={`w-4 h-4 text-brand shrink-0 ${isCrewNotesOpen ? "animate-pulse" : ""}`} />
                         <span className="text-zinc-550 font-extrabold font-mono uppercase tracking-wider text-[10px] truncate">
                           Uploaded by <strong className="text-zinc-800 font-extrabold">{activeSetup.uploadedByName || "Team Lead"}</strong> ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Crew Notes
                         </span>
@@ -2789,7 +2789,7 @@ export default function App() {
                                 }
                               }}
                               className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
-                                isSelected ? "bg-red-650 text-white" : "bg-white border border-zinc-250 hover:bg-zinc-100 text-zinc-700 font-semibold"
+                                isSelected ? "bg-brand text-white" : "bg-white border border-zinc-250 hover:bg-zinc-100 text-zinc-700 font-semibold"
                               }`}
                             >
                               {tag}
@@ -2802,7 +2802,7 @@ export default function App() {
                       <button
                         onClick={handleSaveRating}
                         disabled={isSavingRating || userRating === 0}
-                        className="bg-zinc-900 hover:bg-red-650 text-white font-extrabold px-3 py-1 rounded transition-all cursor-pointer text-[10px] uppercase tracking-wider disabled:opacity-50 inline-flex items-center justify-center gap-1"
+                        className="bg-zinc-900 hover:bg-brand-hover text-white font-extrabold px-3 py-1 rounded transition-all cursor-pointer text-[10px] uppercase tracking-wider disabled:opacity-50 inline-flex items-center justify-center gap-1"
                       >
                         {isSavingRating ? (
                           <RefreshCw className="w-3 h-3 animate-spin" />
@@ -2827,7 +2827,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "tyres"}
                     aria-controls="tabpanel-tyres"
-                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "tyres" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "tyres" ? "border-red-600 text-brand bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Tyres & Alignment
                   </button>
@@ -2837,7 +2837,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "electronics"}
                     aria-controls="tabpanel-electronics"
-                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "electronics" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "electronics" ? "border-red-600 text-brand bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Electronics
                   </button>
@@ -2847,7 +2847,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "fuel"}
                     aria-controls="tabpanel-fuel"
-                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "fuel" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "fuel" ? "border-red-600 text-brand bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Fuel Strategy
                   </button>
@@ -2857,7 +2857,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "mechanical"}
                     aria-controls="tabpanel-mechanical"
-                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "mechanical" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "mechanical" ? "border-red-600 text-brand bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Mechanical Grip
                   </button>
@@ -2867,7 +2867,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "dampers"}
                     aria-controls="tabpanel-dampers"
-                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "dampers" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "dampers" ? "border-red-600 text-brand bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Suspension Dampers
                   </button>
@@ -2877,7 +2877,7 @@ export default function App() {
                     role="tab"
                     aria-selected={selectedTab === "aero"}
                     aria-controls="tabpanel-aero"
-                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "aero" ? "border-red-600 text-red-650 bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
+                    className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${selectedTab === "aero" ? "border-red-600 text-brand bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"}`}
                   >
                     Aero & Ducts
                   </button>
@@ -2922,7 +2922,7 @@ export default function App() {
                               const basePSI = parsedActiveSetup.tyrePressures[0];
                               const displayPSI = showCompensated ? (basePSI - coolingData.compensationPSI) : basePSI;
                               return (
-                                <div className={`p-4 rounded-lg border hover:border-red-650 transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
+                                <div className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">LF Front Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
                                     <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
@@ -2956,7 +2956,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", -1, 0)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
@@ -2965,7 +2965,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 0)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -2978,7 +2978,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", -1, 0)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
@@ -2987,7 +2987,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 0)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3000,7 +3000,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", -1, 0)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
@@ -3009,7 +3009,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 0)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3025,7 +3025,7 @@ export default function App() {
                               const basePSI = parsedActiveSetup.tyrePressures[1];
                               const displayPSI = showCompensated ? (basePSI - coolingData.compensationPSI) : basePSI;
                               return (
-                                <div className={`p-4 rounded-lg border hover:border-red-650 transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
+                                <div className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">RF Front Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
                                     <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
@@ -3059,7 +3059,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", -1, 1)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
@@ -3068,7 +3068,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 1)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3081,7 +3081,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", -1, 1)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
@@ -3090,7 +3090,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 1)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3103,7 +3103,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", -1, 1)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
@@ -3112,7 +3112,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 1)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3138,7 +3138,7 @@ export default function App() {
                               const basePSI = parsedActiveSetup.tyrePressures[2];
                               const displayPSI = showCompensated ? (basePSI - coolingData.compensationPSI) : basePSI;
                               return (
-                                <div className={`p-4 rounded-lg border hover:border-red-650 transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
+                                <div className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">LR Rear Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
                                     <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
@@ -3172,7 +3172,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", -1, 2)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
@@ -3181,7 +3181,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 2)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3194,7 +3194,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", -1, 2)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
@@ -3203,7 +3203,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 2)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3219,7 +3219,7 @@ export default function App() {
                               const basePSI = parsedActiveSetup.tyrePressures[3];
                               const displayPSI = showCompensated ? (basePSI - coolingData.compensationPSI) : basePSI;
                               return (
-                                <div className={`p-4 rounded-lg border hover:border-red-650 transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
+                                <div className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">RR Rear Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
                                     <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
@@ -3253,7 +3253,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", -1, 3)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
@@ -3262,7 +3262,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 3)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3275,7 +3275,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", -1, 3)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
@@ -3284,7 +3284,7 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 3)}
-                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                          className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
                                         </button>
@@ -3422,7 +3422,7 @@ export default function App() {
                                     setTransitionAmbientTemp(prev => Math.max(10, prev - 1));
                                     setShowCompensated(true);
                                   }}
-                                  className="px-2.5 py-2 hover:bg-zinc-100 text-zinc-500 hover:text-red-650 transition-colors border-r border-zinc-200 cursor-pointer focus:outline-none flex items-center justify-center h-full"
+                                  className="px-2.5 py-2 hover:bg-zinc-100 text-zinc-500 hover:text-brand-hover transition-colors border-r border-zinc-200 cursor-pointer focus:outline-none flex items-center justify-center h-full"
                                   title="Decrease ambient temperature"
                                 >
                                   <Minus className="w-3.5 h-3.5" />
@@ -3436,7 +3436,7 @@ export default function App() {
                                     setTransitionAmbientTemp(prev => Math.min(40, prev + 1));
                                     setShowCompensated(true);
                                   }}
-                                  className="px-2.5 py-2 hover:bg-zinc-105 text-zinc-500 hover:text-red-650 transition-colors border-l border-zinc-200 cursor-pointer focus:outline-none flex items-center justify-center h-full"
+                                  className="px-2.5 py-2 hover:bg-zinc-105 text-zinc-500 hover:text-brand-hover transition-colors border-l border-zinc-200 cursor-pointer focus:outline-none flex items-center justify-center h-full"
                                   title="Increase ambient temperature"
                                 >
                                   <Plus className="w-3.5 h-3.5" />
@@ -3541,7 +3541,7 @@ export default function App() {
                               const absClicks = Math.round(absCompValue * 10);
                               
                               const actionWord = isPositiveComp ? "INCREASE" : "DECREASE";
-                              const actionColorClass = isPositiveComp ? "text-red-655" : "text-blue-655";
+                              const actionColorClass = isPositiveComp ? "text-brand" : "text-blue-655";
                               
                               const trendTerm = isWarming ? "warm" : "cool";
                               const thermalEffect = isWarming 
@@ -3575,28 +3575,28 @@ export default function App() {
                                 <div className="text-[10px] text-zinc-500 font-black uppercase">LF Tyre</div>
                                 <span className="text-zinc-400 mt-1 block text-[10px] line-through">Def: {parsedActiveSetup.tyrePressures[0].toFixed(1)}</span>
                                 <div className="text-emerald-700 font-black mt-0.5 text-xs">Set: {(parsedActiveSetup.tyrePressures[0] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-red-655 text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
+                                <div className="text-brand text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
                               </div>
 
                               <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
                                 <div className="text-[10px] text-zinc-500 font-black uppercase">RF Tyre</div>
                                 <span className="text-zinc-400 mt-1 block text-[10px] line-through">Def: {parsedActiveSetup.tyrePressures[1].toFixed(1)}</span>
                                 <div className="text-emerald-700 font-black mt-0.5 text-xs">Set: {(parsedActiveSetup.tyrePressures[1] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-red-655 text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
+                                <div className="text-brand text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
                               </div>
 
                               <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
                                 <div className="text-[10px] text-zinc-500 font-black uppercase">LR Tyre</div>
                                 <span className="text-zinc-400 mt-1 block text-[10px] line-through">Def: {parsedActiveSetup.tyrePressures[2].toFixed(1)}</span>
                                 <div className="text-emerald-700 font-black mt-0.5 text-xs">Set: {(parsedActiveSetup.tyrePressures[2] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-red-655 text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
+                                <div className="text-brand text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
                               </div>
 
                               <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
                                 <div className="text-[10px] text-zinc-500 font-black uppercase">RR Tyre</div>
                                 <span className="text-zinc-400 mt-1 block text-[10px] line-through">Def: {parsedActiveSetup.tyrePressures[3].toFixed(1)}</span>
                                 <div className="text-emerald-700 font-black mt-0.5 text-xs">Set: {(parsedActiveSetup.tyrePressures[3] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-red-655 text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
+                                <div className="text-brand text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
                               </div>
                             </div>
                           </div>
@@ -3609,9 +3609,9 @@ export default function App() {
                   {selectedTab === "electronics" && (
                     <div id="tabpanel-electronics" role="tabpanel" aria-labelledby="tab-btn-electronics" className="space-y-4 py-2">
                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-white border border-zinc-200 rounded-lg p-5 text-center shadow-sm hover:border-red-655 transition-all">
+                        <div className="bg-white border border-zinc-200 rounded-lg p-5 text-center shadow-sm hover:border-brand transition-all">
                           <span className="text-zinc-500 font-mono text-[10px] tracking-wider uppercase block font-bold">Traction Control 1 (TC1)</span>
-                          <div className="text-4xl font-mono font-black text-red-650 mt-2 flex items-center justify-center gap-4">
+                          <div className="text-4xl font-mono font-black text-brand mt-2 flex items-center justify-center gap-4">
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("tc1", -1)}
@@ -3760,7 +3760,7 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("arbFront", -1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 -
                               </button>
@@ -3769,7 +3769,7 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("arbFront", 1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 +
                               </button>
@@ -3783,7 +3783,7 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("brakePower", -1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 -
                               </button>
@@ -3792,7 +3792,7 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("brakePower", 1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 +
                               </button>
@@ -3806,7 +3806,7 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("brakeBias", -1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 -
                               </button>
@@ -3815,7 +3815,7 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("brakeBias", 1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 +
                               </button>
@@ -3829,7 +3829,7 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("steerRatio", -1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-205 border hover:bg-zinc-350 rounded text-xs font-black cursor-pointer text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-205 border hover:bg-zinc-350 rounded text-xs font-black cursor-pointer text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 -
                               </button>
@@ -3838,7 +3838,7 @@ export default function App() {
                             {isTuneMode && (
                               <button
                                 onClick={() => handleAdjustSetupValue("steerRatio", 1)}
-                                className="w-8 h-8 flex items-center justify-center bg-zinc-205 border hover:bg-zinc-350 rounded text-xs font-black cursor-pointer text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                className="w-8 h-8 flex items-center justify-center bg-zinc-205 border hover:bg-zinc-350 rounded text-xs font-black cursor-pointer text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                               >
                                 +
                               </button>
@@ -3867,7 +3867,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", -1, 0)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -3876,7 +3876,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", 1, 0)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -3889,7 +3889,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", -1, 0)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -3898,7 +3898,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", 1, 0)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -3911,7 +3911,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", -1, 0)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -3920,7 +3920,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", 1, 0)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -3938,7 +3938,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", -1, 1)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -3947,7 +3947,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", 1, 1)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -3960,7 +3960,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", -1, 1)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -3969,7 +3969,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", 1, 1)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -3982,7 +3982,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", -1, 1)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -3991,7 +3991,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", 1, 1)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4019,7 +4019,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", -1, 2)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4028,7 +4028,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", 1, 2)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4041,7 +4041,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", -1, 2)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4050,7 +4050,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", 1, 2)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4063,7 +4063,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", -1, 2)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4072,7 +4072,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", 1, 2)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4090,7 +4090,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", -1, 3)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4099,7 +4099,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("wheelRate", 1, 3)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4112,7 +4112,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", -1, 3)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4121,7 +4121,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRate", 1, 3)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4134,7 +4134,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", -1, 3)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         -
                                       </button>
@@ -4143,7 +4143,7 @@ export default function App() {
                                     {isTuneMode && (
                                       <button
                                         onClick={() => handleAdjustSetupValue("bumpStopRange", 1, 3)}
-                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                        className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                       >
                                         +
                                       </button>
@@ -4165,7 +4165,7 @@ export default function App() {
                               {isTuneMode && (
                                 <button
                                   onClick={() => handleAdjustSetupValue("arbRear", -1)}
-                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                 >
                                   -
                                 </button>
@@ -4174,7 +4174,7 @@ export default function App() {
                               {isTuneMode && (
                                 <button
                                   onClick={() => handleAdjustSetupValue("arbRear", 1)}
-                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                 >
                                   +
                                 </button>
@@ -4190,7 +4190,7 @@ export default function App() {
                               {isTuneMode && (
                                 <button
                                   onClick={() => handleAdjustSetupValue("preloadDifferential", -10)}
-                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                   title="Decrease Preload 10 Nm"
                                 >
                                   -
@@ -4200,7 +4200,7 @@ export default function App() {
                               {isTuneMode && (
                                 <button
                                   onClick={() => handleAdjustSetupValue("preloadDifferential", 10)}
-                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                  className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                   title="Increase Preload 10 Nm"
                                 >
                                   +
@@ -4241,7 +4241,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("brakeDuctFront", -1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4250,7 +4250,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("brakeDuctFront", 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4282,7 +4282,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("rearWing", -1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4291,7 +4291,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("rearWing", 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4304,7 +4304,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("brakeDuctRear", -1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4313,7 +4313,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("brakeDuctRear", 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-650"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-bold cursor-pointer text-zinc-805 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4357,7 +4357,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", -1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4366,7 +4366,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", 1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4379,7 +4379,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", -1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4388,7 +4388,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", 1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4401,7 +4401,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", -1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4410,7 +4410,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", 1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4423,7 +4423,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", -1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4432,7 +4432,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", 1, 0)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4448,7 +4448,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", -1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4457,7 +4457,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", 1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4470,7 +4470,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", -1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4479,7 +4479,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", 1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4492,7 +4492,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", -1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4501,7 +4501,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", 1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4514,7 +4514,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", -1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4523,7 +4523,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", 1, 1)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4550,7 +4550,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", -1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4559,7 +4559,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", 1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4572,7 +4572,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", -1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4581,7 +4581,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", 1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4594,7 +4594,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", -1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4603,7 +4603,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", 1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4616,7 +4616,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", -1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4625,7 +4625,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", 1, 2)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4641,7 +4641,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", -1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4650,7 +4650,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpSlow", 1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4663,7 +4663,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", -1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4672,7 +4672,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("bumpFast", 1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4685,7 +4685,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", -1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4694,7 +4694,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundSlow", 1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4707,7 +4707,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", -1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       -
                                     </button>
@@ -4716,7 +4716,7 @@ export default function App() {
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("reboundFast", 1, 3)}
-                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                                      className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 rounded text-xs font-black cursor-pointer text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                     >
                                       +
                                     </button>
@@ -4880,7 +4880,7 @@ export default function App() {
               </button>
 
               <div className="text-center mb-6">
-                <span className="text-[10px] font-mono font-black text-red-650 bg-red-50 px-2.5 py-1 rounded-full uppercase tracking-widest inline-block mb-1">
+                <span className="text-[10px] font-mono font-black text-brand bg-red-50 px-2.5 py-1 rounded-full uppercase tracking-widest inline-block mb-1">
                   Edit Crew Profile
                 </span>
                 <h2 className="text-2xl font-extrabold tracking-tight text-zinc-950 mt-1">
@@ -5029,7 +5029,7 @@ export default function App() {
                           setEditPinnedCars([...editPinnedCars, carKey]);
                         }
                       }}
-                      className="accent-red-650 w-3.5 h-3.5 cursor-pointer shrink-0"
+                      className="accent-brand w-3.5 h-3.5 cursor-pointer shrink-0"
                     />
                     <span className="truncate pr-1 text-xs font-sans font-semibold" title={carName}>
                       {carName}

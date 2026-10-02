@@ -4,6 +4,26 @@
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Semantic Brand Tokens (P2.2) */
+  --color-brand: #dc2626;
+  --color-brand-hover: #b91c1c;
+  --color-brand-subtle: #fef2f2;
+  --color-brand-border: #fca5a5;
+  --color-brand-dark: #991b1b;
+
+  /* Theme Color Mappings */
+  --color-red-650: #dc2626;
+  --color-red-655: #dc2626;
+  --color-zinc-150: #ececef;
+  --color-zinc-250: #dcdee2;
+  --color-zinc-350: #b6b8c0;
+  --color-zinc-450: #888995;
+  --color-zinc-550: #5f616e;
+  --color-zinc-650: #464853;
+  --color-zinc-750: #33343d;
+  --color-zinc-850: #202127;
+  --color-zinc-955: #0c0d10;
 }
 
 body {

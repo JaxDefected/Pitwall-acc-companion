@@ -80,7 +80,7 @@ export default function OnboardingModal({
           className="bg-white border border-zinc-200 rounded-xl max-w-xl w-full p-6 sm:p-8 shadow-2xl relative text-zinc-900 max-h-[90vh] overflow-y-auto"
         >
           <div className="text-center mb-6">
-            <span className="text-[10px] font-mono font-black text-red-650 bg-red-50 px-2.5 py-1 rounded-full uppercase tracking-widest inline-block mb-2 animate-pulse">
+            <span className="text-[10px] font-mono font-black text-brand bg-red-50 px-2.5 py-1 rounded-full uppercase tracking-widest inline-block mb-2 animate-pulse">
               Driver Onboarding Required
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-950 mt-1">
@@ -112,7 +112,7 @@ export default function OnboardingModal({
                       ? "border-emerald-500 focus:border-emerald-600 focus:ring-emerald-500"
                       : usernameAvailable === false
                       ? "border-red-500 focus:border-red-600 focus:ring-red-500"
-                      : "border-zinc-250 focus:border-red-650 focus:ring-red-650"
+                      : "border-zinc-250 focus:border-brand focus:ring-brand"
                   }`}
                 />
                 <div className="absolute right-3.5 top-2 flex items-center gap-1.5">
@@ -222,7 +222,7 @@ export default function OnboardingModal({
                                       setPinnedCars([...pinnedCars, carKey]);
                                     }
                                   }}
-                                  className="accent-red-650 w-3.5 h-3.5 cursor-pointer shrink-0"
+                                  className="accent-brand w-3.5 h-3.5 cursor-pointer shrink-0"
                                 />
                                 <span className="truncate pr-1 text-xs font-sans font-semibold" title={carName}>
                                   {carName}

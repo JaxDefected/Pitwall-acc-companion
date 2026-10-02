@@ -238,7 +238,7 @@ export default function FuelStrategyTab({
         {/* Race Fuel Tool calculator console (8 cols) */}
         <div className="md:col-span-8 bg-white border border-zinc-200 p-5 rounded-lg shadow-sm space-y-4 text-zinc-900">
           <div className="flex justify-between items-center border-b border-zinc-200 pb-2">
-            <h4 className="text-xs font-mono font-bold tracking-widest text-red-655 uppercase flex items-center gap-1.5">
+            <h4 className="text-xs font-mono font-bold tracking-widest text-brand uppercase flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-red-600 shrink-0" />
               Interactive Race Fuel Tool
             </h4>
@@ -384,7 +384,7 @@ export default function FuelStrategyTab({
             </div>
             <div className="border-r border-zinc-200 px-1">
               <span className="text-[10px] text-zinc-500 uppercase block font-bold">Total Laps</span>
-              <span className="text-sm sm:text-lg font-black text-red-655">
+              <span className="text-sm sm:text-lg font-black text-brand">
                 {(calculatedFuelLapTimeSec > 0 ? Math.ceil((fuelRaceTime * 60) / calculatedFuelLapTimeSec) : 0) + fuelSafetyLaps}
               </span>
             </div>

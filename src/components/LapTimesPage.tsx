@@ -126,7 +126,7 @@ export default function LapTimesPage() {
       
       {/* Top Header Card */}
       <div className="flex items-center gap-3 border-b border-zinc-150 pb-4">
-        <Clock className="w-5 h-5 text-red-650 shrink-0" />
+        <Clock className="w-5 h-5 text-brand shrink-0" />
         <div>
           <h2 className="text-xs sm:text-sm md:text-md font-extrabold uppercase font-mono tracking-wider text-zinc-900">
             ACC LFM Lap Times Reference
@@ -161,19 +161,19 @@ export default function LapTimesPage() {
           <div className="flex bg-zinc-100 p-1 rounded border border-zinc-200 gap-1">
             <button
               onClick={() => handleClassChange("GT2")}
-              className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655 ${selectedClass === "GT2" ? "bg-white text-red-655 shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
+              className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${selectedClass === "GT2" ? "bg-white text-brand shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
             >
               GT2
             </button>
             <button
               onClick={() => handleClassChange("GT3")}
-              className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655 ${selectedClass === "GT3" ? "bg-white text-red-655 shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
+              className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${selectedClass === "GT3" ? "bg-white text-brand shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
             >
               GT3
             </button>
             <button
               onClick={() => handleClassChange("GT4")}
-              className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655 ${selectedClass === "GT4" ? "bg-white text-red-655 shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
+              className={`flex-1 py-3 md:py-2 rounded transition-all cursor-pointer font-bold min-h-[44px] md:min-h-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${selectedClass === "GT4" ? "bg-white text-brand shadow-3xs font-extrabold border border-zinc-200" : "text-zinc-600 hover:text-zinc-900"}`}
             >
               GT4
             </button>
@@ -185,7 +185,7 @@ export default function LapTimesPage() {
           <label htmlFor="laptimes-car-select" className="text-zinc-600 font-bold uppercase tracking-wide text-[10px]">2. Vehicle Selector</label>
           <select
             id="laptimes-car-select"
-            className="w-full bg-white border border-zinc-250 hover:border-zinc-350 px-3 py-3 md:py-2 rounded text-zinc-850 font-mono text-base md:text-xs outline-none focus:ring-1 focus:ring-red-505 focus-visible:ring-2 focus-visible:ring-red-655 shadow-3xs min-h-[44px] md:min-h-0 cursor-pointer"
+            className="w-full bg-white border border-zinc-250 hover:border-zinc-350 px-3 py-3 md:py-2 rounded text-zinc-850 font-mono text-base md:text-xs outline-none focus:ring-1 focus:ring-red-505 focus-visible:ring-2 focus-visible:ring-brand shadow-3xs min-h-[44px] md:min-h-0 cursor-pointer"
             value={selectedCar}
             onChange={(e) => {
               const newCar = e.target.value;
@@ -213,7 +213,7 @@ export default function LapTimesPage() {
           <label htmlFor="laptimes-track-select" className="text-zinc-600 font-bold uppercase tracking-wide text-[10px]">3. Circuit Selector</label>
           <select
             id="laptimes-track-select"
-            className="w-full bg-white border border-zinc-250 hover:border-zinc-350 px-3 py-3 md:py-2 rounded text-zinc-850 font-mono text-base md:text-xs outline-none focus:ring-1 focus:ring-red-505 focus-visible:ring-2 focus-visible:ring-red-655 shadow-3xs min-h-[44px] md:min-h-0 cursor-pointer"
+            className="w-full bg-white border border-zinc-250 hover:border-zinc-350 px-3 py-3 md:py-2 rounded text-zinc-850 font-mono text-base md:text-xs outline-none focus:ring-1 focus:ring-red-505 focus-visible:ring-2 focus-visible:ring-brand shadow-3xs min-h-[44px] md:min-h-0 cursor-pointer"
             value={selectedTrack}
             onChange={(e) => setSelectedTrack(e.target.value)}
           >
@@ -286,7 +286,7 @@ export default function LapTimesPage() {
                 <div className="flex flex-col gap-4">
                   <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4 md:p-5 shadow-4xs">
                     <h4 className="font-extrabold font-mono text-[10px] text-zinc-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5 border-b border-zinc-200 pb-1.5">
-                      <BookOpen className="w-3.5 h-3.5 text-red-655" />
+                      <BookOpen className="w-3.5 h-3.5 text-brand" />
                       General Overview
                     </h4>
                     <p className="text-xs text-zinc-700 leading-relaxed font-sans font-medium whitespace-normal italic bg-white border border-zinc-150 p-3.5 rounded-lg shadow-5xs">
@@ -369,7 +369,7 @@ export default function LapTimesPage() {
 
               {/* Competition Meta Note */}
               <div className="bg-red-50/45 border border-red-155 rounded-lg p-4 flex gap-3 text-xs text-zinc-700 shadow-5xs items-start mt-1">
-                <Info className="w-4.5 h-4.5 text-red-650 shrink-0 mt-0.5" />
+                <Info className="w-4.5 h-4.5 text-brand shrink-0 mt-0.5" />
                 <div>
                   <span className="font-extrabold font-mono uppercase tracking-widest text-[10px] text-red-700 block mb-0.5">COMPETITION OUTLOOK OVERVIEW:</span>
                   <p className="font-sans font-semibold text-zinc-750 leading-relaxed whitespace-normal break-words">{carNote.meta_note}</p>
@@ -479,7 +479,7 @@ export default function LapTimesPage() {
                             <span className="text-[10px] text-zinc-400 font-extrabold w-4">{idx + 1}.</span>
                             {item.carName}
                           </td>
-                          <td className="px-5 py-3.5 text-right font-black text-red-655 text-[12.5px]">
+                          <td className="px-5 py-3.5 text-right font-black text-brand text-[12.5px]">
                             {secondsToLapTime(item.p102)}
                           </td>
                         </tr>
@@ -546,7 +546,7 @@ export default function LapTimesPage() {
                                 <td className="px-4 py-3 pl-5 font-extrabold text-zinc-900 whitespace-nowrap">
                                   {col.label}
                                 </td>
-                                <td className={`px-4 py-3 text-[12.5px] ${isBenchmark || isBaseRatio ? "text-red-655 font-black" : "font-black"}`}>
+                                <td className={`px-4 py-3 text-[12.5px] ${isBenchmark || isBaseRatio ? "text-brand font-black" : "font-black"}`}>
                                   <div className="flex items-center gap-1.5">
                                     <span>{timeStr}</span>
                                     {trackData.estimated && (
@@ -675,10 +675,10 @@ export default function LapTimesPage() {
                         <button
                           onClick={() => setIsBriefingOpen(!isBriefingOpen)}
                           aria-expanded={isBriefingOpen}
-                          className="w-full flex items-center justify-between p-4 md:p-5 bg-zinc-100 hover:bg-zinc-150/80 border-b border-zinc-200 transition-colors text-left outline-none cursor-pointer select-none border-t-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-655"
+                          className="w-full flex items-center justify-between p-4 md:p-5 bg-zinc-100 hover:bg-zinc-150/80 border-b border-zinc-200 transition-colors text-left outline-none cursor-pointer select-none border-t-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <Compass className="w-5 h-5 text-red-655 shrink-0" />
+                            <Compass className="w-5 h-5 text-brand shrink-0" />
                             <span className="font-extrabold font-mono text-xs sm:text-sm tracking-wide text-zinc-950 uppercase truncate">
                               Crew Briefing: {selectedTrack}
                             </span>
