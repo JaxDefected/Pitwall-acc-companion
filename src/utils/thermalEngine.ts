@@ -1,5 +1,5 @@
 /**
- * ACC Thermal Behavior Engine v1.9
+ * ACC Thermal Behavior Engine v2.0
  * 
  * Accurately models diurnal (time-of-day) track & ambient temperature evolutions
  * and calculates precise tyre pressure compensations for Assetto Corsa Competizione (v1.9+ Pirelli DHF tyre model).
@@ -11,10 +11,12 @@
  * 2. Time-Slice Integration: Race duration is integrated in discrete time steps (dt = 0.25h / 15m)
  *    to realistically handle races traversing multiple diurnal phases (e.g. afternoon to dusk to night).
  * 3. Thermodynamic Pressure Delta: Tyre air follows ideal gas principles modified by carcass compliance.
- *    In ACC v1.9, hot running pressure changes at ~0.10 PSI per 1.0°C of effective bulk temperature change:
+ *    In ACC, hot running pressure changes at ~0.10 PSI per 1.0°C of effective bulk temperature change:
  *    ΔT_eff = 0.65 * ΔT_track + 0.35 * ΔT_ambient.
- * 4. ACC v1.9 Dry Slick Operating Window: Optimal hot pressure is 26.0 - 27.0 PSI (target ~26.6 - 26.8 PSI).
+ * 4. ACC v1.9+ Dry Slick Operating Window: Optimal hot pressure is 26.0 - 27.0 PSI (target ~26.6 - 26.8 PSI).
  */
+
+export const THERMAL_ENGINE_VERSION = "v2.0";
 
 export interface ThermalTransitionInput {
   startTime: string; // "HH:MM", e.g. "17:00"
@@ -24,6 +26,7 @@ export interface ThermalTransitionInput {
 }
 
 export interface ThermalTransitionResult {
+  version: string; // "v2.0"
   trackCoolingRate: number; // Effective average °C/h across race
   ambientCoolingRate: number; // Effective average °C/h across race
   coolingType: string;
@@ -159,6 +162,7 @@ export function calculateTransitionCoolingModel(input: ThermalTransitionInput): 
       : "ambient and track conditions remain in dynamic thermal equilibrium";
 
   return {
+    version: THERMAL_ENGINE_VERSION,
     trackCoolingRate: effectiveAvgTrackRate,
     ambientCoolingRate: effectiveAvgAmbientRate,
     coolingType,

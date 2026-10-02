@@ -1,7 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { calculateTransitionCoolingModel, getPressureColor } from "../thermalEngine";
+import { calculateTransitionCoolingModel, getPressureColor, THERMAL_ENGINE_VERSION } from "../thermalEngine";
 
-describe("Thermal Behavior Engine v1.9", () => {
+describe("Thermal Behavior Engine v2.0", () => {
+  it("exports v2.0 as engine version", () => {
+    expect(THERMAL_ENGINE_VERSION).toBe("v2.0");
+  });
+
   it("calculates realistic cooling for a 45-minute sunset transition (18:00 start)", () => {
     const res = calculateTransitionCoolingModel({
       startTime: "18:00",
@@ -10,6 +14,7 @@ describe("Thermal Behavior Engine v1.9", () => {
       startAmbientTemp: 24,
     });
 
+    expect(res.version).toBe("v2.0");
     expect(res.trend).toBe("cooling");
     expect(res.trackDrop).toBeGreaterThan(2.0);
     expect(res.trackDrop).toBeLessThan(5.0);

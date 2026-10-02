@@ -1529,7 +1529,7 @@ export default function App() {
     setActiveSetup(refSetup);
   };
 
-  // ACC Thermal Behavior Engine v1.9 (Diurnal solar curve & thermodynamic pressure model)
+  // ACC Thermal Behavior Engine v2.0 (Diurnal solar curve & thermodynamic pressure model)
   const coolingData = useMemo(() => {
     return calculateTransitionCoolingModel({
       startTime: transitionTimeStart,
@@ -3364,7 +3364,7 @@ export default function App() {
                               </h3>
                             </div>
                             <span className="text-[10px] font-mono bg-zinc-50 px-2 py-0.5 rounded text-zinc-600 border border-zinc-200 font-bold">
-                              THERMAL BEHAVIOR ENGINE v1.9
+                              THERMAL BEHAVIOR ENGINE v2.0
                             </span>
                           </div>
 
