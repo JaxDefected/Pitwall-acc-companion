@@ -75,6 +75,8 @@ import LapTimesPage from "./components/LapTimesPage";
 import GaragePage from "./components/GaragePage";
 import AiRaceEngineer from "./components/AiRaceEngineer";
 import FuelStrategyTab from "./components/FuelStrategyTab";
+import TuningWorkshopBanner from "./components/TuningWorkshopBanner";
+import OnboardingModal from "./components/OnboardingModal";
 import SectionErrorBoundary from "./components/SectionErrorBoundary";
 
 export interface PendingSetup {
@@ -234,7 +236,7 @@ function SetupSlider({ label, value, min, max, step, unit = "", discreteArray }:
       <div className="flex justify-between items-start gap-1 pb-1.5 border-b border-zinc-150">
         <span className="text-[9.5px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">{label}</span>
         <span className="text-[11.5px] font-mono font-black text-red-655 bg-zinc-100/80 px-1.5 py-0.5 rounded border border-zinc-150">
-          {value.toFixed(unit === "Ãƒâ€šÃ‚Â°" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
+          {value.toFixed(unit === "ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
           <span className="text-[8px] font-bold text-zinc-400 ml-0.5">{unit}</span>
         </span>
       </div>
@@ -325,21 +327,15 @@ export default function App() {
   useEffect(() => {
     const titles: Record<string, string> = {
       telemetry: activeSetup
-        ? `${ACC_CARS[activeSetup.car] || activeSetup.car} Ãƒâ€šÃ‚Â· Pitwall`
+        ? `${ACC_CARS[activeSetup.car] || activeSetup.car} ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Pitwall`
         : 'Pitwall ACC Setup Lab',
-      laptimes: 'Lap Times Ãƒâ€šÃ‚Â· Pitwall',
-      garage: 'Garage Ãƒâ€šÃ‚Â· Pitwall',
-      engineer: 'Race Engineer Ãƒâ€šÃ‚Â· Pitwall',
+      laptimes: 'Lap Times ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Pitwall',
+      garage: 'Garage ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Pitwall',
+      engineer: 'Race Engineer ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· Pitwall',
     };
     document.title = titles[currentView] || 'Pitwall ACC Setup Lab';
   }, [currentView, activeSetup]);
 
-  // Onboarding UI inputs state
-  const [onboardingUsername, setOnboardingUsername] = useState<string>("");
-  const [onboardingPinnedCars, setOnboardingPinnedCars] = useState<string[]>([]);
-  const [onboardingCheckingUsername, setOnboardingCheckingUsername] = useState<boolean>(false);
-  const [onboardingUsernameAvailable, setOnboardingUsernameAvailable] = useState<boolean | null>(null);
-  const [isSubmittingOnboarding, setIsSubmittingOnboarding] = useState<boolean>(false);
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
 
   // Edit Profile UI inputs state
@@ -360,11 +356,6 @@ export default function App() {
   // Tuning raw data & options states
   const [isTuneMode, setIsTuneMode] = useState<boolean>(false);
   const [tunedRawData, setTunedRawData] = useState<any>(null);
-  const [tuneVersionNote, setTuneVersionNote] = useState<string>("");
-  const [tuneIsTeamWorkspace, setTuneIsTeamWorkspace] = useState<boolean>(false);
-  const [isSaveModalOpen, setIsSaveModalOpen] = useState<boolean>(false);
-  const [saveModalNote, setSaveModalNote] = useState<string>("");
-  const [saveModalTargetTrack, setSaveModalTargetTrack] = useState<string>("");
   const [tunedSetupsList, setTunedSetupsList] = useState<SavedSetupItem[]>([]);
 
   // Setup quality star ratings & handling tags
@@ -435,14 +426,12 @@ export default function App() {
       if (state && typeof state === "object") {
         if ("view" in state) setCurrentView(state.view);
         if ("showProfile" in state) setShowProfileModal(state.showProfile);
-        if ("showSave" in state) setIsSaveModalOpen(state.showSave);
         if ("showUploader" in state) setIsUploaderPanelOpen(state.showUploader);
         if ("showGuide" in state) setIsGuidePanelOpen(state.showGuide);
       } else {
         // Safe fallback to original state when history is blank
         setCurrentView("telemetry");
         setShowProfileModal(false);
-        setIsSaveModalOpen(false);
         setIsUploaderPanelOpen(false);
         setIsGuidePanelOpen(false);
       }
@@ -460,7 +449,6 @@ export default function App() {
     const currentState = {
       view: currentView,
       showProfile: showProfileModal,
-      showSave: isSaveModalOpen,
       showUploader: isUploaderPanelOpen,
       showGuide: isGuidePanelOpen,
     };
@@ -468,7 +456,6 @@ export default function App() {
     const isInitial = 
       currentView === "telemetry" && 
       !showProfileModal && 
-      !isSaveModalOpen && 
       !isUploaderPanelOpen && 
       !isGuidePanelOpen;
 
@@ -479,7 +466,6 @@ export default function App() {
       const isMatch = historyState && 
         historyState.view === currentView &&
         historyState.showProfile === showProfileModal &&
-        historyState.showSave === isSaveModalOpen &&
         historyState.showUploader === isUploaderPanelOpen &&
         historyState.showGuide === isGuidePanelOpen;
 
@@ -487,7 +473,7 @@ export default function App() {
         window.history.pushState(currentState, "");
       }
     }
-  }, [currentView, showProfileModal, isSaveModalOpen, isUploaderPanelOpen, isGuidePanelOpen]);
+  }, [currentView, showProfileModal, isUploaderPanelOpen, isGuidePanelOpen]);
 
   // Drag and Drop files or parsing state
   const [parsedSetup, setParsedSetup] = useState<NormalizedAccSetup | null>(null);
@@ -564,8 +550,6 @@ export default function App() {
   useEffect(() => {
     setIsTuneMode(false);
     setTunedRawData(null);
-    setTuneVersionNote("");
-    setTuneIsTeamWorkspace(false);
     setSelectedReviewTags([]);
     
     if (activeSetup) {
@@ -624,13 +608,13 @@ export default function App() {
       loadActiveRatings(activeSetup.id);
     } catch (err) {
       console.error(err);
-      showToast("Review failed ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â try again", "error");
+      showToast("Review failed ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â try again", "error");
     } finally {
       setIsSavingRating(false);
     }
   };
 
-  // Memoized handler for registry list item clicks ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â prevents N function allocations per render
+  // Memoized handler for registry list item clicks ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â prevents N function allocations per render
   const handleSetupClick = useCallback((setup: SetupItem) => {
     setActiveSetup(setup);
     if (isMobile) setMobileView('inspection');
@@ -844,7 +828,7 @@ export default function App() {
     setTunedRawData(cloned);
   };
 
-  const handleSaveCustomTunedSetup = async (customNote?: string, targetTrack?: string) => {
+  const handleSaveCustomTunedSetup = async (customNote?: string, targetTrack?: string, isTeamWorkspace = false) => {
     if (!profile) {
       showToast("Sign in to save tuned setups", "error");
       return;
@@ -858,7 +842,7 @@ export default function App() {
       const sourceTrackLabel = ACC_TRACKS[activeSetup.track] || activeSetup.track;
       const targetTrackLabel = ACC_TRACKS[destinationTrack] || destinationTrack;
       
-      let finalNote = (customNote || tuneVersionNote).trim() || "Tweaked custom parameters.";
+      let finalNote = customNote?.trim() || "Tweaked custom parameters.";
       if (isAdapted) {
         finalNote = `[Adapted from ${sourceTrackLabel}] ${finalNote}`;
       }
@@ -874,7 +858,7 @@ export default function App() {
         parentSetupId: activeSetup.id,
         authorUsername: profile.username,
         versionNote: finalNote,
-        isTeamWorkspace: tuneIsTeamWorkspace,
+        isTeamWorkspace: isTeamWorkspace,
         car: activeSetup.car,
         track: destinationTrack,
         notes: finalNote,
@@ -886,7 +870,7 @@ export default function App() {
       await dbSaveTunedSetup(payload);
       showToast("Variant saved", "success");
       
-      if (tuneIsTeamWorkspace) {
+      if (isTeamWorkspace) {
         const standardSetup: SetupItem = {
           id: tunedItemId,
           name: revisionName,
@@ -907,29 +891,10 @@ export default function App() {
       
       setIsTuneMode(false);
       setTunedRawData(null);
-      setTuneVersionNote("");
       loadTunedSetups();
     } catch (err) {
       console.error(err);
-      showToast("Save failed ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â try again", "error");
-    }
-  };
-
-  const handleCheckUsername = async (val: string) => {
-    setOnboardingUsername(val);
-    if (val.trim().length < 3) {
-      setOnboardingUsernameAvailable(null);
-      return;
-    }
-    setOnboardingCheckingUsername(true);
-    try {
-      const isOk = await dbCheckUsernameAvailable(val);
-      setOnboardingUsernameAvailable(isOk);
-    } catch (err) {
-      console.error(err);
-      setOnboardingUsernameAvailable(true); // default true for safety on connectivity limits
-    } finally {
-      setOnboardingCheckingUsername(false);
+      showToast("Save failed â€” try again", "error");
     }
   };
 
@@ -1127,7 +1092,7 @@ export default function App() {
         setActiveSetup(lastSavedItem);
         const carName = ACC_CARS[lastSavedItem.car] || lastSavedItem.car || "GT3 Car";
         const trackName = ACC_TRACKS[lastSavedItem.track] || lastSavedItem.track || "Circuit";
-        showToast(`${carName} Ãƒâ€šÃ‚Â· ${trackName} loaded`, "success");
+        showToast(`${carName} ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${trackName} loaded`, "success");
       }
 
       setPendingSetups([]);
@@ -1174,7 +1139,7 @@ export default function App() {
       const reader = new FileReader();
       reader.onload = (event) => {
         setCustomGuideText(event.target?.result as string);
-        showToast("Workbook imported ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â commit to save", "info");
+        showToast("Workbook imported ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â commit to save", "info");
       };
       reader.readAsText(file);
     }
@@ -1217,7 +1182,7 @@ export default function App() {
       if (data.error) {
         setChatMessages((prev) => [
           ...prev,
-          { role: "model", content: `ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â **Engineering Radio Down:** ${data.error}` }
+          { role: "model", content: `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â **Engineering Radio Down:** ${data.error}` }
         ]);
       } else {
         setChatMessages((prev) => [...prev, { role: "model", content: data.reply }]);
@@ -1225,7 +1190,7 @@ export default function App() {
     } catch (err) {
       setChatMessages((prev) => [
         ...prev,
-        { role: "model", content: "ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â **Timeout Error:** Could not contact the pitwall. Ensure your dev server is active on Port 3000." }
+        { role: "model", content: "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â **Timeout Error:** Could not contact the pitwall. Ensure your dev server is active on Port 3000." }
       ]);
     }
     setIsChatAnalyzing(false);
@@ -1418,8 +1383,8 @@ export default function App() {
     const startHour = parseInt(transitionTimeStart.split(":")[0]) || 17;
     const durationHrs = transitionDuration / 60;
     
-    let trackCoolingRate = 0; // Ãƒâ€šÃ‚Â°C per hour
-    let ambientCoolingRate = 0; // Ãƒâ€šÃ‚Â°C per hour
+    let trackCoolingRate = 0; // ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C per hour
+    let ambientCoolingRate = 0; // ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C per hour
     let coolingType = "Stable Ambient";
     
     if (startHour >= 12 && startHour < 16) {
@@ -1448,7 +1413,7 @@ export default function App() {
     const ambientDrop = ambientCoolingRate * durationHrs;
     
     // In ACC, base cold pressures need to increase as temps drop
-    // Factor: ~ +0.1 PSI for every 1Ãƒâ€šÃ‚Â°C of track drop, ~ +0.12 PSI for every 1Ãƒâ€šÃ‚Â°C of ambient drop
+    // Factor: ~ +0.1 PSI for every 1ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C of track drop, ~ +0.12 PSI for every 1ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C of ambient drop
     const rawOffset = (trackDrop * 0.1) + (ambientDrop * 0.12);
     // Keep offset representation clean and rounded
     const compensationPSI = Math.round(rawOffset * 10) / 10;
@@ -1631,7 +1596,7 @@ export default function App() {
             }`}
           >
             <Wrench className="w-4 h-4 text-emerald-440" />
-            <span className="hidden md:inline">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â§ AI RACE ENGINEER</span>
+            <span className="hidden md:inline">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ AI RACE ENGINEER</span>
             <span className="md:hidden">ENGINEER</span>
           </button>
         </div>
@@ -1996,17 +1961,17 @@ export default function App() {
                             <div className="flex gap-1.5 mt-1.5 flex-wrap">
                               {hasTrackUnknown && (
                                 <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold">
-                                  ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Circuit Unspecified
+                                  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Circuit Unspecified
                                 </span>
                               )}
                               {hasCarUnknown && (
                                 <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold">
-                                  ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Car Unspecified
+                                  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Car Unspecified
                                 </span>
                               )}
                               {!hasTrackUnknown && !hasCarUnknown && (
                                 <span className="bg-red-50 border border-red-200 text-red-655 text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
-                                  ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Identified
+                                  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ Identified
                                 </span>
                               )}
                             </div>
@@ -2225,7 +2190,7 @@ export default function App() {
 
                 {githubStatus === "error" && githubError && (
                   <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3.5 rounded-lg font-mono font-medium shadow-xs">
-                    <div className="font-bold uppercase tracking-wider text-[9px] text-red-800 mb-1">ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Community Sync Failed</div>
+                    <div className="font-bold uppercase tracking-wider text-[9px] text-red-800 mb-1">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Community Sync Failed</div>
                     {githubError}
                   </div>
                 )}
@@ -2234,7 +2199,7 @@ export default function App() {
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 border-b border-zinc-200 pb-2">
                     <span className="flex items-center gap-1.5 font-bold uppercase text-[9px] text-zinc-600 tracking-wider">
-                      ÃƒÂ°Ã…Â¸Ã…â€™Ã‚Â Remote Community Search Results
+                      ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Remote Community Search Results
                       {githubStatus === "connected" && (
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Synchronized Live" />
                       )}
@@ -2275,10 +2240,10 @@ export default function App() {
                                     className="font-mono text-[8px] sm:text-[9px] px-1.5 py-0.2 rounded bg-zinc-950 font-bold flex items-center gap-1 text-amber-500 shrink-0"
                                     title={item.meta.gradeLabel}
                                   >
-                                    {item.meta.grade === 3 && "ÃƒÂ¢Ã‚Â­Ã‚ÂÃƒÂ¢Ã‚Â­Ã‚ÂÃƒÂ¢Ã‚Â­Ã‚Â [LGE]"}
-                                    {item.meta.grade === 2 && "ÃƒÂ¢Ã‚Â­Ã‚ÂÃƒÂ¢Ã‚Â­Ã‚ÂÃƒÂ¢Ã‹Å“Ã¢â‚¬Â  [WIP]"}
-                                    {item.meta.grade === 1 && "ÃƒÂ¢Ã‚Â­Ã‚ÂÃƒÂ¢Ã‹Å“Ã¢â‚¬Â ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â  [BAS]"}
-                                    {item.meta.grade === 0 && "ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â ÃƒÂ¢Ã‹Å“Ã¢â‚¬Â  [PRE]"}
+                                    {item.meta.grade === 3 && "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â [LGE]"}
+                                    {item.meta.grade === 2 && "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â  [WIP]"}
+                                    {item.meta.grade === 1 && "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â  [BAS]"}
+                                    {item.meta.grade === 0 && "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â  [PRE]"}
                                   </span>
                                 )}
 
@@ -2447,7 +2412,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* MOBILE: Back navigation bar ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â visible only during mobile inspection view */}
+        {/* MOBILE: Back navigation bar ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â visible only during mobile inspection view */}
         {isMobile && mobileView === 'inspection' && (
           <div className="lg:hidden col-span-full bg-white border border-zinc-200 rounded-lg px-4 py-3 flex items-center gap-3 shadow-sm">
             <button
@@ -2463,7 +2428,7 @@ export default function App() {
             {activeSetup && (
               <div className="flex-1 min-w-0 text-right">
                 <p className="text-[11px] font-mono text-zinc-400 truncate">
-                  {ACC_CARS[activeSetup.car] || activeSetup.car} Ãƒâ€šÃ‚Â· {ACC_TRACKS[activeSetup.track] || activeSetup.track}
+                  {ACC_CARS[activeSetup.car] || activeSetup.car} ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {ACC_TRACKS[activeSetup.track] || activeSetup.track}
                 </p>
               </div>
             )}
@@ -2527,9 +2492,6 @@ export default function App() {
                         if (!isTuneMode) {
                           const cloned = JSON.parse(JSON.stringify(activeSetup.rawData || {}));
                           setTunedRawData(cloned);
-                          setTuneVersionNote("");
-                          setTuneIsTeamWorkspace(false);
-                          setSaveModalTargetTrack(activeSetup.track);
                           setIsTuneMode(true);
                           showToast("Tune mode active", "info");
                         } else {
@@ -2564,74 +2526,17 @@ export default function App() {
                 
                 {/* Active Tuning Workshop Save Banner */}
                 {isTuneMode && (
-                  <div className="bg-amber-500/10 border-b border-amber-500/30 p-4 shrink-0 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 text-xs font-mono">
-                    <div className="flex items-center gap-2.5">
-                      <div className="bg-amber-500 text-black p-2 rounded-md shrink-0">
-                        <Wrench className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h4 className="font-extrabold text-amber-600 uppercase tracking-wider text-[11px]">Active Tuning Workshop Mode</h4>
-                        <p className="text-[10px] text-zinc-650 mt-0.5 leading-tight">Modify values using +/- controls inside the Tyre pressures, Electronics, and Mechanical sections.</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                      <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
-                        <input
-                          type="text"
-                          placeholder="Version note (e.g. Sunset cooling adjustment)"
-                          value={tuneVersionNote}
-                          onChange={(e) => setTuneVersionNote(e.target.value)}
-                          className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-1.5 rounded text-base md:text-[11.5px] min-h-[44px] md:min-h-0 placeholder-zinc-400 outline-none focus:border-amber-500"
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-1 shrink-0 min-w-[150px]">
-                        <select
-                          value={saveModalTargetTrack || activeSetup?.track || "monza"}
-                          onChange={(e) => setSaveModalTargetTrack(e.target.value)}
-                          className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-1.5 rounded text-base md:text-[11.5px] min-h-[44px] md:min-h-0 outline-none focus:border-amber-500 cursor-pointer font-sans"
-                        >
-                          {Object.entries(ACC_TRACKS).map(([key, name]) => (
-                            <option key={key} value={key}>
-                              {key === activeSetup?.track ? `${name} (Current Track)` : name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      
-                      <label className="flex items-center gap-1.5 text-[10.5px] text-zinc-650 cursor-pointer select-none font-bold">
-                        <input
-                          type="checkbox"
-                          checked={tuneIsTeamWorkspace}
-                          onChange={(e) => setTuneIsTeamWorkspace(e.target.checked)}
-                          className="accent-amber-500 w-3.5 h-3.5 rounded border-zinc-300 focus:ring-amber-550"
-                        />
-                        Share to Team Workspace
-                      </label>
-                      
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          onClick={async () => {
-                            const finalNotes = tuneVersionNote.trim() || "Tweaked custom parameters.";
-                            await handleSaveCustomTunedSetup(finalNotes, saveModalTargetTrack || activeSetup?.track);
-                          }}
-                          className="bg-amber-600 hover:bg-amber-750 text-white font-extrabold px-3 py-1.5 rounded cursor-pointer transition-colors text-[10.5px] uppercase tracking-wider shadow-md active:scale-95 text-center"
-                        >
-                          Save Variant
-                        </button>
-                        <button
-                          onClick={() => {
-                            setIsTuneMode(false);
-                            setTunedRawData(null);
-                          }}
-                          className="bg-zinc-200 hover:bg-zinc-300 text-zinc-705 font-extrabold px-3 py-1.5 rounded cursor-pointer transition-colors text-[10.5px] active:scale-95 text-center"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <TuningWorkshopBanner
+                    currentTrack={activeSetup?.track}
+                    variant="top"
+                    onSave={async (notes, targetTrack, isTeam) => {
+                      await handleSaveCustomTunedSetup(notes, targetTrack, isTeam);
+                    }}
+                    onCancel={() => {
+                      setIsTuneMode(false);
+                      setTunedRawData(null);
+                    }}
+                  />
                 )}
                 
                 {/* Custom Uploader Notes Accordion */}
@@ -2644,7 +2549,7 @@ export default function App() {
                       <div className="flex items-center gap-2.5 min-w-0">
                         <FileText className={`w-4 h-4 text-red-650 shrink-0 ${isCrewNotesOpen ? "animate-pulse" : ""}`} />
                         <span className="text-zinc-550 font-extrabold font-mono uppercase tracking-wider text-[10px] truncate">
-                          Uploaded by <strong className="text-zinc-800 font-extrabold">{activeSetup.uploadedByName || "Team Lead"}</strong> ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Crew Notes
+                          Uploaded by <strong className="text-zinc-800 font-extrabold">{activeSetup.uploadedByName || "Team Lead"}</strong> ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Crew Notes
                         </span>
                       </div>
                       <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-200 shrink-0 ${isCrewNotesOpen ? "rotate-180" : ""}`} />
@@ -2924,7 +2829,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[0]}Ãƒâ€šÃ‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[0]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 0)}
@@ -2946,7 +2851,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[0]}Ãƒâ€šÃ‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[0]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 0)}
@@ -2968,7 +2873,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[0]}Ãƒâ€šÃ‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[0]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 0)}
@@ -3027,7 +2932,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[1]}Ãƒâ€šÃ‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[1]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 1)}
@@ -3049,7 +2954,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[1]}Ãƒâ€šÃ‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[1]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 1)}
@@ -3071,7 +2976,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[1]}Ãƒâ€šÃ‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[1]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 1)}
@@ -3140,7 +3045,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[2]}Ãƒâ€šÃ‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[2]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 2)}
@@ -3162,7 +3067,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[2]}Ãƒâ€šÃ‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[2]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 2)}
@@ -3221,7 +3126,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[3]}Ãƒâ€šÃ‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[3]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 3)}
@@ -3243,7 +3148,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[3]}Ãƒâ€šÃ‚Â°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[3]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 3)}
@@ -3276,7 +3181,7 @@ export default function App() {
 
                           {showCompensated && (
                             <div className="text-[10px] text-center text-amber-900 mt-2 p-2 bg-amber-50/80 rounded border border-amber-200 font-mono font-semibold">
-                              ÃƒÂ¢Ã…Â¡Ã‚Â  Thermal pressure loss simulated. Notice tyres falling into the <strong className="text-sky-700">blue/underinflated</strong> zone as track temperature cools down.
+                              ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  Thermal pressure loss simulated. Notice tyres falling into the <strong className="text-sky-700">blue/underinflated</strong> zone as track temperature cools down.
                             </div>
                           )}
                         </div>
@@ -3315,7 +3220,7 @@ export default function App() {
                                   const isSunset = i === 17 || i === 18 || i === 19;
                                   return (
                                     <option key={hourStr} value={hourStr}>
-                                      {hourStr} {isSunset ? "ÃƒÂ°Ã…Â¸Ã…â€™Ã¢â‚¬Â¡ (Sunset Transition)" : ""}
+                                      {hourStr} {isSunset ? "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¡ (Sunset Transition)" : ""}
                                     </option>
                                   );
                                 })}
@@ -3391,7 +3296,7 @@ export default function App() {
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="flex-1 text-center font-mono text-xs font-bold text-zinc-900 select-none">
-                                  {transitionAmbientTemp}Ãƒâ€šÃ‚Â°C
+                                  {transitionAmbientTemp}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
                                 </span>
                                 <button
                                   type="button"
@@ -3425,7 +3330,7 @@ export default function App() {
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="flex-1 text-center font-mono text-xs font-bold text-zinc-900 select-none">
-                                  {transitionTrackTemp}Ãƒâ€šÃ‚Â°C
+                                  {transitionTrackTemp}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
                                 </span>
                                 <button
                                   type="button"
@@ -3448,11 +3353,11 @@ export default function App() {
                               <span className="text-[9.5px] font-mono text-zinc-650 uppercase font-bold">Session Thermal Evolution</span>
                               <span className="text-[10.5px] font-mono text-amber-800 font-extrabold flex items-center gap-1">
                                 {parseInt(transitionTimeStart.split(":")[0]) >= 16 && parseInt(transitionTimeStart.split(":")[0]) < 21 ? (
-                                  <>ÃƒÂ°Ã…Â¸Ã…â€™Ã¢â‚¬Â¦ {coolingData.coolingType}</>
+                                  <>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ {coolingData.coolingType}</>
                                 ) : parseInt(transitionTimeStart.split(":")[0]) >= 21 || parseInt(transitionTimeStart.split(":")[0]) < 5 ? (
-                                  <>ÃƒÂ°Ã…Â¸Ã…â€™Ã¢â€žÂ¢ {coolingData.coolingType}</>
+                                  <>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ {coolingData.coolingType}</>
                                 ) : (
-                                  <>ÃƒÂ¢Ã‹Å“Ã¢â€šÂ¬ÃƒÂ¯Ã‚Â¸Ã‚Â {coolingData.coolingType}</>
+                                  <>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â {coolingData.coolingType}</>
                                 )}
                               </span>
                             </div>
@@ -3467,10 +3372,10 @@ export default function App() {
                                       {isLoss ? "Est. Ambient Drop" : "Est. Ambient Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-emerald-700" : "text-amber-600"}`}>
-                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}Ãƒâ€šÃ‚Â°C
+                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
                                     </span>
                                     <span className="text-[8.5px] font-mono text-zinc-500 block mt-0.5">
-                                      Finish: {(transitionAmbientTemp - val).toFixed(1)}Ãƒâ€šÃ‚Â°C
+                                      Finish: {(transitionAmbientTemp - val).toFixed(1)}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
                                     </span>
                                   </div>
                                 );
@@ -3485,10 +3390,10 @@ export default function App() {
                                       {isLoss ? "Est. Track Drop" : "Est. Track Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-blue-700" : "text-orange-600"}`}>
-                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}Ãƒâ€šÃ‚Â°C
+                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
                                     </span>
                                     <span className="text-[8.5px] font-mono text-zinc-500 block mt-0.5">
-                                      Finish: {(transitionTrackTemp - val).toFixed(1)}Ãƒâ€šÃ‚Â°C
+                                      Finish: {(transitionTrackTemp - val).toFixed(1)}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
                                     </span>
                                   </div>
                                 );
@@ -4196,7 +4101,7 @@ export default function App() {
                               </div>
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-semibold items-center">
                                 <span className="text-zinc-500 font-sans font-medium">Front Splitter:</span>
-                                <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.splitter}Ãƒâ€šÃ‚Â°</strong>
+                                <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.splitter}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
                               </div>
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-bold items-center">
                                 <span className="text-zinc-500 font-sans font-medium">Front Brake Duct:</span>
@@ -4250,7 +4155,7 @@ export default function App() {
                                       -
                                     </button>
                                   )}
-                                  <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.rearWing}Ãƒâ€šÃ‚Â°</strong>
+                                  <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.rearWing}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("rearWing", 1)}
@@ -4696,63 +4601,13 @@ export default function App() {
                   )}
 
                   {isTuneMode && (
-                    <div className="mt-6 p-4 md:p-5 bg-amber-500/5 border border-amber-500/25 rounded-xl flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center text-zinc-950 shrink-0 mt-0.5">
-                          <Wrench className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-black text-zinc-900 font-sans tracking-wider uppercase">Active Tuning Sandbox Modded</p>
-                          <p className="text-[10.5px] text-zinc-600 leading-normal mt-1 font-medium max-w-xl">
-                            Parameters edited in Tyre pressures, Alignment, Electronics, Mechanical, or Dampers. Save variant to preserve changes.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto lg:justify-end">
-                        <div className="w-full sm:w-64">
-                          <input
-                            type="text"
-                            placeholder="Version note (e.g. Sunset cooling adjustment)"
-                            value={tuneVersionNote}
-                            onChange={(e) => setTuneVersionNote(e.target.value)}
-                            className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-2.5 rounded-lg text-[11px] placeholder-zinc-400 outline-none focus:border-amber-500 h-11"
-                          />
-                        </div>
-
-                        <select
-                          value={saveModalTargetTrack || activeSetup?.track || "monza"}
-                          onChange={(e) => setSaveModalTargetTrack(e.target.value)}
-                          className="bg-white border border-zinc-200 text-zinc-900 text-[11px] px-3 py-2 rounded-lg cursor-pointer font-sans focus:outline-none focus:border-amber-500 h-11 shrink-0 w-full sm:w-auto font-mono text-zinc-800"
-                        >
-                          {Object.entries(ACC_TRACKS).map(([key, name]) => (
-                            <option key={key} value={key}>
-                              {key === activeSetup?.track ? `${name} (Current Track)` : name}
-                            </option>
-                          ))}
-                        </select>
-
-                        <label className="flex items-center justify-center sm:justify-start gap-2.5 text-[11px] text-zinc-700 bg-white/60 hover:bg-white border border-zinc-200 hover:border-zinc-300 px-3.5 py-2 rounded-lg cursor-pointer select-none font-bold shadow-3xs transition-all active:scale-[0.98] h-11 shrink-0 w-full sm:w-auto">
-                          <input
-                            type="checkbox"
-                            checked={tuneIsTeamWorkspace}
-                            onChange={(e) => setTuneIsTeamWorkspace(e.target.checked)}
-                            className="accent-amber-600 w-4.5 h-4.5 rounded border-zinc-300 focus:ring-amber-500 cursor-pointer"
-                          />
-                          <span>Share to Team Workspace</span>
-                        </label>
-
-                        <button
-                          onClick={async () => {
-                            const finalNotes = tuneVersionNote.trim() || "Tweaked custom parameters.";
-                            await handleSaveCustomTunedSetup(finalNotes, saveModalTargetTrack || activeSetup?.track);
-                          }}
-                          className="bg-amber-600 hover:bg-amber-700 text-white font-black px-5 py-2.5 rounded-lg text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer shrink-0 h-11 w-full sm:w-auto"
-                        >
-                          <span>ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¾ Save Custom Variant</span>
-                        </button>
-                      </div>
-                    </div>
+                    <TuningWorkshopBanner
+                      currentTrack={activeSetup?.track}
+                      variant="bottom"
+                      onSave={async (notes, targetTrack, isTeam) => {
+                        await handleSaveCustomTunedSetup(notes, targetTrack, isTeam);
+                      }}
+                    />
                   )}
 
                 </div>
@@ -4812,7 +4667,7 @@ export default function App() {
                 loadTunedSetups();
               } catch (err) {
                 console.error(err);
-                showToast("Delete failed ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â try again", "error");
+                showToast("Delete failed ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â try again", "error");
               }
             }}
             onRefresh={async () => {
@@ -4838,7 +4693,7 @@ export default function App() {
       {/* 3. Footer indicator metadata */}
       <footer id="visual-garage-footer" className="bg-zinc-950 border-t border-zinc-900 py-4 px-6 text-center mt-auto font-mono text-[10px] text-zinc-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
-          <span>PITWALL COMPANION APP V1.9 ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ POWERED BY JAXTUNE</span>
+          <span>PITWALL COMPANION APP V1.9 ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ POWERED BY JAXTUNE</span>
           <span>CRAFTED FOR ACC AND LATE NIGHT RACING</span>
         </div>
       </footer>
@@ -4854,225 +4709,20 @@ export default function App() {
           >
             <div className={`w-2 h-2 rounded-full shrink-0 ${toast.type === "success" ? "bg-emerald-500" : toast.type === "error" ? "bg-red-500" : "bg-cyan-500"}`} />
             <span className="text-xs font-semibold leading-relaxed text-zinc-200">{toast.message}</span>
-            <button onClick={() => setToast(null)} className="ml-2 hover:text-white text-zinc-400 text-sm font-bold cursor-pointer transition-colors shrink-0">ÃƒÆ’Ã¢â‚¬â€</button>
+            <button onClick={() => setToast(null)} className="ml-2 hover:text-white text-zinc-400 text-sm font-bold cursor-pointer transition-colors shrink-0">ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</button>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Full Screen Onboarding Interceptor Modal */}
-      <AnimatePresence>
-        {needsOnboarding && user && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-zinc-950/85 backdrop-blur-md z-[150] flex items-center justify-center p-4 font-sans"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              className="bg-white border border-zinc-200 rounded-xl max-w-xl w-full p-6 sm:p-8 shadow-2xl relative text-zinc-900 max-h-[90vh] overflow-y-auto"
-            >
-              <div className="text-center mb-6">
-                <span className="text-[10px] font-mono font-black text-red-650 bg-red-50 px-2.5 py-1 rounded-full uppercase tracking-widest inline-block mb-2 animate-pulse">
-                  Driver Onboarding Required
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-950 mt-1">
-                  Connect Driver Profile
-                </h2>
-                <p className="text-zinc-650 text-xs sm:text-sm mt-2 max-w-md mx-auto">
-                  Hi <strong className="text-zinc-800 font-bold">{user.displayName || user.email}</strong>, let's configure your central Sim Racing telemetry handle and class rules.
-                </p>
-              </div>
-
-              <div className="space-y-5">
-                {/* 1. Username Input with real-time validation */}
-                <div>
-                  <label className="block text-zinc-650 text-xs font-mono uppercase font-black tracking-wider mb-2">
-                    Sim Racing Username <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-2 text-zinc-400 font-mono text-sm">@</span>
-                    <input
-                      type="text"
-                      placeholder="e.g. Apex_Driver"
-                      value={onboardingUsername}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^a-zA-Z0-9_\-]/g, "");
-                        handleCheckUsername(val);
-                      }}
-                      className={`w-full bg-zinc-50 text-zinc-950 pl-8 pr-12 py-2.5 md:py-2 border rounded font-semibold text-base md:text-sm min-h-[44px] md:min-h-0 focus:outline-none focus:ring-1 transition-all ${
-                        onboardingUsernameAvailable === true
-                          ? "border-emerald-500 focus:border-emerald-600 focus:ring-emerald-500"
-                          : onboardingUsernameAvailable === false
-                          ? "border-red-500 focus:border-red-600 focus:ring-red-500"
-                          : "border-zinc-250 focus:border-red-650 focus:ring-red-650"
-                      }`}
-                    />
-                    <div className="absolute right-3.5 top-2 flex items-center gap-1.5">
-                      {onboardingCheckingUsername ? (
-                        <RefreshCw className="w-4 h-4 animate-spin text-zinc-400" />
-                      ) : onboardingUsernameAvailable === true ? (
-                        <CheckCircle className="w-4 h-4 text-emerald-500" />
-                      ) : onboardingUsernameAvailable === false ? (
-                        <AlertTriangle className="w-4 h-4 text-red-500" />
-                      ) : null}
-                    </div>
-                  </div>
-                  
-                  {/* Status explanation line */}
-                  <span className="text-[10px] mt-1.5 block font-medium leading-normal">
-                    {onboardingUsername.trim().length === 0 ? (
-                      <span className="text-zinc-500 italic">Usernames can contain letters, numbers, underscores, and dashes.</span>
-                    ) : onboardingUsername.trim().length < 3 ? (
-                      <span className="text-amber-600 font-bold">Username must be at least 3 characters long.</span>
-                    ) : onboardingCheckingUsername ? (
-                      <span className="text-zinc-500">Checking registry database...</span>
-                    ) : onboardingUsernameAvailable === true ? (
-                      <span className="text-emerald-600 font-bold">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ This handle is clear and authentic!</span>
-                    ) : onboardingUsernameAvailable === false ? (
-                      <span className="text-red-500 font-black">ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ This handle is already registered by another driver.</span>
-                    ) : (
-                      <span className="text-zinc-500 italic font-bold">Perfect fit.</span>
-                    )}
-                  </span>
-                </div>
-
-{/* 2. Pinned Series Cars Multi-Select Selector */}
-<div>
-  <div className="flex justify-between items-center mb-1">
-    <label className="block text-zinc-650 text-xs font-mono uppercase font-black tracking-wider">
-      Pinned Series Cars
-    </label>
-    <span className="text-[9px] text-zinc-450 font-semibold font-mono font-bold">OPTIONAL FILTER</span>
-  </div>
-  <p className="text-[11px] text-zinc-500 leading-tight mb-3 font-medium">
-    Select your current racing series cars to automatically pin them. Checking the "Series Only" toggle in the Main Registry will filter the setup list only to these choices!
-  </p>
-
-  <div className="space-y-3">
-    {(() => {
-      // 1. Group cars by class dynamically based on their underlying data properties or naming keys
-      const groups: Record<string, Array<[string, string]>> = {
-        "GT3 Class": [],
-        "GT4 Class": [],
-        "GT2 / GTC / Cup / Other": []
-      };
-
-      Object.entries(ACC_CARS).forEach(([carKey, carName]) => {
-        const lowerKey = carKey.toLowerCase();
-        if (lowerKey.includes("gt4")) {
-          groups["GT4 Class"].push([carKey, carName]);
-        } else if (lowerKey.includes("gt3") || lowerKey.includes("vantage") || lowerKey.includes("huracan") || lowerKey.includes("r8_lms") || lowerKey.includes("m6") || lowerKey.includes("991") || lowerKey.includes("992")) {
-          // Catching standard GT3 variants that lack explicit "gt3" strings in legacy keys
-          if (!lowerKey.includes("cup") && !lowerKey.includes("gt2") && !lowerKey.includes("challenge") && !lowerKey.includes("supertrofeo")) {
-            groups["GT3 Class"].push([carKey, carName]);
-          } else {
-            groups["GT2 / GTC / Cup / Other"].push([carKey, carName]);
-          }
-        } else {
-          groups["GT2 / GTC / Cup / Other"].push([carKey, carName]);
-        }
-      });
-
-      // 2. Alphabetically sort cars inside each category
-      Object.keys(groups).forEach(key => {
-        groups[key].sort((a, b) => a[1].localeCompare(b[1]));
-      });
-
-      return Object.entries(groups).map(([groupName, items]) => {
-        if (items.length === 0) return null;
-
-        return (
-          <div key={groupName} className="bg-zinc-50 border border-zinc-200 rounded-lg p-3">
-            <h4 className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 mb-2 pb-1 border-b border-zinc-200">
-              {groupName} ({items.length})
-            </h4>
-            
-            {/* Responsive grid: 1 column on mobile, 2 columns on small screens/tablets */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-sans">
-              {items.map(([carKey, carName]) => {
-                const isChecked = onboardingPinnedCars.includes(carKey);
-                return (
-                  <label
-                    key={carKey}
-                    className={`flex items-center gap-2 p-2 rounded border cursor-pointer select-none transition-all ${
-                      isChecked
-                        ? "bg-red-50 border-red-200 text-red-700 font-bold"
-                        : "bg-white border-zinc-200 hover:bg-zinc-100 text-zinc-800"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={() => {
-                        if (isChecked) {
-                          setOnboardingPinnedCars(onboardingPinnedCars.filter((k) => k !== carKey));
-                        } else {
-                          setOnboardingPinnedCars([...onboardingPinnedCars, carKey]);
-                        }
-                      }}
-                      className="accent-red-650 w-3.5 h-3.5 cursor-pointer shrink-0"
-                    />
-                    <span className="truncate pr-1 text-[11px] font-sans font-semibold" title={carName}>
-                      {carName}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        );
-      });
-    })()}
-  </div>
-</div>
-
-                {/* Onboarding buttons */}
-                <div className="pt-3 flex gap-3">
-                  <button
-                    onClick={async () => {
-                      await handleLogout();
-                    }}
-                    className="flex-1 bg-zinc-100 hover:bg-zinc-200 border border-zinc-250 text-zinc-700 font-bold py-2.5 rounded cursor-pointer text-xs uppercase tracking-wider font-mono text-center shadow-3xs"
-                  >
-                    Disconnect Profile
-                  </button>
-                  <button
-                    disabled={
-                      isSubmittingOnboarding ||
-                      onboardingCheckingUsername ||
-                      onboardingUsernameAvailable !== true ||
-                      onboardingUsername.trim().length < 3
-                    }
-                    onClick={async () => {
-                      setIsSubmittingOnboarding(true);
-                      try {
-                        await saveProfileData(onboardingUsername.trim(), onboardingPinnedCars);
-                        showToast(`Welcome, @${onboardingUsername.trim()}`, "success");
-                      } catch (err: any) {
-                        console.error(err);
-                        const msg = err.message || err.toString() || "Server write failed.";
-                        showToast(`Connection failed: ${msg}`, "error");
-                      } finally {
-                        setIsSubmittingOnboarding(false);
-                      }
-                    }}
-                    className="flex-1 bg-red-600 hover:bg-red-750 disabled:opacity-50 disabled:hover:bg-red-600 text-white font-extrabold py-2.5 rounded cursor-pointer text-xs uppercase tracking-wider font-mono text-center flex items-center justify-center gap-2 shadow-md shadow-red-600/15 active:scale-95 select-none"
-                  >
-                    {isSubmittingOnboarding ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
-                    ) : (
-                      "Initialize Pilot Profile"
-                    )}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <OnboardingModal
+        isOpen={!!(needsOnboarding && user)}
+        user={user}
+        onDisconnect={handleLogout}
+        onSaveProfile={saveProfileData}
+        onSuccess={(cleanUsername) => showToast(`Welcome, @${cleanUsername}`, "success")}
+        onError={(msg) => showToast(`Connection failed: ${msg}`, "error")}
+      />
 
       {/* Settings / Edit Profile Modal */}
       <AnimatePresence>
@@ -5093,7 +4743,7 @@ export default function App() {
                 onClick={() => setShowProfileModal(false)}
                 className="absolute right-4 top-4 hover:text-zinc-800 text-zinc-400 text-xl font-bold cursor-pointer transition-colors p-1"
               >
-                ÃƒÆ’Ã¢â‚¬â€
+                ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â
               </button>
 
               <div className="text-center mb-6">
@@ -5159,15 +4809,15 @@ export default function App() {
                   {/* Status explanation */}
                   <span className="text-[10px] mt-1.5 block font-medium leading-normal">
                     {editUsername.trim().toLowerCase() === profile.username.toLowerCase() ? (
-                      <span className="text-emerald-600 font-bold">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ This is your current active callsigned username.</span>
+                      <span className="text-emerald-600 font-bold">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ This is your current active callsigned username.</span>
                     ) : editUsername.trim().length < 3 ? (
                       <span className="text-amber-600 font-bold">Username must be at least 3 characters.</span>
                     ) : editCheckingUsername ? (
                       <span className="text-zinc-505">Checking username registry...</span>
                     ) : editUsernameAvailable === true ? (
-                      <span className="text-emerald-600 font-bold">ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ This handle is clear and authentic!</span>
+                      <span className="text-emerald-600 font-bold">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ This handle is clear and authentic!</span>
                     ) : editUsernameAvailable === false ? (
-                      <span className="text-red-500 font-black">ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ This handle is already registered by another driver.</span>
+                      <span className="text-red-500 font-black">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â This handle is already registered by another driver.</span>
                     ) : null}
                   </span>
                 </div>
@@ -5317,129 +4967,6 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* 4. Custom Variant Tuning Notes Overlay Dialog Modal */}
-      {isSaveModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-fade-in">
-          <div className="bg-zinc-950 border border-zinc-850 rounded-xl w-full max-w-md p-6 text-white shadow-2xl relative">
-            <h3 className="text-lg font-black font-sans tracking-tight text-white mb-2 flex items-center gap-2">
-              <Folder className="w-5 h-5 text-amber-500" />
-              <span>Label Your Tuning Variant</span>
-            </h3>
-            <p className="text-xs text-zinc-400 mb-4 leading-relaxed font-mono">
-              Saved custom variant is stored in your private garage and synchronizes automatically on the cloud.
-            </p>
-
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase">Version Note / Changelog</label>
-                <textarea
-                  placeholder="e.g., Softer rear ARB for better curb stability..."
-                  value={saveModalNote}
-                  onChange={(e) => setSaveModalNote(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-xs text-white placeholder-zinc-550 font-medium focus:outline-none focus:border-amber-550 focus:ring-1 focus:ring-amber-550 min-h-[90px]"
-                  autoFocus
-                />
-              </div>
-
-              {/* Target Track Mapping Selector */}
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase">Target Circuit / Track Mapping</label>
-                <select
-                  value={saveModalTargetTrack}
-                  onChange={(e) => setSaveModalTargetTrack(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-xs text-white placeholder-zinc-550 font-medium focus:outline-none focus:border-amber-550 focus:ring-1 focus:ring-amber-550 min-h-[44px] md:min-h-0 cursor-pointer"
-                >
-                  {Object.entries(ACC_TRACKS).map(([key, name]) => (
-                    <option key={key} value={key} className="bg-zinc-900 text-white">
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Target Circuit Note Preview Pane (Enhancement 1) */}
-              {(() => {
-                const mapping: Record<string, string> = {
-                  barcelona: "Barcelona",
-                  brands_hatch: "Brands Hatch",
-                  cota: "COTA",
-                  donington: "Donington Park",
-                  hungaroring: "Hungaroring",
-                  imola: "Imola",
-                  indianapolis: "Indianapolis",
-                  kyalami: "Kyalami",
-                  laguna_seca: "Laguna Seca",
-                  misano: "Misano",
-                  monza: "Monza",
-                  mount_panorama: "Mount Panorama",
-                  nurburgring: "NÃƒÆ’Ã‚Â¼rburgring",
-                  nurburgring_24h: "Nordschleife",
-                  oulton_park: "Oulton Park",
-                  paul_ricard: "Paul Ricard",
-                  red_bull_ring: "Red Bull Ring",
-                  silverstone: "Silverstone",
-                  snetterton: "Snetterton",
-                  spa: "Spa",
-                  suzuka: "Suzuka",
-                  valencia: "Valencia",
-                  watkins_glen: "Watkins Glen",
-                  zandvoort: "Zandvoort",
-                  zolder: "Zolder",
-                };
-                const matchedKey = mapping[saveModalTargetTrack] || saveModalTargetTrack;
-                const note = CIRCUIT_NOTES[matchedKey];
-                if (!note) return null;
-                return (
-                  <div className="bg-amber-500/5 border border-amber-500/10 p-3 rounded-lg text-xs leading-relaxed font-sans text-zinc-300 space-y-1">
-                    <div className="font-extrabold text-amber-400 font-mono uppercase tracking-wider text-[10px] flex items-center gap-1">
-                      <span>ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â Target Notes: {ACC_TRACKS[saveModalTargetTrack] || saveModalTargetTrack}</span>
-                    </div>
-                    <p className="text-[11px] text-zinc-200">{note.circuit_notes.length > 120 ? note.circuit_notes.substring(0, 120) + "..." : note.circuit_notes}</p>
-                    <div className="text-[10px] font-mono text-zinc-400 pt-0.5 space-y-0.5">
-                      <div><span className="font-extrabold text-zinc-300">Aero Config:</span> {note.setup_notes?.downforce}</div>
-                      <div><span className="font-extrabold text-zinc-300">Tyre Load:</span> {note.setup_notes?.tyres}</div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Redundant workspace info label */}
-              <div className="bg-zinc-900/65 border border-zinc-850 p-3 rounded-lg text-[10.5px] font-mono text-zinc-400 leading-normal flex gap-2">
-                <Wrench className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-bold text-zinc-200">Workspace Status: </span>
-                  {tuneIsTeamWorkspace ? (
-                    <span className="text-emerald-400 font-extrabold uppercase">SHARED - WILL MAP TO TEAM PANEL</span>
-                  ) : (
-                    <span className="text-zinc-500 font-bold uppercase">PRIVATE PILOT GARAGE ONLY</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsSaveModalOpen(false)}
-                  className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg text-xs font-mono font-bold tracking-wider cursor-pointer transition-colors"
-                >
-                  CANCEL
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const finalNotes = saveModalNote.trim() || "Tweaked custom parameters.";
-                    await handleSaveCustomTunedSetup(finalNotes, saveModalTargetTrack);
-                    setIsSaveModalOpen(false);
-                  }}
-                  className="px-4.5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-mono font-bold tracking-wider cursor-pointer transition-all active:scale-95 shadow-md uppercase"
-                >
-                  CONFIRM SAVE
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
