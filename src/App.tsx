@@ -67,6 +67,7 @@ import {
 import { useAuth } from "./hooks/useAuth";
 import { useGitHubSync, parseGithubPath } from "./hooks/useGitHubSync";
 import { parseAccSetup, NormalizedAccSetup, ACC_CARS, ACC_TRACKS, formatDegrees, formatCelsius } from "./utils/accParser";
+import { calculateTransitionCoolingModel, getPressureColor } from "./utils/thermalEngine";
 import { fetchWithRetry } from "./utils/fetchWithRetry";
 import { CIRCUIT_NOTES } from "./data/circuitNotes";
 import { cars } from "./data/cars";
@@ -1528,57 +1529,15 @@ export default function App() {
     setActiveSetup(refSetup);
   };
 
-  // Track Temp Transition Calculator math
-  const getTransitionCoolingModel = () => {
-    const startHour = parseInt(transitionTimeStart.split(":")[0]) || 17;
-    const durationHrs = transitionDuration / 60;
-    
-    let trackCoolingRate = 0; // deg C per hour
-    let ambientCoolingRate = 0; // deg C per hour
-    let coolingType = "Stable Ambient";
-    
-    if (startHour >= 12 && startHour < 16) {
-      trackCoolingRate = 0.5;
-      ambientCoolingRate = 0.2;
-      coolingType = "Stable Peak Heat";
-    } else if (startHour >= 16 && startHour < 18) {
-      trackCoolingRate = 3.2;
-      ambientCoolingRate = 1.2;
-      coolingType = "Late Afternoon Golden Hour (High Cooling)";
-    } else if (startHour >= 18 && startHour < 21) {
-      trackCoolingRate = 5.0;
-      ambientCoolingRate = 2.0;
-      coolingType = "Sunset Dusk Transition (Severe Cooling)";
-    } else if (startHour >= 21 || startHour < 5) {
-      trackCoolingRate = 1.0;
-      ambientCoolingRate = 0.5;
-      coolingType = "Early Night/Midnight (Slow Cooling)";
-    } else {
-      trackCoolingRate = -2.0; // heats up!
-      ambientCoolingRate = -1.0;
-      coolingType = "Morning Transition (Warming Up)";
-    }
-    
-    const trackDrop = trackCoolingRate * durationHrs;
-    const ambientDrop = ambientCoolingRate * durationHrs;
-    
-    // In ACC, base cold pressures need to increase as temps drop
-    // Factor: ~ +0.1 PSI for every 1 deg C of track drop, ~ +0.12 PSI for every 1 deg C of ambient drop
-    const rawOffset = (trackDrop * 0.1) + (ambientDrop * 0.12);
-    // Keep offset representation clean and rounded
-    const compensationPSI = Math.round(rawOffset * 10) / 10;
-    
-    return {
-      trackCoolingRate,
-      ambientCoolingRate,
-      coolingType,
-      trackDrop,
-      ambientDrop,
-      compensationPSI,
-    };
-  };
-
-  const coolingData = getTransitionCoolingModel();
+  // ACC Thermal Behavior Engine v1.9 (Diurnal solar curve & thermodynamic pressure model)
+  const coolingData = useMemo(() => {
+    return calculateTransitionCoolingModel({
+      startTime: transitionTimeStart,
+      durationMinutes: transitionDuration,
+      startTrackTemp: transitionTrackTemp,
+      startAmbientTemp: transitionAmbientTemp,
+    });
+  }, [transitionTimeStart, transitionDuration, transitionTrackTemp, transitionAmbientTemp]);
 
   return (
     <div id="acc-app-root" className="min-h-screen bg-zinc-100/60 font-sans text-zinc-900 flex flex-col antialiased w-full max-w-full overflow-x-hidden">
@@ -3611,19 +3570,14 @@ export default function App() {
 
                             {/* Prescribed Action Block */}
                             {(() => {
-                              const isWarming = coolingData.trackDrop < 0 || coolingData.ambientDrop < 0;
                               const isPositiveComp = coolingData.compensationPSI >= 0;
                               const compensationSign = isPositiveComp ? "+" : "-";
                               const absCompValue = Math.abs(coolingData.compensationPSI);
-                              const absClicks = Math.round(absCompValue * 10);
+                              const absClicks = Math.abs(coolingData.compensationClicks);
                               
                               const actionWord = isPositiveComp ? "INCREASE" : "DECREASE";
                               const actionColorClass = isPositiveComp ? "text-brand" : "text-blue-655";
-                              
-                              const trendTerm = isWarming ? "warm" : "cool";
-                              const thermalEffect = isWarming 
-                                ? "thermal expansion increases active tyre pressures" 
-                                : "cold air contraction reduces dynamic thermal inflation";
+                              const trendTerm = coolingData.trend === "warming" ? "warm" : "cool";
                               
                               return (
                                 <div className="bg-amber-50 border border-amber-250 rounded-md p-3.5">
@@ -3634,7 +3588,7 @@ export default function App() {
                                     </h4>
                                   </div>
                                   <p className="text-[10px] text-zinc-805 leading-normal font-mono">
-                                    In {transitionDuration}m races under {trendTerm}-trending track conditions, {thermalEffect}. To hit the optimal <strong className="text-emerald-700 font-extrabold text-xs">26.5 - 27.5 PSI</strong> sweet spot, you must <strong className={`${actionColorClass} font-black underline`}>{actionWord} cold inflations by {compensationSign}{absCompValue.toFixed(1)} PSI</strong> (or <strong className="text-zinc-900 font-black">{compensationSign}{absClicks} garage clicks</strong>) per tyre!
+                                    In {transitionDuration}m races under {trendTerm}-trending track conditions, {coolingData.thermalEffectDescription}. To hit the optimal <strong className="text-emerald-700 font-extrabold text-xs">26.0 - 27.0 PSI</strong> sweet spot (ACC v1.9 DHF), you must <strong className={`${actionColorClass} font-black underline`}>{actionWord} cold inflations by {compensationSign}{absCompValue.toFixed(1)} PSI</strong> (or <strong className="text-zinc-900 font-black">{compensationSign}{absClicks} garage clicks</strong>) per tyre!
                                   </p>
                                 </div>
                               );
@@ -3648,33 +3602,16 @@ export default function App() {
                             </div>
                             
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center font-mono text-xs sm:text-[10px]">
-                              <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
-                                <div className="text-[10px] text-zinc-500 font-black uppercase">LF Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[10px] line-through">Def: {parsedActiveSetup.tyrePressures[0].toFixed(1)}</span>
-                                <div className="text-emerald-700 font-black mt-0.5 text-xs">Set: {(parsedActiveSetup.tyrePressures[0] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-brand text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
-                              </div>
-
-                              <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
-                                <div className="text-[10px] text-zinc-500 font-black uppercase">RF Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[10px] line-through">Def: {parsedActiveSetup.tyrePressures[1].toFixed(1)}</span>
-                                <div className="text-emerald-700 font-black mt-0.5 text-xs">Set: {(parsedActiveSetup.tyrePressures[1] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-brand text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
-                              </div>
-
-                              <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
-                                <div className="text-[10px] text-zinc-500 font-black uppercase">LR Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[10px] line-through">Def: {parsedActiveSetup.tyrePressures[2].toFixed(1)}</span>
-                                <div className="text-emerald-700 font-black mt-0.5 text-xs">Set: {(parsedActiveSetup.tyrePressures[2] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-brand text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
-                              </div>
-
-                              <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
-                                <div className="text-[10px] text-zinc-500 font-black uppercase">RR Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[10px] line-through">Def: {parsedActiveSetup.tyrePressures[3].toFixed(1)}</span>
-                                <div className="text-emerald-700 font-black mt-0.5 text-xs">Set: {(parsedActiveSetup.tyrePressures[3] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-brand text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
-                              </div>
+                              {["LF Tyre", "RF Tyre", "LR Tyre", "RR Tyre"].map((label, idx) => (
+                                <div key={label} className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
+                                  <div className="text-[10px] text-zinc-500 font-black uppercase">{label}</div>
+                                  <span className="text-zinc-400 mt-1 block text-[10px] line-through">Def: {parsedActiveSetup.tyrePressures[idx].toFixed(1)}</span>
+                                  <div className="text-emerald-700 font-black mt-0.5 text-xs">Set: {(parsedActiveSetup.tyrePressures[idx] + coolingData.compensationPSI).toFixed(1)}</div>
+                                  <div className="text-brand text-[10px] font-bold mt-0.5">
+                                    {coolingData.compensationClicks >= 0 ? `+${coolingData.compensationClicks}` : `${coolingData.compensationClicks}`} Clicks
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </div>
@@ -5182,17 +5119,6 @@ export default function App() {
   );
 }
 
-// Visual helper helper functions
-function getPressureColor(psi: number): string {
-  // Optimal range in dry slick tyres is updated to 26.5 - 27.5 PSI for transition races
-  if (psi >= 26.5 && psi <= 27.5) return "text-emerald-400";
-  // Rain setups are standard between 29.5 - 30.5
-  if (psi >= 29.5 && psi <= 30.5) return "text-cyan-400";
-  // Cold tyres underinflated
-  if (psi < 26.5) return "text-sky-400 shadow-sm shadow-sky-500/10";
-  // Hot/overinflated blistered tyres
-  return "text-red-400 shadow-sm shadow-red-500/10";
-}
 
 // Clean mapping of raw track values
 function setupFilterTrack(t: string): string {
