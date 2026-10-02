@@ -65,6 +65,7 @@ import {
   UserProfile
 } from "./firebase";
 import { useAuth } from "./hooks/useAuth";
+import { useGitHubSync, parseGithubPath } from "./hooks/useGitHubSync";
 import { parseAccSetup, NormalizedAccSetup, ACC_CARS, ACC_TRACKS, TRACK_FUEL_RANGES, DEFAULT_FUEL_RANGE } from "./utils/accParser";
 import { fetchWithRetry } from "./utils/fetchWithRetry";
 import { CIRCUIT_NOTES } from "./data/circuitNotes";
@@ -186,211 +187,7 @@ const DEMO_SETUPS: SetupItem[] = [
   }
 ];
 
-interface SetupFilenameMetadata {
-  grade?: number;       // 0-3
-  gradeLabel?: string;  // Detailed explanation of grade
-  patch?: string;       // e.g. "1.8.18", "1.9"
-  session?: string;     // "Q", "R" etc
-  sessionLabel?: string; // e.g. "Qualifying", "Race"
-  temp?: string;        // e.g. "23c"
-  isCustomFormat: boolean;
-}
 
-function parseSetupFilenameMetadata(fileName: string): SetupFilenameMetadata {
-  const cleanName = fileName.replace(/\.json$/i, "").trim();
-  
-  let grade: number | undefined = undefined;
-  let gradeLabel: string | undefined = undefined;
-  let patch: string | undefined = undefined;
-  let session: string | undefined = undefined;
-  let sessionLabel: string | undefined = undefined;
-  let temp: string | undefined = undefined;
-  let isCustomFormat = false;
-
-  // Strict format matching: ^([0-3])\s+([\d\.]+)\s+([qQrRpP]+)\s+(\d+c|C)$
-  const strictRegex = /^([0-3])\s+([\d\.]+)\s+([a-zA-Z0-9_\-]+)\s+(\d+c|C)$/i;
-  const match = cleanName.match(strictRegex);
-
-  if (match) {
-    grade = parseInt(match[1], 10);
-    patch = match[2];
-    session = match[3];
-    temp = match[4].toLowerCase();
-    isCustomFormat = true;
-  } else {
-    // Heuristic/fuzzy splitting
-    const parts = cleanName.split(/\s+/);
-    if (parts.length >= 2) {
-      if (/^[0-3]$/.test(parts[0])) {
-        grade = parseInt(parts[0], 10);
-      }
-      
-      const foundPatch = parts.find(p => /^1\.\d+(\.\d+)?$/.test(p));
-      if (foundPatch) patch = foundPatch;
-
-      const foundSession = parts.find(p => /^(q|r|p|qualy|race|qualifying)$/i.test(p));
-      if (foundSession) session = foundSession;
-
-      const foundTemp = parts.find(p => /^\d+(c|C)$/.test(p));
-      if (foundTemp) temp = foundTemp.toLowerCase();
-
-      if (grade !== undefined || patch !== undefined || session !== undefined || temp !== undefined) {
-        isCustomFormat = true;
-      }
-    }
-  }
-
-  // Set precise Grade labels
-  if (grade !== undefined) {
-    if (grade === 0) {
-      gradeLabel = "Mostly only pressures fixed. Literally aggro preset stuff";
-    } else if (grade === 1) {
-      gradeLabel = "Includes some basic aero and mechanical changes but overall not refined";
-    } else if (grade === 2) {
-      gradeLabel = "Considered a 'complete' set, but needs verification / WIP parts";
-    } else if (grade === 3) {
-      gradeLabel = "Proven league complete set. Proven in league competition";
-    }
-  }
-
-  if (session) {
-    const sLower = session.toLowerCase();
-    if (sLower === "q" || sLower.includes("qualy") || sLower.includes("qualifying")) {
-      sessionLabel = "Qualifying / Low Fuel Pace";
-    } else if (sLower === "r" || sLower.includes("race")) {
-      sessionLabel = "Race / Full Fuel Consistency";
-    } else if (sLower === "p" || sLower.includes("practice")) {
-      sessionLabel = "Practice Setup / Balanced";
-    } else {
-      sessionLabel = session.toUpperCase();
-    }
-  }
-
-  return { grade, gradeLabel, patch, session, sessionLabel, temp, isCustomFormat };
-}
-
-function detectCarFromSegment(segment: string): string {
-  const clean = segment.toLowerCase().trim();
-  if (!clean) return "unknown";
-
-  // 1. Direct shorthand/synonym mapping overrides
-  if (clean === "amr_v12_vantage_gt3" || clean === "amr_v12" || clean === "vantage_v12" || clean.includes("amr_v12") || clean.includes("amrv12")) {
-    return "aston_martin_v12_vantage_gt3";
-  }
-  if (clean === "audi_r8_gt4" || clean === "r8_gt4" || clean === "audi_gt4" || clean.includes("audi_r8_gt4") || clean.includes("audir8gt4")) {
-    return "audi_r8_lms_gt4";
-  }
-  // Explicit override for Audi GT2 folder variations
-  if (clean === "audi_lms_gt2" || clean === "audi_gt2" || clean === "r8_gt2") {
-    return "audi_r8_lms_gt2";
-  }
-  if (clean === "bmw_m6_gt3" || clean === "m6_gt3" || clean === "bmwm6") {
-    return "bmw_m6_gt3";
-  }
-
-  const normClean = clean.replace(/[-_\s]/g, "");
-
-  // First Pass: Check for strict exact matches to prevent substring hijacking
-  for (const [key, label] of Object.entries(ACC_CARS)) {
-    const kLower = key.toLowerCase();
-    const lLower = label.toLowerCase();
-    const normKey = kLower.replace(/[-_\s]/g, "");
-    const normLabel = lLower.replace(/[-_\s]/g, "");
-
-    if (clean === kLower || normClean === normKey || normClean === normLabel) {
-      if (normClean.length > 2 && normClean !== "sets" && normClean !== "setup" && normClean !== "setups") {
-        return key;
-      }
-    }
-  }
-
-  // Second Pass: Fuzzy/substring mapping fallback
-  for (const [key, label] of Object.entries(ACC_CARS)) {
-    const kLower = key.toLowerCase();
-    const lLower = label.toLowerCase();
-    const normKey = kLower.replace(/[-_\s]/g, "");
-    const normLabel = lLower.replace(/[-_\s]/g, "");
-
-    if (kLower.includes(clean) || lLower.includes(clean) || 
-        clean.includes(kLower) || clean.includes(lLower) || 
-        normKey.includes(normClean) || normLabel.includes(normClean) || 
-        normClean.includes(normKey) || normClean.includes(normLabel)) {
-      if (normClean.length > 2 && normClean !== "sets" && normClean !== "setup" && normClean !== "setups") {
-        return key;
-      }
-    }
-  }
-
-  return "unknown";
-}
-
-function detectTrackFromSegment(segment: string): string {
-  const clean = segment.toLowerCase().trim();
-  if (!clean) return "unknown";
-  
-  const normClean = clean.replace(/[-_\s]/g, "");
-
-  // First Pass: Check for strict exact matches to prevent substring hijacking
-  for (const [key, label] of Object.entries(ACC_TRACKS)) {
-    const kLower = key.toLowerCase();
-    const lLower = label.toLowerCase();
-    const normKey = kLower.replace(/[-_\s]/g, "");
-    const normLabel = lLower.replace(/[-_\s]/g, "");
-
-    if (clean === kLower || normClean === normKey || normClean === normLabel) {
-      return key;
-    }
-  }
-
-  // Second Pass: Fuzzy/substring mapping fallback
-  for (const [key, label] of Object.entries(ACC_TRACKS)) {
-    const kLower = key.toLowerCase();
-    const lLower = label.toLowerCase();
-    const normKey = kLower.replace(/[-_\s]/g, "");
-    const normLabel = lLower.replace(/[-_\s]/g, "");
-
-    if (kLower.includes(clean) || lLower.includes(clean) || 
-        clean.includes(kLower) || clean.includes(lLower) || 
-        normKey.includes(normClean) || normLabel.includes(normClean) || 
-        normClean.includes(normKey) || normClean.includes(normLabel)) {
-      if (normClean.length > 2) {
-        return key;
-      }
-    }
-  }
-  return "unknown";
-}
-
-function parseGithubPath(path: string): { carKey: string; trackKey: string; fileName: string; meta: SetupFilenameMetadata } {
-  // Normalize path separators to forward slash to split correctly on both Windows and UNIX style paths
-  const segments = path.toLowerCase().replace(/\\/g, "/").split("/");
-  const fileName = segments[segments.length - 1] || "";
-  
-  let carKey = "unknown";
-  let trackKey = "unknown";
-  
-  // Try matching search mapping in segments (folders first)
-  for (let i = 0; i < segments.length - 1; i++) {
-    const segment = segments[i];
-    if (carKey === "unknown") {
-      carKey = detectCarFromSegment(segment);
-    }
-    if (trackKey === "unknown") {
-      trackKey = detectTrackFromSegment(segment);
-    }
-    if (carKey !== "unknown" && trackKey !== "unknown") break;
-  }
-  
-  // If still unknown, scan filename (last segment)
-  if (carKey === "unknown") {
-    carKey = detectCarFromSegment(fileName);
-  }
-  if (trackKey === "unknown") {
-    trackKey = detectTrackFromSegment(fileName);
-  }
-  
-  return { carKey, trackKey, fileName, meta: parseSetupFilenameMetadata(fileName) };
-}
 
 interface SetupSliderProps {
   label: string;
@@ -436,7 +233,7 @@ function SetupSlider({ label, value, min, max, step, unit = "", discreteArray }:
       <div className="flex justify-between items-start gap-1 pb-1.5 border-b border-zinc-150">
         <span className="text-[9.5px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">{label}</span>
         <span className="text-[11.5px] font-mono font-black text-red-655 bg-zinc-100/80 px-1.5 py-0.5 rounded border border-zinc-150">
-          {value.toFixed(unit === "°" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
+          {value.toFixed(unit === "Ã‚Â°" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
           <span className="text-[8px] font-bold text-zinc-400 ml-0.5">{unit}</span>
         </span>
       </div>
@@ -527,11 +324,11 @@ export default function App() {
   useEffect(() => {
     const titles: Record<string, string> = {
       telemetry: activeSetup
-        ? `${ACC_CARS[activeSetup.car] || activeSetup.car} · Pitwall`
+        ? `${ACC_CARS[activeSetup.car] || activeSetup.car} Ã‚Â· Pitwall`
         : 'Pitwall ACC Setup Lab',
-      laptimes: 'Lap Times · Pitwall',
-      garage: 'Garage · Pitwall',
-      engineer: 'Race Engineer · Pitwall',
+      laptimes: 'Lap Times Ã‚Â· Pitwall',
+      garage: 'Garage Ã‚Â· Pitwall',
+      engineer: 'Race Engineer Ã‚Â· Pitwall',
     };
     document.title = titles[currentView] || 'Pitwall ACC Setup Lab';
   }, [currentView, activeSetup]);
@@ -595,22 +392,25 @@ export default function App() {
   
   // GitHub Integration States
   const [activeGarageTab, setActiveGarageTab] = useState<"team" | "github">("github");
-  const [githubRepo, setGithubRepo] = useState<string>(() => localStorage.getItem("jax_gh_repo") || "");
-  const [githubBranch, setGithubBranch] = useState<string>(() => localStorage.getItem("jax_gh_branch") || "main");
-  const [githubToken, setGithubToken] = useState<string>(() => localStorage.getItem("jax_gh_token") || "");
-  const [githubTree, setGithubTree] = useState<any[]>(() => {
-    try {
-      const cached = localStorage.getItem("jax_gh_cached_tree");
-      return cached ? JSON.parse(cached) : [];
-    } catch (e) {
-      return [];
-    }
+  const {
+    githubRepo, setGithubRepo,
+    githubBranch, setGithubBranch,
+    githubToken, setGithubToken,
+    githubTree,
+    githubStatus, githubError,
+    isImportingFromGithub,
+    handleScanMultipleRepos,
+    handleScanGithubRepo,
+    handleImportGithubSetup,
+  } = useGitHubSync({
+    onSetupImported: (setup) => {
+      setActiveSetup(setup);
+      if (isMobile) setMobileView('inspection');
+    },
+    showToast,
+    user,
+    refreshSetupsList: setSetupsList,
   });
-  const [githubStatus, setGithubStatus] = useState<"idle" | "loading" | "connected" | "error">(
-    localStorage.getItem("jax_gh_cached_tree") ? "connected" : "idle"
-  );
-  const [githubError, setGithubError] = useState<string>("");
-  const [isImportingFromGithub, setIsImportingFromGithub] = useState<string | null>(null);
   
   // Interactive Race Fuel Calculator states
   const [fuelRaceTime, setFuelRaceTime] = useState<number>(20); // race duration in mins
@@ -851,13 +651,13 @@ export default function App() {
       loadActiveRatings(activeSetup.id);
     } catch (err) {
       console.error(err);
-      showToast("Review failed — try again", "error");
+      showToast("Review failed Ã¢â‚¬â€ try again", "error");
     } finally {
       setIsSavingRating(false);
     }
   };
 
-  // Memoized handler for registry list item clicks — prevents N function allocations per render
+  // Memoized handler for registry list item clicks Ã¢â‚¬â€ prevents N function allocations per render
   const handleSetupClick = useCallback((setup: SetupItem) => {
     setActiveSetup(setup);
     if (isMobile) setMobileView('inspection');
@@ -1138,7 +938,7 @@ export default function App() {
       loadTunedSetups();
     } catch (err) {
       console.error(err);
-      showToast("Save failed — try again", "error");
+      showToast("Save failed Ã¢â‚¬â€ try again", "error");
     }
   };
 
@@ -1354,7 +1154,7 @@ export default function App() {
         setActiveSetup(lastSavedItem);
         const carName = ACC_CARS[lastSavedItem.car] || lastSavedItem.car || "GT3 Car";
         const trackName = ACC_TRACKS[lastSavedItem.track] || lastSavedItem.track || "Circuit";
-        showToast(`${carName} · ${trackName} loaded`, "success");
+        showToast(`${carName} Ã‚Â· ${trackName} loaded`, "success");
       }
 
       setPendingSetups([]);
@@ -1401,253 +1201,13 @@ export default function App() {
       const reader = new FileReader();
       reader.onload = (event) => {
         setCustomGuideText(event.target?.result as string);
-        showToast("Workbook imported — commit to save", "info");
+        showToast("Workbook imported Ã¢â‚¬â€ commit to save", "info");
       };
       reader.readAsText(file);
     }
   };
 
-  // GitHub search, scan, and import handlers
-  const handleScanMultipleRepos = async (reposList: { repo: string; branch: string }[], silenceError = false) => {
-    setGithubStatus("loading");
-    setGithubError("");
 
-    const consolidatedTree: any[] = [];
-    let hadError = false;
-    let errorMessage = "";
-
-    const CONCURRENCY_LIMIT = 5;
-    for (let i = 0; i < reposList.length; i += CONCURRENCY_LIMIT) {
-      const chunk = reposList.slice(i, i + CONCURRENCY_LIMIT);
-      await Promise.all(
-        chunk.map(async (item) => {
-          const cleanRepo = item.repo.trim().replace("https://github.com/", "").replace(/\/+$/, "");
-          const branchStr = item.branch || "master";
-          const url = `https://api.github.com/repos/${cleanRepo}/git/trees/${branchStr}?recursive=1`;
-
-          try {
-            const headers: Record<string, string> = {
-              "Accept": "application/vnd.github.v3+json",
-            };
-            if (githubToken.trim()) {
-              headers["Authorization"] = `token ${githubToken.trim()}`;
-            }
-
-            const res = await fetch(url, { headers });
-            if (res.ok) {
-              const data = await res.json();
-              if (data.tree && Array.isArray(data.tree)) {
-                const jsonFiles = data.tree
-                  .filter((f: any) => f.type === "blob" && f.path.toLowerCase().endsWith(".json"))
-                  .map((f: any) => ({
-                    ...f,
-                    repo: cleanRepo,
-                    branch: branchStr,
-                  }));
-                consolidatedTree.push(...jsonFiles);
-              }
-            } else {
-              hadError = true;
-              if (res.status === 403) {
-                errorMessage = "GitHub API rate limit exceeded. Please configure a Personal Access Token in setting inputs.";
-              } else {
-                errorMessage = `Error scanning ${cleanRepo} (${res.status})`;
-              }
-            }
-          } catch (e: any) {
-            hadError = true;
-            errorMessage = e.message || "Failed to scan remote repository.";
-          }
-        })
-      );
-    }
-
-    if (consolidatedTree.length > 0) {
-      setGithubTree(consolidatedTree);
-      setGithubStatus("connected");
-      try {
-        localStorage.setItem("jax_gh_cached_tree", JSON.stringify(consolidatedTree));
-      } catch (e) {
-        console.warn("Could not cache tree state:", e);
-      }
-    } else {
-      if (hadError && !silenceError) {
-        setGithubStatus("error");
-        setGithubError(errorMessage);
-      } else {
-        setGithubStatus("idle");
-      }
-    }
-  };
-
-  const handleScanGithubRepo = async (repoStr = githubRepo, branchStr = githubBranch, tokenStr = githubToken) => {
-    let cleanRepo = repoStr.trim();
-    if (!cleanRepo) {
-      setGithubStatus("error");
-      setGithubError("Please specify a GitHub repository name (e.g. owner/repo).");
-      return;
-    }
-
-    if (cleanRepo.startsWith("https://github.com/")) {
-      cleanRepo = cleanRepo.replace("https://github.com/", "").trim();
-    }
-    cleanRepo = cleanRepo.replace(/\/+$/, "");
-
-    setGithubStatus("loading");
-    setGithubError("");
-
-    try {
-      const url = `https://api.github.com/repos/${cleanRepo}/git/trees/${branchStr || "main"}?recursive=1`;
-      
-      const headers: Record<string, string> = {
-        "Accept": "application/vnd.github.v3+json",
-      };
-      if (tokenStr.trim()) {
-        headers["Authorization"] = `token ${tokenStr.trim()}`;
-      }
-
-      const res = await fetch(url, { headers });
-      if (!res.ok) {
-        if (res.status === 404) {
-          throw new Error("Repository or branch not found. Check repository path or branch name.");
-        } else if (res.status === 403) {
-          throw new Error("API rate limits exceeded, or unauthorized. Try providing a GitHub Personal Access Token.");
-        } else {
-          throw new Error(`GitHub API Error: ${res.statusText} (${res.status})`);
-        }
-      }
-
-      const data = await res.json();
-      if (!data.tree || !Array.isArray(data.tree)) {
-        throw new Error("Could not retrieve repository file structure.");
-      }
-
-      const jsonFiles = data.tree
-        .filter((item: any) => item.type === "blob" && item.path.toLowerCase().endsWith(".json"))
-        .map((f: any) => ({
-          ...f,
-          repo: cleanRepo,
-          branch: branchStr || "main",
-        }));
-
-      setGithubTree(jsonFiles);
-      setGithubStatus("connected");
-      
-      localStorage.setItem("jax_gh_repo", cleanRepo);
-      localStorage.setItem("jax_gh_branch", branchStr);
-      localStorage.setItem("jax_gh_token", tokenStr);
-      
-      try {
-        localStorage.setItem("jax_gh_cached_tree", JSON.stringify(jsonFiles));
-      } catch (e) {
-        console.warn("Could not cache tree state:", e);
-      }
-    } catch (err: any) {
-      console.error(err);
-      setGithubStatus("error");
-      setGithubError(err.message || "Failed to establish connection.");
-    }
-  };
-
-  const handleImportGithubSetup = async (path: string, liveInspectOnly = false, customRepo?: string, customBranch?: string) => {
-    let targetRepo = customRepo || githubRepo;
-    let targetBranch = customBranch || githubBranch;
-
-    let cleanRepo = targetRepo.trim();
-    if (cleanRepo.startsWith("https://github.com/")) {
-      cleanRepo = cleanRepo.replace("https://github.com/", "").trim();
-    }
-    cleanRepo = cleanRepo.replace(/\/+$/, "");
-    
-    if (!cleanRepo) {
-      showToast("Connect a GitHub repo first", "info");
-      return;
-    }
-
-    setIsImportingFromGithub(path);
-    try {
-      const rawUrl = `https://raw.githubusercontent.com/${cleanRepo}/${targetBranch || "main"}/${path}`;
-      const headers: Record<string, string> = {};
-      if (githubToken.trim()) {
-        headers["Authorization"] = `token ${githubToken.trim()}`;
-      }
-
-      const res = await fetch(rawUrl, { headers });
-      if (!res.ok) {
-        throw new Error(`Failed to download file from GitHub raw (Status ${res.status})`);
-      }
-
-      const rawJson = await res.json();
-      const parsed = parseAccSetup(rawJson, path);
-
-      const pathMeta = parseGithubPath(path);
-      const finalCar = pathMeta.carKey !== "unknown" ? pathMeta.carKey : (parsed.carKey || "unknown");
-      const finalTrack = pathMeta.trackKey !== "unknown" ? pathMeta.trackKey : (parsed.trackKey || "unknown");
-      
-      const setupName = pathMeta.fileName.replace(".json", "").replace(/[-_]/g, " ");
-      const prettyName = setupName.charAt(0).toUpperCase() + setupName.slice(1);
-
-      let customNotes = "";
-      if (pathMeta.meta.isCustomFormat) {
-        customNotes += `=== SETUP SPECIFICATION METADATA ===`;
-        if (pathMeta.meta.grade !== undefined) {
-          customNotes += `\n• Grade: ${pathMeta.meta.grade}/3 (${pathMeta.meta.gradeLabel})`;
-        }
-        if (pathMeta.meta.patch) {
-          customNotes += `\n• Asset Version / Patch: v${pathMeta.meta.patch}`;
-        }
-        if (pathMeta.meta.session) {
-          customNotes += `\n• Intent Session: ${pathMeta.meta.session} (${pathMeta.meta.sessionLabel})`;
-        }
-        if (pathMeta.meta.temp) {
-          customNotes += `\n• Ambient Operating Temp: ${pathMeta.meta.temp.toUpperCase()}`;
-        }
-      }
-
-      const lapTimesText = getLapTimesText(finalCar, finalTrack);
-      if (lapTimesText) {
-        if (customNotes) {
-          customNotes += `\n\n${lapTimesText}`;
-        } else {
-          customNotes = lapTimesText;
-        }
-      }
-
-      const mockSetupItem: SetupItem = {
-        id: "gh_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now().toString(36),
-        name: prettyName,
-        car: finalCar,
-        track: finalTrack,
-        notes: customNotes,
-        rawData: rawJson,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        uploadedBy: user?.uid || "guest_driver",
-        uploadedByName: user?.displayName || "GitHub Link",
-      };
-
-      if (liveInspectOnly) {
-        setActiveSetup(mockSetupItem);
-        const carName = ACC_CARS[finalCar] || finalCar || "GT3 Car";
-        const trackName = ACC_TRACKS[finalTrack] || finalTrack || "Circuit";
-        showToast(`${carName} · ${trackName} loaded`, "success");
-        if (isMobile) setMobileView('inspection');
-      } else {
-        await dbSaveSetup(mockSetupItem);
-        const list = await dbFetchSetups();
-        setSetupsList(list);
-        setActiveSetup(mockSetupItem);
-        const carName = ACC_CARS[finalCar] || finalCar || "GT3 Car";
-        const trackName = ACC_TRACKS[finalTrack] || finalTrack || "Circuit";
-        showToast(`${carName} · ${trackName} synced`, "success");
-        if (isMobile) setMobileView('inspection');
-      }
-    } catch (err: any) {
-      console.error(err);
-      showToast(`GitHub Download Failed: ${err.message || err}`, "error");
-    }
-    setIsImportingFromGithub(null);
-  };
 
   // 3. AI Race Engineering chat trigger
   const handleSendChatMessage = async (presetText?: string) => {
@@ -1684,7 +1244,7 @@ export default function App() {
       if (data.error) {
         setChatMessages((prev) => [
           ...prev,
-          { role: "model", content: `⚠️ **Engineering Radio Down:** ${data.error}` }
+          { role: "model", content: `Ã¢Å¡Â Ã¯Â¸Â **Engineering Radio Down:** ${data.error}` }
         ]);
       } else {
         setChatMessages((prev) => [...prev, { role: "model", content: data.reply }]);
@@ -1692,7 +1252,7 @@ export default function App() {
     } catch (err) {
       setChatMessages((prev) => [
         ...prev,
-        { role: "model", content: "⚠️ **Timeout Error:** Could not contact the pitwall. Ensure your dev server is active on Port 3000." }
+        { role: "model", content: "Ã¢Å¡Â Ã¯Â¸Â **Timeout Error:** Could not contact the pitwall. Ensure your dev server is active on Port 3000." }
       ]);
     }
     setIsChatAnalyzing(false);
@@ -1885,8 +1445,8 @@ export default function App() {
     const startHour = parseInt(transitionTimeStart.split(":")[0]) || 17;
     const durationHrs = transitionDuration / 60;
     
-    let trackCoolingRate = 0; // °C per hour
-    let ambientCoolingRate = 0; // °C per hour
+    let trackCoolingRate = 0; // Ã‚Â°C per hour
+    let ambientCoolingRate = 0; // Ã‚Â°C per hour
     let coolingType = "Stable Ambient";
     
     if (startHour >= 12 && startHour < 16) {
@@ -1915,7 +1475,7 @@ export default function App() {
     const ambientDrop = ambientCoolingRate * durationHrs;
     
     // In ACC, base cold pressures need to increase as temps drop
-    // Factor: ~ +0.1 PSI for every 1°C of track drop, ~ +0.12 PSI for every 1°C of ambient drop
+    // Factor: ~ +0.1 PSI for every 1Ã‚Â°C of track drop, ~ +0.12 PSI for every 1Ã‚Â°C of ambient drop
     const rawOffset = (trackDrop * 0.1) + (ambientDrop * 0.12);
     // Keep offset representation clean and rounded
     const compensationPSI = Math.round(rawOffset * 10) / 10;
@@ -1967,9 +1527,9 @@ export default function App() {
         isOverfilled: overfill
       });
       if (overfill) {
-        alertMsg = `⚠️ Critical: Total fuel required (${totalFuelNeeded.toFixed(1)}L) exceeds max tank capacity (${pitMaxFuelCapacity}L). You MUST plan at least 1 pitstop!`;
+        alertMsg = `Ã¢Å¡Â Ã¯Â¸Â Critical: Total fuel required (${totalFuelNeeded.toFixed(1)}L) exceeds max tank capacity (${pitMaxFuelCapacity}L). You MUST plan at least 1 pitstop!`;
       } else {
-        msg = "✓ Standard single stint. No pitstop required.";
+        msg = "Ã¢Å“â€œ Standard single stint. No pitstop required.";
       }
     } else if (pitNumberOfStops === 1) {
       // 1 stop = 2 stints
@@ -2010,7 +1570,7 @@ export default function App() {
       });
       
       if (stint1Overfilled || stint2Overfilled) {
-        alertMsg = `⚠️ Tank limitation reached! One of your stints exceeds ${pitMaxFuelCapacity}L capacity. Consider planning 2 stops or shifting the stint balance.`;
+        alertMsg = `Ã¢Å¡Â Ã¯Â¸Â Tank limitation reached! One of your stints exceeds ${pitMaxFuelCapacity}L capacity. Consider planning 2 stops or shifting the stint balance.`;
       }
     } else if (pitNumberOfStops === 2) {
       // 2 stops = 3 stints
@@ -2244,7 +1804,7 @@ export default function App() {
             }`}
           >
             <Wrench className="w-4 h-4 text-emerald-440" />
-            <span className="hidden md:inline">🔧 AI RACE ENGINEER</span>
+            <span className="hidden md:inline">Ã°Å¸â€Â§ AI RACE ENGINEER</span>
             <span className="md:hidden">ENGINEER</span>
           </button>
         </div>
@@ -2609,17 +2169,17 @@ export default function App() {
                             <div className="flex gap-1.5 mt-1.5 flex-wrap">
                               {hasTrackUnknown && (
                                 <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold">
-                                  ⚠️ Circuit Unspecified
+                                  Ã¢Å¡Â Ã¯Â¸Â Circuit Unspecified
                                 </span>
                               )}
                               {hasCarUnknown && (
                                 <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold">
-                                  ⚠️ Car Unspecified
+                                  Ã¢Å¡Â Ã¯Â¸Â Car Unspecified
                                 </span>
                               )}
                               {!hasTrackUnknown && !hasCarUnknown && (
                                 <span className="bg-red-50 border border-red-200 text-red-655 text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
-                                  ✓ Identified
+                                  Ã¢Å“â€œ Identified
                                 </span>
                               )}
                             </div>
@@ -2838,7 +2398,7 @@ export default function App() {
 
                 {githubStatus === "error" && githubError && (
                   <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3.5 rounded-lg font-mono font-medium shadow-xs">
-                    <div className="font-bold uppercase tracking-wider text-[9px] text-red-800 mb-1">⚠️ Community Sync Failed</div>
+                    <div className="font-bold uppercase tracking-wider text-[9px] text-red-800 mb-1">Ã¢Å¡Â Ã¯Â¸Â Community Sync Failed</div>
                     {githubError}
                   </div>
                 )}
@@ -2847,7 +2407,7 @@ export default function App() {
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 border-b border-zinc-200 pb-2">
                     <span className="flex items-center gap-1.5 font-bold uppercase text-[9px] text-zinc-600 tracking-wider">
-                      🌍 Remote Community Search Results
+                      Ã°Å¸Å’Â Remote Community Search Results
                       {githubStatus === "connected" && (
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Synchronized Live" />
                       )}
@@ -2888,10 +2448,10 @@ export default function App() {
                                     className="font-mono text-[8px] sm:text-[9px] px-1.5 py-0.2 rounded bg-zinc-950 font-bold flex items-center gap-1 text-amber-500 shrink-0"
                                     title={item.meta.gradeLabel}
                                   >
-                                    {item.meta.grade === 3 && "⭐⭐⭐ [LGE]"}
-                                    {item.meta.grade === 2 && "⭐⭐☆ [WIP]"}
-                                    {item.meta.grade === 1 && "⭐☆☆ [BAS]"}
-                                    {item.meta.grade === 0 && "☆☆☆ [PRE]"}
+                                    {item.meta.grade === 3 && "Ã¢Â­ÂÃ¢Â­ÂÃ¢Â­Â [LGE]"}
+                                    {item.meta.grade === 2 && "Ã¢Â­ÂÃ¢Â­ÂÃ¢Ëœâ€  [WIP]"}
+                                    {item.meta.grade === 1 && "Ã¢Â­ÂÃ¢Ëœâ€ Ã¢Ëœâ€  [BAS]"}
+                                    {item.meta.grade === 0 && "Ã¢Ëœâ€ Ã¢Ëœâ€ Ã¢Ëœâ€  [PRE]"}
                                   </span>
                                 )}
 
@@ -3060,7 +2620,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* MOBILE: Back navigation bar — visible only during mobile inspection view */}
+        {/* MOBILE: Back navigation bar Ã¢â‚¬â€ visible only during mobile inspection view */}
         {isMobile && mobileView === 'inspection' && (
           <div className="lg:hidden col-span-full bg-white border border-zinc-200 rounded-lg px-4 py-3 flex items-center gap-3 shadow-sm">
             <button
@@ -3076,7 +2636,7 @@ export default function App() {
             {activeSetup && (
               <div className="flex-1 min-w-0 text-right">
                 <p className="text-[11px] font-mono text-zinc-400 truncate">
-                  {ACC_CARS[activeSetup.car] || activeSetup.car} · {ACC_TRACKS[activeSetup.track] || activeSetup.track}
+                  {ACC_CARS[activeSetup.car] || activeSetup.car} Ã‚Â· {ACC_TRACKS[activeSetup.track] || activeSetup.track}
                 </p>
               </div>
             )}
@@ -3257,7 +2817,7 @@ export default function App() {
                       <div className="flex items-center gap-2.5 min-w-0">
                         <FileText className={`w-4 h-4 text-red-650 shrink-0 ${isCrewNotesOpen ? "animate-pulse" : ""}`} />
                         <span className="text-zinc-550 font-extrabold font-mono uppercase tracking-wider text-[10px] truncate">
-                          Uploaded by <strong className="text-zinc-800 font-extrabold">{activeSetup.uploadedByName || "Team Lead"}</strong> • Crew Notes
+                          Uploaded by <strong className="text-zinc-800 font-extrabold">{activeSetup.uploadedByName || "Team Lead"}</strong> Ã¢â‚¬Â¢ Crew Notes
                         </span>
                       </div>
                       <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-200 shrink-0 ${isCrewNotesOpen ? "rotate-180" : ""}`} />
@@ -3537,7 +3097,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[0]}°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[0]}Ã‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 0)}
@@ -3559,7 +3119,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[0]}°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[0]}Ã‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 0)}
@@ -3581,7 +3141,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[0]}°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[0]}Ã‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 0)}
@@ -3640,7 +3200,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[1]}°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[1]}Ã‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 1)}
@@ -3662,7 +3222,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[1]}°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[1]}Ã‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 1)}
@@ -3684,7 +3244,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[1]}°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[1]}Ã‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 1)}
@@ -3753,7 +3313,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[2]}°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[2]}Ã‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 2)}
@@ -3775,7 +3335,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[2]}°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[2]}Ã‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 2)}
@@ -3834,7 +3394,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[3]}°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[3]}Ã‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 3)}
@@ -3856,7 +3416,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[3]}°</strong>
+                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[3]}Ã‚Â°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 3)}
@@ -3889,7 +3449,7 @@ export default function App() {
 
                           {showCompensated && (
                             <div className="text-[10px] text-center text-amber-900 mt-2 p-2 bg-amber-50/80 rounded border border-amber-200 font-mono font-semibold">
-                              ⚠ Thermal pressure loss simulated. Notice tyres falling into the <strong className="text-sky-700">blue/underinflated</strong> zone as track temperature cools down.
+                              Ã¢Å¡Â  Thermal pressure loss simulated. Notice tyres falling into the <strong className="text-sky-700">blue/underinflated</strong> zone as track temperature cools down.
                             </div>
                           )}
                         </div>
@@ -3928,7 +3488,7 @@ export default function App() {
                                   const isSunset = i === 17 || i === 18 || i === 19;
                                   return (
                                     <option key={hourStr} value={hourStr}>
-                                      {hourStr} {isSunset ? "🌇 (Sunset Transition)" : ""}
+                                      {hourStr} {isSunset ? "Ã°Å¸Å’â€¡ (Sunset Transition)" : ""}
                                     </option>
                                   );
                                 })}
@@ -4004,7 +3564,7 @@ export default function App() {
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="flex-1 text-center font-mono text-xs font-bold text-zinc-900 select-none">
-                                  {transitionAmbientTemp}°C
+                                  {transitionAmbientTemp}Ã‚Â°C
                                 </span>
                                 <button
                                   type="button"
@@ -4038,7 +3598,7 @@ export default function App() {
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="flex-1 text-center font-mono text-xs font-bold text-zinc-900 select-none">
-                                  {transitionTrackTemp}°C
+                                  {transitionTrackTemp}Ã‚Â°C
                                 </span>
                                 <button
                                   type="button"
@@ -4061,11 +3621,11 @@ export default function App() {
                               <span className="text-[9.5px] font-mono text-zinc-650 uppercase font-bold">Session Thermal Evolution</span>
                               <span className="text-[10.5px] font-mono text-amber-800 font-extrabold flex items-center gap-1">
                                 {parseInt(transitionTimeStart.split(":")[0]) >= 16 && parseInt(transitionTimeStart.split(":")[0]) < 21 ? (
-                                  <>🌅 {coolingData.coolingType}</>
+                                  <>Ã°Å¸Å’â€¦ {coolingData.coolingType}</>
                                 ) : parseInt(transitionTimeStart.split(":")[0]) >= 21 || parseInt(transitionTimeStart.split(":")[0]) < 5 ? (
-                                  <>🌙 {coolingData.coolingType}</>
+                                  <>Ã°Å¸Å’â„¢ {coolingData.coolingType}</>
                                 ) : (
-                                  <>☀️ {coolingData.coolingType}</>
+                                  <>Ã¢Ëœâ‚¬Ã¯Â¸Â {coolingData.coolingType}</>
                                 )}
                               </span>
                             </div>
@@ -4080,10 +3640,10 @@ export default function App() {
                                       {isLoss ? "Est. Ambient Drop" : "Est. Ambient Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-emerald-700" : "text-amber-600"}`}>
-                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}°C
+                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}Ã‚Â°C
                                     </span>
                                     <span className="text-[8.5px] font-mono text-zinc-500 block mt-0.5">
-                                      Finish: {(transitionAmbientTemp - val).toFixed(1)}°C
+                                      Finish: {(transitionAmbientTemp - val).toFixed(1)}Ã‚Â°C
                                     </span>
                                   </div>
                                 );
@@ -4098,10 +3658,10 @@ export default function App() {
                                       {isLoss ? "Est. Track Drop" : "Est. Track Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-blue-700" : "text-orange-600"}`}>
-                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}°C
+                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}Ã‚Â°C
                                     </span>
                                     <span className="text-[8.5px] font-mono text-zinc-500 block mt-0.5">
-                                      Finish: {(transitionTrackTemp - val).toFixed(1)}°C
+                                      Finish: {(transitionTrackTemp - val).toFixed(1)}Ã‚Â°C
                                     </span>
                                   </div>
                                 );
@@ -4511,7 +4071,7 @@ export default function App() {
                           </div>
 
                           <span className="text-[10px] block text-zinc-550 leading-relaxed italic text-center font-sans font-medium">
-                            *Pit strategy recommendation: {((((calculatedFuelLapTimeSec > 0 ? Math.ceil((fuelRaceTime * 60) / calculatedFuelLapTimeSec) : 0) + fuelSafetyLaps) * fuelPerLap) > pitMaxFuelCapacity) ? `⚠️ Refuel pitstop needed: Minimum load exceeds your customized ${pitMaxFuelCapacity}L tank limit.` : "✓ Optimal run capacity: No physical mid-session refuelling breaks strictly required by tank volume."}
+                            *Pit strategy recommendation: {((((calculatedFuelLapTimeSec > 0 ? Math.ceil((fuelRaceTime * 60) / calculatedFuelLapTimeSec) : 0) + fuelSafetyLaps) * fuelPerLap) > pitMaxFuelCapacity) ? `Ã¢Å¡Â Ã¯Â¸Â Refuel pitstop needed: Minimum load exceeds your customized ${pitMaxFuelCapacity}L tank limit.` : "Ã¢Å“â€œ Optimal run capacity: No physical mid-session refuelling breaks strictly required by tank volume."}
                           </span>
                         </div>
 
@@ -4587,7 +4147,7 @@ export default function App() {
                                     : "bg-white border-zinc-200 text-zinc-500 hover:text-zinc-700"
                                 }`}
                               >
-                                {pitMandatoryFuel ? "✓ Mandatory Fuel Stop" : "⚡ Refueling Optional"}
+                                {pitMandatoryFuel ? "Ã¢Å“â€œ Mandatory Fuel Stop" : "Ã¢Å¡Â¡ Refueling Optional"}
                               </button>
 
                               <button
@@ -4598,7 +4158,7 @@ export default function App() {
                                     : "bg-white border-zinc-200 text-zinc-500 hover:text-zinc-700"
                                 }`}
                               >
-                                {pitMandatoryTyres ? "✓ Mandatory Tyre Swap" : "⚡ Tyres Optional"}
+                                {pitMandatoryTyres ? "Ã¢Å“â€œ Mandatory Tyre Swap" : "Ã¢Å¡Â¡ Tyres Optional"}
                               </button>
                             </div>
 
@@ -4676,7 +4236,7 @@ export default function App() {
                                       {sIdx < pitStrategy.stints.length - 1 && (
                                         <div className="flex flex-row md:flex-col items-center justify-center gap-1.5 px-3 py-2 bg-red-50 border border-red-200 text-red-700 text-[10px] font-mono rounded-lg font-black uppercase text-center tracking-wider max-w-xs mx-auto md:mx-0 shrink-0 select-none shadow-xs">
                                           <span>Pitstop</span>
-                                          <span className="hidden md:inline">➔</span>
+                                          <span className="hidden md:inline">Ã¢Å¾â€</span>
                                         </div>
                                       )}
                                     </div>
@@ -5258,7 +4818,7 @@ export default function App() {
                               </div>
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-semibold items-center">
                                 <span className="text-zinc-500 font-sans font-medium">Front Splitter:</span>
-                                <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.splitter}°</strong>
+                                <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.splitter}Ã‚Â°</strong>
                               </div>
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-bold items-center">
                                 <span className="text-zinc-500 font-sans font-medium">Front Brake Duct:</span>
@@ -5312,7 +4872,7 @@ export default function App() {
                                       -
                                     </button>
                                   )}
-                                  <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.rearWing}°</strong>
+                                  <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.rearWing}Ã‚Â°</strong>
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("rearWing", 1)}
@@ -5811,7 +5371,7 @@ export default function App() {
                           }}
                           className="bg-amber-600 hover:bg-amber-700 text-white font-black px-5 py-2.5 rounded-lg text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer shrink-0 h-11 w-full sm:w-auto"
                         >
-                          <span>💾 Save Custom Variant</span>
+                          <span>Ã°Å¸â€™Â¾ Save Custom Variant</span>
                         </button>
                       </div>
                     </div>
@@ -5874,7 +5434,7 @@ export default function App() {
                 loadTunedSetups();
               } catch (err) {
                 console.error(err);
-                showToast("Delete failed — try again", "error");
+                showToast("Delete failed Ã¢â‚¬â€ try again", "error");
               }
             }}
             onRefresh={async () => {
@@ -5900,7 +5460,7 @@ export default function App() {
       {/* 3. Footer indicator metadata */}
       <footer id="visual-garage-footer" className="bg-zinc-950 border-t border-zinc-900 py-4 px-6 text-center mt-auto font-mono text-[10px] text-zinc-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
-          <span>PITWALL COMPANION APP V1.9 • POWERED BY JAXTUNE</span>
+          <span>PITWALL COMPANION APP V1.9 Ã¢â‚¬Â¢ POWERED BY JAXTUNE</span>
           <span>CRAFTED FOR ACC AND LATE NIGHT RACING</span>
         </div>
       </footer>
@@ -5916,7 +5476,7 @@ export default function App() {
           >
             <div className={`w-2 h-2 rounded-full shrink-0 ${toast.type === "success" ? "bg-emerald-500" : toast.type === "error" ? "bg-red-500" : "bg-cyan-500"}`} />
             <span className="text-xs font-semibold leading-relaxed text-zinc-200">{toast.message}</span>
-            <button onClick={() => setToast(null)} className="ml-2 hover:text-white text-zinc-400 text-sm font-bold cursor-pointer transition-colors shrink-0">×</button>
+            <button onClick={() => setToast(null)} className="ml-2 hover:text-white text-zinc-400 text-sm font-bold cursor-pointer transition-colors shrink-0">Ãƒâ€”</button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -5992,9 +5552,9 @@ export default function App() {
                     ) : onboardingCheckingUsername ? (
                       <span className="text-zinc-500">Checking registry database...</span>
                     ) : onboardingUsernameAvailable === true ? (
-                      <span className="text-emerald-600 font-bold">✓ This handle is clear and authentic!</span>
+                      <span className="text-emerald-600 font-bold">Ã¢Å“â€œ This handle is clear and authentic!</span>
                     ) : onboardingUsernameAvailable === false ? (
-                      <span className="text-red-500 font-black">✗ This handle is already registered by another driver.</span>
+                      <span className="text-red-500 font-black">Ã¢Å“â€” This handle is already registered by another driver.</span>
                     ) : (
                       <span className="text-zinc-500 italic font-bold">Perfect fit.</span>
                     )}
@@ -6155,7 +5715,7 @@ export default function App() {
                 onClick={() => setShowProfileModal(false)}
                 className="absolute right-4 top-4 hover:text-zinc-800 text-zinc-400 text-xl font-bold cursor-pointer transition-colors p-1"
               >
-                ×
+                Ãƒâ€”
               </button>
 
               <div className="text-center mb-6">
@@ -6221,15 +5781,15 @@ export default function App() {
                   {/* Status explanation */}
                   <span className="text-[10px] mt-1.5 block font-medium leading-normal">
                     {editUsername.trim().toLowerCase() === profile.username.toLowerCase() ? (
-                      <span className="text-emerald-600 font-bold">✓ This is your current active callsigned username.</span>
+                      <span className="text-emerald-600 font-bold">Ã¢Å“â€œ This is your current active callsigned username.</span>
                     ) : editUsername.trim().length < 3 ? (
                       <span className="text-amber-600 font-bold">Username must be at least 3 characters.</span>
                     ) : editCheckingUsername ? (
                       <span className="text-zinc-505">Checking username registry...</span>
                     ) : editUsernameAvailable === true ? (
-                      <span className="text-emerald-600 font-bold">✓ This handle is clear and authentic!</span>
+                      <span className="text-emerald-600 font-bold">Ã¢Å“â€œ This handle is clear and authentic!</span>
                     ) : editUsernameAvailable === false ? (
-                      <span className="text-red-500 font-black">✗ This handle is already registered by another driver.</span>
+                      <span className="text-red-500 font-black">Ã¢Å“â€” This handle is already registered by another driver.</span>
                     ) : null}
                   </span>
                 </div>
@@ -6434,7 +5994,7 @@ export default function App() {
                   misano: "Misano",
                   monza: "Monza",
                   mount_panorama: "Mount Panorama",
-                  nurburgring: "Nürburgring",
+                  nurburgring: "NÃƒÂ¼rburgring",
                   nurburgring_24h: "Nordschleife",
                   oulton_park: "Oulton Park",
                   paul_ricard: "Paul Ricard",
@@ -6454,7 +6014,7 @@ export default function App() {
                 return (
                   <div className="bg-amber-500/5 border border-amber-500/10 p-3 rounded-lg text-xs leading-relaxed font-sans text-zinc-300 space-y-1">
                     <div className="font-extrabold text-amber-400 font-mono uppercase tracking-wider text-[10px] flex items-center gap-1">
-                      <span>🏁 Target Notes: {ACC_TRACKS[saveModalTargetTrack] || saveModalTargetTrack}</span>
+                      <span>Ã°Å¸ÂÂ Target Notes: {ACC_TRACKS[saveModalTargetTrack] || saveModalTargetTrack}</span>
                     </div>
                     <p className="text-[11px] text-zinc-200">{note.circuit_notes.length > 120 ? note.circuit_notes.substring(0, 120) + "..." : note.circuit_notes}</p>
                     <div className="text-[10px] font-mono text-zinc-400 pt-0.5 space-y-0.5">
