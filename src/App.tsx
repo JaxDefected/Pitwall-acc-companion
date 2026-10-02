@@ -66,7 +66,7 @@ import {
 } from "./firebase";
 import { useAuth } from "./hooks/useAuth";
 import { useGitHubSync, parseGithubPath } from "./hooks/useGitHubSync";
-import { parseAccSetup, NormalizedAccSetup, ACC_CARS, ACC_TRACKS } from "./utils/accParser";
+import { parseAccSetup, NormalizedAccSetup, ACC_CARS, ACC_TRACKS, formatDegrees, formatCelsius } from "./utils/accParser";
 import { fetchWithRetry } from "./utils/fetchWithRetry";
 import { CIRCUIT_NOTES } from "./data/circuitNotes";
 import { cars } from "./data/cars";
@@ -3014,7 +3014,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[0]}&deg;</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.toes[0])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 0)}
@@ -3038,7 +3038,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[0]}&deg;</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.cambers[0])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 0)}
@@ -3062,7 +3062,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[0]}&deg;</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.casters[0])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 0)}
@@ -3125,7 +3125,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[1]}&deg;</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.toes[1])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 1)}
@@ -3149,7 +3149,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[1]}&deg;</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.cambers[1])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 1)}
@@ -3173,7 +3173,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[1]}&deg;</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.casters[1])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 1)}
@@ -3246,7 +3246,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[2]}&deg;</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.toes[2])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 2)}
@@ -3270,7 +3270,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[2]}&deg;</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.cambers[2])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 2)}
@@ -3333,7 +3333,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[3]}&deg;</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.toes[3])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 3)}
@@ -3357,7 +3357,7 @@ export default function App() {
                                           -
                                         </button>
                                       )}
-                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[3]}&deg;</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{formatDegrees(parsedActiveSetup.cambers[3])}</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 3)}
@@ -3505,7 +3505,7 @@ export default function App() {
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="flex-1 text-center font-mono text-xs font-bold text-zinc-900 select-none">
-                                  {transitionAmbientTemp}&deg;C
+                                  {formatCelsius(transitionAmbientTemp)}
                                 </span>
                                 <button
                                   type="button"
@@ -3539,7 +3539,7 @@ export default function App() {
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="flex-1 text-center font-mono text-xs font-bold text-zinc-900 select-none">
-                                  {transitionTrackTemp}&deg;C
+                                  {formatCelsius(transitionTrackTemp)}
                                 </span>
                                 <button
                                   type="button"
@@ -3581,10 +3581,10 @@ export default function App() {
                                       {isLoss ? "Est. Ambient Drop" : "Est. Ambient Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-emerald-700" : "text-amber-600"}`}>
-                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}&deg;C
+                                      {isLoss ? "-" : "+"}{formatCelsius(Math.abs(val).toFixed(1))}
                                     </span>
                                     <span className="text-[10px] font-mono text-zinc-500 block mt-0.5">
-                                      Finish: {(transitionAmbientTemp - val).toFixed(1)}&deg;C
+                                      Finish: {formatCelsius((transitionAmbientTemp - val).toFixed(1))}
                                     </span>
                                   </div>
                                 );
@@ -3599,10 +3599,10 @@ export default function App() {
                                       {isLoss ? "Est. Track Drop" : "Est. Track Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-blue-700" : "text-orange-600"}`}>
-                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}&deg;C
+                                      {isLoss ? "-" : "+"}{formatCelsius(Math.abs(val).toFixed(1))}
                                     </span>
                                     <span className="text-[10px] font-mono text-zinc-500 block mt-0.5">
-                                      Finish: {(transitionTrackTemp - val).toFixed(1)}&deg;C
+                                      Finish: {formatCelsius((transitionTrackTemp - val).toFixed(1))}
                                     </span>
                                   </div>
                                 );
@@ -4310,7 +4310,7 @@ export default function App() {
                               </div>
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-semibold items-center">
                                 <span className="text-zinc-500 font-sans font-medium">Front Splitter:</span>
-                                <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.splitter}&deg;</strong>
+                                <strong className="text-zinc-900 text-sm font-extrabold">{formatDegrees(parsedActiveSetup.splitter)}</strong>
                               </div>
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-bold items-center">
                                 <span className="text-zinc-500 font-sans font-medium">Front Brake Duct:</span>
@@ -4364,7 +4364,7 @@ export default function App() {
                                       -
                                     </button>
                                   )}
-                                  <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.rearWing}&deg;</strong>
+                                  <strong className="text-zinc-900 text-sm font-extrabold">{formatDegrees(parsedActiveSetup.rearWing)}</strong>
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("rearWing", 1)}

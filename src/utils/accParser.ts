@@ -521,3 +521,6 @@ export function parseAccSetup(rawJson: any, defaultFilename: string = "setup.jso
 
   return normalized;
 }
+
+export const formatDegrees = (val: number | string) => `${val}°`;
+export const formatCelsius = (val: number | string) => `${val}°C`;
