@@ -234,10 +234,10 @@ function SetupSlider({ label, value, min, max, step, unit = "", discreteArray }:
   return (
     <div className="bg-zinc-50 border border-zinc-200/60 rounded p-3 text-zinc-900 shadow-3xs hover:border-zinc-350 hover:bg-zinc-50/80 transition-all flex flex-col justify-between">
       <div className="flex justify-between items-start gap-1 pb-1.5 border-b border-zinc-150">
-        <span className="text-[9.5px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">{label}</span>
-        <span className="text-[11.5px] font-mono font-black text-red-655 bg-zinc-100/80 px-1.5 py-0.5 rounded border border-zinc-150">
+        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">{label}</span>
+        <span className="text-xs font-mono font-black text-red-655 bg-zinc-100/80 px-1.5 py-0.5 rounded border border-zinc-150">
           {value.toFixed(unit === "ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
-          <span className="text-[8px] font-bold text-zinc-400 ml-0.5">{unit}</span>
+          <span className="text-[10px] font-bold text-zinc-400 ml-0.5">{unit}</span>
         </span>
       </div>
 
@@ -260,9 +260,9 @@ function SetupSlider({ label, value, min, max, step, unit = "", discreteArray }:
           })}
         </div>
 
-        <div className="flex justify-between mt-1.5 text-[8.5px] font-mono text-zinc-400 font-bold">
+        <div className="flex justify-between mt-1.5 text-[10px] font-mono text-zinc-400 font-bold">
           <span>{discreteArray ? "SEGMENTED" : `MIN: ${min}${unit}`}</span>
-          {step > 0 && <span className="text-[7.5px] bg-zinc-100 px-1 rounded border border-zinc-200">STEP: {step}</span>}
+          {step > 0 && <span className="text-[10px] bg-zinc-100 px-1 rounded border border-zinc-200">STEP: {step}</span>}
           <span>{discreteArray ? `OPTS: ${discreteArray.length}` : `MAX: ${max}${unit}`}</span>
         </div>
       </div>
@@ -1577,13 +1577,13 @@ export default function App() {
             <h1 className="text-xs sm:text-sm md:text-lg font-bold tracking-tight text-white flex items-center gap-1 sm:gap-1.5 truncate">
               <Gauge className="text-red-500 w-3.5 h-3.5 md:w-5 md:h-5 animate-pulse shrink-0" />
               <span className="shrink-0">PitWall</span>
-              <span className={`text-[9px] md:text-xs text-zinc-400 border-l border-zinc-800 pl-1 sm:pl-1.5 font-normal transition-all duration-300 ease-in-out overflow-hidden ${
+              <span className={`text-[10px] md:text-xs text-zinc-400 border-l border-zinc-800 pl-1 sm:pl-1.5 font-normal transition-all duration-300 ease-in-out overflow-hidden ${
                 isScrolled ? "max-w-0 opacity-0 md:max-w-[240px] md:opacity-100" : "max-w-[240px] opacity-100"
               }`}>
                 ACC Setup Lab
               </span>
             </h1>
-            <p className={`text-[9px] md:text-xs text-zinc-500 truncate transition-all duration-300 ease-in-out ${
+            <p className={`text-[10px] md:text-xs text-zinc-500 truncate transition-all duration-300 ease-in-out ${
               isScrolled 
                 ? "max-h-0 opacity-0 pr-0 mt-0 overflow-hidden" 
                 : "max-h-4 opacity-100 mt-0.5"
@@ -1635,11 +1635,11 @@ export default function App() {
                     ? "max-w-0 opacity-0 md:max-w-[124px] md:opacity-100" 
                     : "max-w-[124px] opacity-100"
                 }`}>
-                  <span className="text-zinc-200 group-hover:text-red-400 truncate font-semibold text-[11px] leading-tight flex items-center gap-1">
+                  <span className="text-zinc-200 group-hover:text-red-400 truncate font-semibold text-xs leading-tight flex items-center gap-1">
                     <span>{profile?.username ? `@${profile.username}` : (user.displayName || user.email)}</span>
                     <Wrench className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-red-100" />
                   </span>
-                  <span className="text-[8px] text-red-500 font-black tracking-wider uppercase leading-none mt-0.5 animate-pulse">
+                  <span className="text-[10px] text-red-500 font-black tracking-wider uppercase leading-none mt-0.5 animate-pulse">
                     TEAM CLOUD ACTIVE
                   </span>
                 </div>
@@ -1651,8 +1651,8 @@ export default function App() {
               onClick={handleLogin}
               className={`flex items-center gap-2 bg-red-650 hover:bg-red-700 transition-all duration-300 text-white rounded font-black cursor-pointer font-mono uppercase tracking-wider shadow-md shadow-red-600/10 active:scale-95 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 ${
                 isScrolled 
-                  ? "px-2.5 py-1.5 text-[9px] max-w-[90px]" 
-                  : "px-4 py-2.5 sm:py-1.5 text-[11px] max-w-[200px]"
+                  ? "px-2.5 py-1.5 text-[10px] max-w-[90px]" 
+                  : "px-4 py-2.5 sm:py-1.5 text-xs max-w-[200px]"
               }`}
             >
               <span className="truncate">{isScrolled ? "Connect" : "Connect Driver"}</span>
@@ -1666,7 +1666,7 @@ export default function App() {
         id="app-view-switcher" 
         className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-950/95 border-t border-zinc-850 p-2 pb-[calc(8px+env(safe-area-inset-bottom,16px))] shadow-2xl md:static md:z-auto md:bg-transparent md:border-none md:p-0 md:shadow-none max-w-7xl w-full mx-auto md:px-4 lg:md:px-6 md:pt-3 md:sm:pt-5"
       >
-        <div className="bg-transparent border-none p-0 flex gap-1 font-mono text-[9px] sm:text-[10px] md:text-xs md:bg-white md:border md:border-zinc-250 md:p-1.5 md:rounded-lg md:gap-2 md:shadow-3xs w-full max-w-full justify-around md:justify-start" role="tablist" aria-label="App Views">
+        <div className="bg-transparent border-none p-0 flex gap-1 font-mono text-[10px] sm:text-[10px] md:text-xs md:bg-white md:border md:border-zinc-250 md:p-1.5 md:rounded-lg md:gap-2 md:shadow-3xs w-full max-w-full justify-around md:justify-start" role="tablist" aria-label="App Views">
           <button
             id="view-btn-telemetry"
             onClick={() => setCurrentView("telemetry")}
@@ -1760,8 +1760,8 @@ export default function App() {
                 <div className="flex items-center gap-2">
                   <Flame className="w-4 h-4 text-red-500 animate-pulse" />
                   <div className="min-w-0">
-                    <p className="text-[11px] font-black text-red-700 tracking-tight leading-none">Series Vehicles Active</p>
-                    <p className="text-[9px] text-zinc-500 mt-0.5 font-mono leading-none">Pin list: {profile.pinnedSeriesCars.length} cars configured</p>
+                    <p className="text-xs font-black text-red-700 tracking-tight leading-none">Series Vehicles Active</p>
+                    <p className="text-[10px] text-zinc-500 mt-0.5 font-mono leading-none">Pin list: {profile.pinnedSeriesCars.length} cars configured</p>
                   </div>
                 </div>
                 <label className="flex items-center gap-2 text-xs text-red-600 font-bold bg-white border border-red-200 hover:border-red-350 shadow-3xs px-3 py-1.5 rounded-lg cursor-pointer select-none active:scale-95 transition-all h-9 shrink-0">
@@ -1779,13 +1779,13 @@ export default function App() {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label htmlFor="filter-car-select" className="text-zinc-500 block font-mono uppercase text-[9px] font-bold">Car Class</label>
+                  <label htmlFor="filter-car-select" className="text-zinc-500 block font-mono uppercase text-[10px] font-bold">Car Class</label>
                 </div>
                 <select
                   id="filter-car-select"
                   value={carFilter}
                   onChange={(e) => setCarFilter(e.target.value)}
-                  className="w-full bg-zinc-50 border border-zinc-250 text-zinc-850 p-3 md:p-2 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 font-mono text-base md:text-[11px] font-semibold min-h-[44px] md:min-h-0 cursor-pointer"
+                  className="w-full bg-zinc-50 border border-zinc-250 text-zinc-850 p-3 md:p-2 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 font-mono text-base md:text-xs font-semibold min-h-[44px] md:min-h-0 cursor-pointer"
                 >
                   <option value="all">All Cars</option>
                   {(() => {
@@ -1858,12 +1858,12 @@ export default function App() {
                 </select>
               </div>
               <div>
-                <label htmlFor="filter-track-select" className="text-zinc-500 block mb-1 font-mono uppercase text-[9px] font-bold">Track</label>
+                <label htmlFor="filter-track-select" className="text-zinc-500 block mb-1 font-mono uppercase text-[10px] font-bold">Track</label>
                 <select
                   id="filter-track-select"
                   value={trackFilter}
                   onChange={(e) => setTrackFilter(e.target.value)}
-                  className="w-full bg-zinc-50 border border-zinc-250 text-zinc-850 p-3 md:p-2 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 font-mono text-base md:text-[11px] font-semibold min-h-[44px] md:min-h-0 cursor-pointer"
+                  className="w-full bg-zinc-50 border border-zinc-250 text-zinc-850 p-3 md:p-2 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 font-mono text-base md:text-xs font-semibold min-h-[44px] md:min-h-0 cursor-pointer"
                 >
                   <option value="all">All Tracks</option>
                   {(() => {
@@ -1909,7 +1909,7 @@ export default function App() {
                 <div className="flex gap-2.5 mt-3.5">
                   <label
                     htmlFor="file-input-setup"
-                    className="bg-white hover:bg-zinc-50 text-[11px] text-zinc-700 px-3 py-1.5 rounded border border-zinc-300 font-mono cursor-pointer transition-colors font-semibold shadow-sm focus-within:ring-2 focus-within:ring-red-600 focus-within:outline-none animate-none"
+                    className="bg-white hover:bg-zinc-50 text-xs text-zinc-700 px-3 py-1.5 rounded border border-zinc-300 font-mono cursor-pointer transition-colors font-semibold shadow-sm focus-within:ring-2 focus-within:ring-red-600 focus-within:outline-none animate-none"
                   >
                     <input
                       id="file-input-setup"
@@ -1923,7 +1923,7 @@ export default function App() {
                   </label>
                   <label
                     htmlFor="folder-input-setup"
-                    className="bg-red-50 hover:bg-red-100 text-[11px] text-red-700 px-3 py-1.5 rounded border border-red-200 font-mono cursor-pointer transition-colors font-semibold shadow-sm focus-within:ring-2 focus-within:ring-red-600 focus-within:outline-none animate-none"
+                    className="bg-red-50 hover:bg-red-100 text-xs text-red-700 px-3 py-1.5 rounded border border-red-200 font-mono cursor-pointer transition-colors font-semibold shadow-sm focus-within:ring-2 focus-within:ring-red-600 focus-within:outline-none animate-none"
                   >
                     <input
                       id="folder-input-setup"
@@ -2082,23 +2082,23 @@ export default function App() {
                               Circuit: {ACC_TRACKS[setup.trackKey] || setup.parsedData.trackName || "Unknown Track"}
                             </div>
                             {/* Line 3: Filename / Path */}
-                            <div className="text-[9px] text-zinc-400 font-mono truncate max-w-[280px] mt-0.5" title={setup.relativePath || setup.fileName}>
+                            <div className="text-[10px] text-zinc-400 font-mono truncate max-w-[280px] mt-0.5" title={setup.relativePath || setup.fileName}>
                               File: {setup.relativePath || setup.fileName}
                             </div>
                             
                             <div className="flex gap-1.5 mt-1.5 flex-wrap">
                               {hasTrackUnknown && (
-                                <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold">
+                                <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">
                                   ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Circuit Unspecified
                                 </span>
                               )}
                               {hasCarUnknown && (
-                                <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold">
+                                <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">
                                   ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Car Unspecified
                                 </span>
                               )}
                               {!hasTrackUnknown && !hasCarUnknown && (
-                                <span className="bg-red-50 border border-red-200 text-red-655 text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
+                                <span className="bg-red-50 border border-red-200 text-red-655 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">
                                   ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ Identified
                                 </span>
                               )}
@@ -2120,7 +2120,7 @@ export default function App() {
                         {/* Edit Form Fields */}
                         <div className="grid grid-cols-1 gap-2 bg-zinc-50 p-2.5 rounded border border-zinc-200 text-xs">
                           <div>
-                            <label className="text-zinc-500 text-[9px] font-mono block uppercase">Friendly Setup Name</label>
+                            <label className="text-zinc-500 text-[10px] font-mono block uppercase">Friendly Setup Name</label>
                             <input
                               type="text"
                               value={setup.customName}
@@ -2128,14 +2128,14 @@ export default function App() {
                                 const val = e.target.value;
                                 setPendingSetups(prev => prev.map(item => item.id === setup.id ? { ...item, customName: val } : item));
                               }}
-                              className="bg-white border border-zinc-350 text-[11px] p-1.5 mt-0.5 rounded text-zinc-900 focus:outline-none focus:border-red-600 w-full"
+                              className="bg-white border border-zinc-350 text-xs p-1.5 mt-0.5 rounded text-zinc-900 focus:outline-none focus:border-red-600 w-full"
                               placeholder="Setup Name"
                             />
                           </div>
 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="text-zinc-500 text-[9px] font-mono block uppercase">Car Model</label>
+                              <label className="text-zinc-500 text-[10px] font-mono block uppercase">Car Model</label>
                               <select
                                 value={setup.carKey}
                                 onChange={(e) => {
@@ -2152,7 +2152,7 @@ export default function App() {
                             </div>
 
                             <div>
-                              <label className="text-zinc-500 text-[9px] font-mono block uppercase">Track / Circuit</label>
+                              <label className="text-zinc-500 text-[10px] font-mono block uppercase">Track / Circuit</label>
                               <select
                                 value={setup.trackKey}
                                 onChange={(e) => {
@@ -2170,7 +2170,7 @@ export default function App() {
                           </div>
 
                           <div>
-                            <label className="text-zinc-500 text-[9px] font-mono block uppercase">Individual Notes</label>
+                            <label className="text-zinc-500 text-[10px] font-mono block uppercase">Individual Notes</label>
                             <input
                               type="text"
                               value={setup.notes}
@@ -2262,12 +2262,12 @@ export default function App() {
                             Circuit: {ACC_TRACKS[setup.track] || setup.track || "Unknown Track"}
                           </div>
                           {/* Line 3: Filename / Name */}
-                          <div className={`text-[9px] font-mono truncate max-w-[280px] mt-0.5 ${isActive ? "text-zinc-500" : "text-zinc-400"}`}>
+                          <div className={`text-[10px] font-mono truncate max-w-[280px] mt-0.5 ${isActive ? "text-zinc-500" : "text-zinc-400"}`}>
                             Setup: {setup.name}
                           </div>
                           {(setup.notes?.includes('[Adapted from') || setup.versionNote?.includes('[Adapted from')) && (
                             <div className="mt-1 flex">
-                              <span className="font-mono text-[8px] uppercase tracking-wider text-amber-650 bg-amber-100/60 font-black px-1.5 py-0.5 rounded border border-amber-250/30">
+                              <span className="font-mono text-[10px] uppercase tracking-wider text-amber-650 bg-amber-100/60 font-black px-1.5 py-0.5 rounded border border-amber-250/30">
                                 Adapted
                               </span>
                             </div>
@@ -2318,15 +2318,15 @@ export default function App() {
 
                 {githubStatus === "error" && githubError && (
                   <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3.5 rounded-lg font-mono font-medium shadow-xs">
-                    <div className="font-bold uppercase tracking-wider text-[9px] text-red-800 mb-1">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Community Sync Failed</div>
+                    <div className="font-bold uppercase tracking-wider text-[10px] text-red-800 mb-1">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Community Sync Failed</div>
                     {githubError}
                   </div>
                 )}
 
                 {/* Scanned Setup Files list */}
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 border-b border-zinc-200 pb-2">
-                    <span className="flex items-center gap-1.5 font-bold uppercase text-[9px] text-zinc-600 tracking-wider">
+                  <div className="flex items-center justify-between text-xs font-mono text-zinc-400 border-b border-zinc-200 pb-2">
+                    <span className="flex items-center gap-1.5 font-bold uppercase text-[10px] text-zinc-600 tracking-wider">
                       ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Remote Community Search Results
                       {githubStatus === "connected" && (
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Synchronized Live" />
@@ -2338,7 +2338,7 @@ export default function App() {
                   {githubTree.length === 0 && githubStatus !== "loading" ? (
                     <div className="p-6 text-center text-zinc-500 border border-dashed border-zinc-200 rounded-lg bg-zinc-50/50">
                       <Terminal className="w-6 h-6 mx-auto mb-2 opacity-35 text-red-650 animate-pulse" />
-                      <p className="text-[11px] leading-relaxed max-w-[240px] mx-auto font-medium text-zinc-600">
+                      <p className="text-xs leading-relaxed max-w-[240px] mx-auto font-medium text-zinc-600">
                         Select this tab to automatically sync ACC setups across all leading racing registries!
                       </p>
                     </div>
@@ -2359,13 +2359,13 @@ export default function App() {
                             <div className="min-w-0 flex-1">
                               {/* 1. Header Line: Car Name parsed or from Path & Rating Display */}
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-bold text-zinc-900 text-[11px] truncate group-hover:text-red-655 tracking-tight">
+                                <span className="font-bold text-zinc-900 text-xs truncate group-hover:text-red-655 tracking-tight">
                                   {ACC_CARS[item.carKey] || (item.carKey !== "unknown" ? item.carKey : "Unsorted Car")}
                                 </span>
                                 
                                 {hasGrade && (
                                   <span
-                                    className="font-mono text-[8px] sm:text-[9px] px-1.5 py-0.2 rounded bg-zinc-950 font-bold flex items-center gap-1 text-amber-500 shrink-0"
+                                    className="font-mono text-[10px] sm:text-[10px] px-1.5 py-0.2 rounded bg-zinc-950 font-bold flex items-center gap-1 text-amber-500 shrink-0"
                                     title={item.meta.gradeLabel}
                                   >
                                     {item.meta.grade === 3 && "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â [LGE]"}
@@ -2376,7 +2376,7 @@ export default function App() {
                                 )}
 
                                 {item.repo && (
-                                  <span className={`font-mono text-[8.5px] px-1 rounded font-bold shrink-0 ${
+                                  <span className={`font-mono text-[10px] px-1 rounded font-bold shrink-0 ${
                                     item.repo.toLowerCase().includes("temetias") 
                                       ? "bg-emerald-950/40 text-emerald-400 border border-emerald-900/35" 
                                       : item.repo.toLowerCase().includes("lon3035") 
@@ -2394,7 +2394,7 @@ export default function App() {
                               </div>
 
                               {/* 3. Filename & Metadata badging */}
-                              <div className="flex items-center gap-1 mx-0 flex-wrap mt-1 text-[9px]">
+                              <div className="flex items-center gap-1 mx-0 flex-wrap mt-1 text-[10px]">
                                 {item.meta.patch && (
                                   <span className="bg-zinc-850 text-zinc-400 font-mono px-1 rounded">
                                     v{item.meta.patch}
@@ -2428,7 +2428,7 @@ export default function App() {
                               <button
                                 disabled={!!isImportingFromGithub}
                                 onClick={() => handleImportGithubSetup(item.path, true, item.repo, item.branch)}
-                                className="px-2 py-1 rounded bg-zinc-850 hover:bg-zinc-800 font-mono text-[9px] font-bold text-zinc-350 hover:text-white transition-all cursor-pointer flex items-center gap-1 disabled:opacity-40"
+                                className="px-2 py-1 rounded bg-zinc-850 hover:bg-zinc-800 font-mono text-[10px] font-bold text-zinc-350 hover:text-white transition-all cursor-pointer flex items-center gap-1 disabled:opacity-40"
                               >
                                 {isThisImporting ? (
                                   <RefreshCw className="w-2.5 h-2.5 animate-spin" />
@@ -2442,7 +2442,7 @@ export default function App() {
                               <button
                                 disabled={!!isImportingFromGithub}
                                 onClick={() => handleImportGithubSetup(item.path, false, item.repo, item.branch)}
-                                className="px-2 py-1 rounded bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-950/40 font-mono text-[9px] font-bold text-emerald-400 hover:text-emerald-300 transition-all cursor-pointer flex items-center gap-1 disabled:opacity-40"
+                                className="px-2 py-1 rounded bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-950/40 font-mono text-[10px] font-bold text-emerald-400 hover:text-emerald-300 transition-all cursor-pointer flex items-center gap-1 disabled:opacity-40"
                               >
                                 {isThisImporting ? (
                                   <RefreshCw className="w-2.5 h-2.5 animate-spin" />
@@ -2519,7 +2519,7 @@ export default function App() {
                   <button
                     id="btn-save-workbook"
                     onClick={handleSaveCustomGuide}
-                    className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-mono text-[11px] py-2 rounded font-bold cursor-pointer transition-colors"
+                    className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-mono text-xs py-2 rounded font-bold cursor-pointer transition-colors"
                   >
                     Commit Workbook
                   </button>
@@ -2529,7 +2529,7 @@ export default function App() {
                         setCustomGuideText("");
                         dbSaveGuide("", user?.uid || "guest");
                       }}
-                      className="bg-red-950/25 hover:bg-red-950/60 border border-red-900/40 text-red-300 font-mono text-[11px] px-3 py-2 rounded transition-colors"
+                      className="bg-red-950/25 hover:bg-red-950/60 border border-red-900/40 text-red-300 font-mono text-xs px-3 py-2 rounded transition-colors"
                     >
                       Reset
                     </button>
@@ -2559,7 +2559,7 @@ export default function App() {
             </button>
             {activeSetup && (
               <div className="flex-1 min-w-0 text-right">
-                <p className="text-[11px] font-mono text-zinc-400 truncate">
+                <p className="text-xs font-mono text-zinc-400 truncate">
                   {ACC_CARS[activeSetup.car] || activeSetup.car} · {ACC_TRACKS[activeSetup.track] || activeSetup.track}
                 </p>
               </div>
@@ -2588,7 +2588,7 @@ export default function App() {
                 <h2 className="text-xl md:text-2xl font-black text-zinc-950 tracking-tight leading-snug break-words">
                   {activeSetup ? activeSetup.name : "Select an ACC Setup to inspect"}
                 </h2>
-                <div className="text-[11.5px] text-zinc-650 font-mono font-semibold flex items-center flex-wrap gap-x-2.5 gap-y-1">
+                <div className="text-xs text-zinc-650 font-mono font-semibold flex items-center flex-wrap gap-x-2.5 gap-y-1">
                   {activeSetup ? (
                     <>
                       <span className="text-zinc-500">Car: <strong className="text-zinc-900 font-extrabold">{ACC_CARS[activeSetup.car] || activeSetup.car}</strong></span>
@@ -2606,7 +2606,7 @@ export default function App() {
                   <div className="flex items-center gap-2 bg-white border border-zinc-250 px-3 py-1.5 rounded-lg shadow-3xs hover:border-zinc-350 transition-colors w-full sm:w-auto">
                     <span className="text-[10px] font-mono text-zinc-500 font-extrabold uppercase shrink-0">REF VEHICLE:</span>
                     <select
-                      className="bg-transparent border-none text-zinc-905 font-mono font-bold text-[11px] cursor-pointer focus:ring-0 outline-none p-0 pr-6 w-full shadow-none"
+                      className="bg-transparent border-none text-zinc-905 font-mono font-bold text-xs cursor-pointer focus:ring-0 outline-none p-0 pr-6 w-full shadow-none"
                       value={activeSetup.car}
                       onChange={(e) => handleSelectReferenceCar(e.target.value)}
                     >
@@ -2631,7 +2631,7 @@ export default function App() {
                           setTunedRawData(null);
                         }
                       }}
-                      className={`flex items-center justify-center gap-1.5 px-4 py-2 sm:px-3.5 sm:py-2 rounded-lg border text-[11px] font-mono font-black shadow-3xs transition-all cursor-pointer h-10 w-full sm:w-auto ${
+                      className={`flex items-center justify-center gap-1.5 px-4 py-2 sm:px-3.5 sm:py-2 rounded-lg border text-xs font-mono font-black shadow-3xs transition-all cursor-pointer h-10 w-full sm:w-auto ${
                         isTuneMode 
                           ? "bg-amber-600 border-amber-700 text-white hover:bg-amber-700" 
                           : "bg-white border-zinc-250 text-amber-700 hover:border-amber-300 hover:bg-amber-50/20"
@@ -2644,7 +2644,7 @@ export default function App() {
                   <button
                     id="active-setup-download-original"
                     onClick={() => handleDownloadOriginalJson(activeSetup)}
-                    className="flex items-center justify-center gap-1.5 bg-zinc-50 text-zinc-700 hover:text-red-655 px-4 py-2 sm:px-3.5 sm:py-2 rounded-lg border border-zinc-250 hover:border-red-350 text-[11px] font-mono font-black shadow-3xs transition-all cursor-pointer h-10 w-full sm:w-auto"
+                    className="flex items-center justify-center gap-1.5 bg-zinc-50 text-zinc-700 hover:text-red-655 px-4 py-2 sm:px-3.5 sm:py-2 rounded-lg border border-zinc-250 hover:border-red-350 text-xs font-mono font-black shadow-3xs transition-all cursor-pointer h-10 w-full sm:w-auto"
                   >
                     <Download className="w-3.5 h-3.5 mr-0.5" />
                     Extract Setup .json
@@ -2701,7 +2701,7 @@ export default function App() {
                   <div className="flex flex-wrap gap-4 items-center">
                     {/* Aggregate rating */}
                     <div className="flex flex-col">
-                      <span className="text-zinc-500 font-semibold font-mono uppercase tracking-wider text-[9px] mb-1 leading-none font-bold">Community Rating</span>
+                      <span className="text-zinc-500 font-semibold font-mono uppercase tracking-wider text-[10px] mb-1 leading-none font-bold">Community Rating</span>
                       {activeSetupRatings.length > 0 ? (
                         <div className="flex items-center gap-2">
                           <div className="flex items-center text-amber-500">
@@ -2717,17 +2717,17 @@ export default function App() {
                           </div>
                           <strong className="text-zinc-[850] font-extrabold text-sm font-mono text-zinc-900">
                             {(activeSetupRatings.reduce((acc, r) => acc + r.rating, 0) / activeSetupRatings.length).toFixed(1)} 
-                            <span className="text-zinc-550 font-medium text-[11px] font-sans"> ({activeSetupRatings.length} reviews)</span>
+                            <span className="text-zinc-550 font-medium text-xs font-sans"> ({activeSetupRatings.length} reviews)</span>
                           </strong>
                         </div>
                       ) : (
-                        <span className="text-zinc-500 font-semibold italic text-[11px] block mt-0.5">Unrated</span>
+                        <span className="text-zinc-500 font-semibold italic text-xs block mt-0.5">Unrated</span>
                       )}
                     </div>
                     
                     {/* Computed Active Tags */}
                     <div className="flex flex-col">
-                      <span className="text-zinc-500 font-semibold font-mono uppercase tracking-wider text-[9px] mb-1 leading-none font-bold">Active Handling Tags</span>
+                      <span className="text-zinc-500 font-semibold font-mono uppercase tracking-wider text-[10px] mb-1 leading-none font-bold">Active Handling Tags</span>
                       <div className="flex flex-wrap gap-1 mt-0.5 min-h-[22px]">
                         {(() => {
                           const tagCounts: { [key: string]: number } = {};
@@ -2741,13 +2741,13 @@ export default function App() {
                           
                           const uniqueTags = Object.keys(tagCounts);
                           if (uniqueTags.length === 0) {
-                            return <span className="text-zinc-400 italic text-[11px] mt-0.5 block font-medium">No community tags submitted yet</span>;
+                            return <span className="text-zinc-400 italic text-xs mt-0.5 block font-medium">No community tags submitted yet</span>;
                           }
                           
                           return uniqueTags.map((tag) => (
                             <span key={tag} className="bg-zinc-100 text-zinc-805 px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase flex items-center gap-1 border border-zinc-200">
                               {tag}
-                              <strong className="text-red-700 bg-zinc-200/80 px-1 rounded-sm text-[9px] font-black">{tagCounts[tag]}</strong>
+                              <strong className="text-red-700 bg-zinc-200/80 px-1 rounded-sm text-[10px] font-black">{tagCounts[tag]}</strong>
                             </span>
                           ));
                         })()}
@@ -2760,7 +2760,7 @@ export default function App() {
                     <div className="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-zinc-50 border border-zinc-250 p-2 rounded-md shadow-3xs">
                       {/* Star Picker */}
                       <div className="flex items-center gap-1.5 shrink-0 px-1">
-                        <span className="text-zinc-505 font-extrabold font-mono uppercase text-[9px] tracking-wider block shrink-0">Your Assessment:</span>
+                        <span className="text-zinc-505 font-extrabold font-mono uppercase text-[10px] tracking-wider block shrink-0">Your Assessment:</span>
                         <div className="flex items-center gap-0.5">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <button
@@ -2788,7 +2788,7 @@ export default function App() {
                                   setSelectedReviewTags([...selectedReviewTags, tag]);
                                 }
                               }}
-                              className={`px-1.5 py-0.5 rounded text-[9.5px] font-mono font-bold uppercase transition-all cursor-pointer ${
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
                                 isSelected ? "bg-red-650 text-white" : "bg-white border border-zinc-250 hover:bg-zinc-100 text-zinc-700 font-semibold"
                               }`}
                             >
@@ -2813,7 +2813,7 @@ export default function App() {
                       </button>
                     </div>
                   ) : (
-                    <div className="text-zinc-455 font-bold font-mono text-[9px] uppercase border border-dashed border-zinc-250 p-2 rounded shrink-0">
+                    <div className="text-zinc-455 font-bold font-mono text-[10px] uppercase border border-dashed border-zinc-250 p-2 rounded shrink-0">
                       Sign in to rate or tag this setup
                     </div>
                   )}
@@ -2897,7 +2897,7 @@ export default function App() {
                           </div>
                           <div>
                             <h4 className="text-xs font-mono font-black text-zinc-900 uppercase tracking-wider">Tyre Operating Window Upgraded</h4>
-                            <p className="text-[11px] text-zinc-600 mt-0.5 font-medium">
+                            <p className="text-xs text-zinc-600 mt-0.5 font-medium">
                               Optimal pressure targets has been adjusted to <strong className="text-emerald-700 font-extrabold">26.5 - 27.5 PSI</strong>. Target Racing Hot: <strong className="text-zinc-900 font-extrabold">27.0 PSI</strong>.
                             </p>
                           </div>
@@ -2913,7 +2913,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">FRONT TYRES & ALIGNMENT (LF/RF)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">PRESSURE & CAR OUTLINES</span>
+                            <span className="text-[10px] text-zinc-400 font-mono font-bold">PRESSURE & CAR OUTLINES</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">
@@ -3129,7 +3129,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">REAR TYRES & ALIGNMENT (LR/RR)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">PRESSURE & CAR OUTLINES</span>
+                            <span className="text-[10px] text-zinc-400 font-mono font-bold">PRESSURE & CAR OUTLINES</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">
@@ -3327,7 +3327,7 @@ export default function App() {
                                 Transitional Sunset & Night Calculator
                               </h3>
                             </div>
-                            <span className="text-[9px] font-mono bg-zinc-50 px-2 py-0.5 rounded text-zinc-600 border border-zinc-200 font-bold">
+                            <span className="text-[10px] font-mono bg-zinc-50 px-2 py-0.5 rounded text-zinc-600 border border-zinc-200 font-bold">
                               THERMAL BEHAVIOR ENGINE v1.9
                             </span>
                           </div>
@@ -3336,7 +3336,7 @@ export default function App() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {/* Column 1: Time of Day Selector */}
                             <div>
-                              <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 font-bold">
+                              <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 font-bold">
                                 Race Starting Time Of Day
                               </label>
                               <select
@@ -3361,7 +3361,7 @@ export default function App() {
 
                             {/* Column 2: Race Duration */}
                             <div>
-                              <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 font-bold">
+                              <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 font-bold">
                                 Race Duration (Hours and Minutes)
                               </label>
                               <div className="grid grid-cols-2 gap-2">
@@ -3403,7 +3403,7 @@ export default function App() {
 
                           {/* Race Start Temperatures Section Header */}
                           <div className="pt-2.5 border-t border-zinc-200">
-                            <span className="text-[9.5px] font-mono font-extrabold text-zinc-550 uppercase tracking-wider block mb-2">
+                            <span className="text-[10px] font-mono font-extrabold text-zinc-550 uppercase tracking-wider block mb-2">
                               Race Start Temperatures
                             </span>
                           </div>
@@ -3411,7 +3411,7 @@ export default function App() {
                           {/* Interactive Ambient/Track Temp Modifiers */}
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 flex items-center gap-1 font-bold whitespace-nowrap">
+                              <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 flex items-center gap-1 font-bold whitespace-nowrap">
                                 <Thermometer className="w-3 h-3 text-red-600" />
                                 Ambient Temp
                               </label>
@@ -3445,7 +3445,7 @@ export default function App() {
                             </div>
 
                             <div>
-                              <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 flex items-center gap-1 font-bold whitespace-nowrap">
+                              <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block mb-1.5 flex items-center gap-1 font-bold whitespace-nowrap">
                                 <Thermometer className="w-3 h-3 text-blue-600" />
                                 Track Temp
                               </label>
@@ -3482,8 +3482,8 @@ export default function App() {
                           {/* Calculator Results Board */}
                           <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3.5 space-y-3.5">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-zinc-200 pb-2">
-                              <span className="text-[9.5px] font-mono text-zinc-650 uppercase font-bold">Session Thermal Evolution</span>
-                              <span className="text-[10.5px] font-mono text-amber-800 font-extrabold flex items-center gap-1">
+                              <span className="text-[10px] font-mono text-zinc-650 uppercase font-bold">Session Thermal Evolution</span>
+                              <span className="text-xs font-mono text-amber-800 font-extrabold flex items-center gap-1">
                                 {parseInt(transitionTimeStart.split(":")[0]) >= 16 && parseInt(transitionTimeStart.split(":")[0]) < 21 ? (
                                   <>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ {coolingData.coolingType}</>
                                 ) : parseInt(transitionTimeStart.split(":")[0]) >= 21 || parseInt(transitionTimeStart.split(":")[0]) < 5 ? (
@@ -3500,13 +3500,13 @@ export default function App() {
                                 const isLoss = val >= 0;
                                 return (
                                   <div className="bg-white p-2.5 rounded border border-zinc-200 shadow-xs">
-                                    <span className="text-[8.5px] font-mono text-zinc-550 uppercase block tracking-wider font-bold">
+                                    <span className="text-[10px] font-mono text-zinc-550 uppercase block tracking-wider font-bold">
                                       {isLoss ? "Est. Ambient Drop" : "Est. Ambient Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-emerald-700" : "text-amber-600"}`}>
                                       {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
                                     </span>
-                                    <span className="text-[8.5px] font-mono text-zinc-500 block mt-0.5">
+                                    <span className="text-[10px] font-mono text-zinc-500 block mt-0.5">
                                       Finish: {(transitionAmbientTemp - val).toFixed(1)}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
                                     </span>
                                   </div>
@@ -3518,13 +3518,13 @@ export default function App() {
                                 const isLoss = val >= 0;
                                 return (
                                   <div className="bg-white p-2.5 rounded border border-zinc-200 shadow-xs">
-                                    <span className="text-[8.5px] font-mono text-zinc-550 uppercase block tracking-wider font-bold">
+                                    <span className="text-[10px] font-mono text-zinc-550 uppercase block tracking-wider font-bold">
                                       {isLoss ? "Est. Track Drop" : "Est. Track Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-blue-700" : "text-orange-600"}`}>
                                       {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
                                     </span>
-                                    <span className="text-[8.5px] font-mono text-zinc-500 block mt-0.5">
+                                    <span className="text-[10px] font-mono text-zinc-500 block mt-0.5">
                                       Finish: {(transitionTrackTemp - val).toFixed(1)}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
                                     </span>
                                   </div>
@@ -3557,7 +3557,7 @@ export default function App() {
                                     </h4>
                                   </div>
                                   <p className="text-[10px] text-zinc-805 leading-normal font-mono">
-                                    In {transitionDuration}m races under {trendTerm}-trending track conditions, {thermalEffect}. To hit the optimal <strong className="text-emerald-700 font-extrabold text-[10.5px]">26.5 - 27.5 PSI</strong> sweet spot, you must <strong className={`${actionColorClass} font-black underline`}>{actionWord} cold inflations by {compensationSign}{absCompValue.toFixed(1)} PSI</strong> (or <strong className="text-zinc-900 font-black">{compensationSign}{absClicks} garage clicks</strong>) per tyre!
+                                    In {transitionDuration}m races under {trendTerm}-trending track conditions, {thermalEffect}. To hit the optimal <strong className="text-emerald-700 font-extrabold text-xs">26.5 - 27.5 PSI</strong> sweet spot, you must <strong className={`${actionColorClass} font-black underline`}>{actionWord} cold inflations by {compensationSign}{absCompValue.toFixed(1)} PSI</strong> (or <strong className="text-zinc-900 font-black">{compensationSign}{absClicks} garage clicks</strong>) per tyre!
                                   </p>
                                 </div>
                               );
@@ -3566,37 +3566,37 @@ export default function App() {
 
                           {/* Comparative Wheel Table */}
                           <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3">
-                            <div className="text-[9.5px] font-mono text-zinc-600 font-bold uppercase mb-2 px-1">
+                            <div className="text-[10px] font-mono text-zinc-600 font-bold uppercase mb-2 px-1">
                               Starting Cold Garage Card Pressures (Transitional Adjusted)
                             </div>
                             
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center font-mono text-xs sm:text-[10px]">
                               <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
-                                <div className="text-[8px] text-zinc-500 font-black uppercase">LF Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[0].toFixed(1)}</span>
-                                <div className="text-emerald-700 font-black mt-0.5 text-[11px]">Set: {(parsedActiveSetup.tyrePressures[0] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-red-655 text-[8.5px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
+                                <div className="text-[10px] text-zinc-500 font-black uppercase">LF Tyre</div>
+                                <span className="text-zinc-400 mt-1 block text-[10px] line-through">Def: {parsedActiveSetup.tyrePressures[0].toFixed(1)}</span>
+                                <div className="text-emerald-700 font-black mt-0.5 text-xs">Set: {(parsedActiveSetup.tyrePressures[0] + coolingData.compensationPSI).toFixed(1)}</div>
+                                <div className="text-red-655 text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
                               </div>
 
                               <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
-                                <div className="text-[8px] text-zinc-500 font-black uppercase">RF Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[1].toFixed(1)}</span>
-                                <div className="text-emerald-700 font-black mt-0.5 text-[11px]">Set: {(parsedActiveSetup.tyrePressures[1] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-red-655 text-[8.5px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
+                                <div className="text-[10px] text-zinc-500 font-black uppercase">RF Tyre</div>
+                                <span className="text-zinc-400 mt-1 block text-[10px] line-through">Def: {parsedActiveSetup.tyrePressures[1].toFixed(1)}</span>
+                                <div className="text-emerald-700 font-black mt-0.5 text-xs">Set: {(parsedActiveSetup.tyrePressures[1] + coolingData.compensationPSI).toFixed(1)}</div>
+                                <div className="text-red-655 text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
                               </div>
 
                               <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
-                                <div className="text-[8px] text-zinc-500 font-black uppercase">LR Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[2].toFixed(1)}</span>
-                                <div className="text-emerald-700 font-black mt-0.5 text-[11px]">Set: {(parsedActiveSetup.tyrePressures[2] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-red-655 text-[8.5px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
+                                <div className="text-[10px] text-zinc-500 font-black uppercase">LR Tyre</div>
+                                <span className="text-zinc-400 mt-1 block text-[10px] line-through">Def: {parsedActiveSetup.tyrePressures[2].toFixed(1)}</span>
+                                <div className="text-emerald-700 font-black mt-0.5 text-xs">Set: {(parsedActiveSetup.tyrePressures[2] + coolingData.compensationPSI).toFixed(1)}</div>
+                                <div className="text-red-655 text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
                               </div>
 
                               <div className="bg-white p-2 rounded border border-zinc-200 shadow-xs">
-                                <div className="text-[8px] text-zinc-500 font-black uppercase">RR Tyre</div>
-                                <span className="text-zinc-400 mt-1 block text-[9.5px] line-through">Def: {parsedActiveSetup.tyrePressures[3].toFixed(1)}</span>
-                                <div className="text-emerald-700 font-black mt-0.5 text-[11px]">Set: {(parsedActiveSetup.tyrePressures[3] + coolingData.compensationPSI).toFixed(1)}</div>
-                                <div className="text-red-655 text-[8.5px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
+                                <div className="text-[10px] text-zinc-500 font-black uppercase">RR Tyre</div>
+                                <span className="text-zinc-400 mt-1 block text-[10px] line-through">Def: {parsedActiveSetup.tyrePressures[3].toFixed(1)}</span>
+                                <div className="text-emerald-700 font-black mt-0.5 text-xs">Set: {(parsedActiveSetup.tyrePressures[3] + coolingData.compensationPSI).toFixed(1)}</div>
+                                <div className="text-red-655 text-[10px] font-bold mt-0.5">+{Math.round(coolingData.compensationPSI * 10)} Clicks</div>
                               </div>
                             </div>
                           </div>
@@ -3775,7 +3775,7 @@ export default function App() {
                               </button>
                             )}
                           </div>
-                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Anti-Roll Bar Steps</span>
+                          <span className="text-[10px] text-zinc-500 font-mono block mt-0.5 font-medium">Anti-Roll Bar Steps</span>
                         </div>
                         <div className="border-r border-zinc-200 last:border-0 px-2 flex flex-col items-center justify-center">
                           <span className="text-zinc-500 font-mono text-[10px] uppercase block tracking-wider font-bold">Brake Power</span>
@@ -3798,7 +3798,7 @@ export default function App() {
                               </button>
                             )}
                           </div>
-                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Typically 100% but can try above figure if running no ABS</span>
+                          <span className="text-[10px] text-zinc-500 font-mono block mt-0.5 font-medium">Typically 100% but can try above figure if running no ABS</span>
                         </div>
                         <div className="border-r border-zinc-200 last:border-0 px-2 flex flex-col items-center justify-center">
                           <span className="text-zinc-500 font-mono text-[10px] uppercase block tracking-wider font-bold">Brake Bias</span>
@@ -3821,7 +3821,7 @@ export default function App() {
                               </button>
                             )}
                           </div>
-                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Towards the front of the car</span>
+                          <span className="text-[10px] text-zinc-500 font-mono block mt-0.5 font-medium">Towards the front of the car</span>
                         </div>
                         <div className="px-2 flex flex-col items-center justify-center">
                           <span className="text-zinc-500 font-mono text-[10px] uppercase block tracking-wider font-bold">Steer Ratio</span>
@@ -3844,8 +3844,8 @@ export default function App() {
                               </button>
                             )}
                           </div>
-                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">Low = Faster & Sharper</span>
-                          <span className="text-[9px] text-zinc-500 font-mono block mt-0.5 font-medium">High = Smoother & Slower</span>
+                          <span className="text-[10px] text-zinc-500 font-mono block mt-0.5 font-medium">Low = Faster & Sharper</span>
+                          <span className="text-[10px] text-zinc-500 font-mono block mt-0.5 font-medium">High = Smoother & Slower</span>
                         </div>
                       </div>
 
@@ -3854,7 +3854,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">FRONT WHEELS (LF/RF)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">FRONT AXLE SPRING RATES</span>
+                            <span className="text-[10px] text-zinc-400 font-mono font-bold">FRONT AXLE SPRING RATES</span>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -4006,7 +4006,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">REAR WHEELS (LR/RR)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">REAR AXLE SPRING RATES</span>
+                            <span className="text-[10px] text-zinc-400 font-mono font-bold">REAR AXLE SPRING RATES</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -4345,7 +4345,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">FRONT DAMPERS (LF/RF)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">BUMP / REBOUND</span>
+                            <span className="text-[10px] text-zinc-400 font-mono font-bold">BUMP / REBOUND</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">
@@ -4538,7 +4538,7 @@ export default function App() {
                         <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
                           <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">REAR DAMPERS (LR/RR)</span>
-                            <span className="text-[9px] text-zinc-400 font-mono font-bold">BUMP / REBOUND</span>
+                            <span className="text-[10px] text-zinc-400 font-mono font-bold">BUMP / REBOUND</span>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">
@@ -4961,9 +4961,9 @@ export default function App() {
     <label className="block text-zinc-650 text-xs font-mono uppercase font-black tracking-wider">
       Pinned Series Cars
     </label>
-    <span className="text-[9px] text-zinc-450 font-semibold font-mono font-bold">OPTIONAL FILTER</span>
+    <span className="text-[10px] text-zinc-450 font-semibold font-mono font-bold">OPTIONAL FILTER</span>
   </div>
-  <p className="text-[11px] text-zinc-500 leading-tight mb-3 font-medium">
+  <p className="text-xs text-zinc-500 leading-tight mb-3 font-medium">
     Select your current racing series cars to automatically pin them. Checking the "Series Only" toggle in the Main Registry will filter the setup list only to these choices!
   </p>
 
@@ -5031,7 +5031,7 @@ export default function App() {
                       }}
                       className="accent-red-650 w-3.5 h-3.5 cursor-pointer shrink-0"
                     />
-                    <span className="truncate pr-1 text-[11px] font-sans font-semibold" title={carName}>
+                    <span className="truncate pr-1 text-xs font-sans font-semibold" title={carName}>
                       {carName}
                     </span>
                   </label>

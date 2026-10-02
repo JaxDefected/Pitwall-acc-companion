@@ -265,15 +265,15 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
         {activeSetup ? (
           <div className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 px-2 sm:px-3 py-1.5 rounded-full">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-[9px] sm:text-[10px] font-mono text-emerald-400 uppercase font-black tracking-widest max-w-[100px] sm:max-w-[150px] truncate">
+            <span className="text-[10px] font-mono text-emerald-400 uppercase font-black tracking-widest max-w-[100px] sm:max-w-[150px] truncate">
               {ACC_CARS[activeSetup.car]?.split(" ")[0] || activeSetup.car} — {ACC_TRACKS[activeSetup.track] || activeSetup.track}
             </span>
-            <span className="hidden sm:inline text-[9px] font-mono text-zinc-500 px-1 border border-zinc-800 rounded">SETUP LOADED</span>
+            <span className="hidden sm:inline text-[10px] font-mono text-zinc-500 px-1 border border-zinc-800 rounded">SETUP LOADED</span>
           </div>
         ) : (
           <div className="flex items-center gap-2 bg-amber-500/5 border border-amber-500/20 px-2 sm:px-3 py-1.5 rounded-full">
             <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-            <span className="text-[9px] sm:text-[10px] font-mono text-amber-400 uppercase font-black tracking-widest">No setup loaded</span>
+            <span className="text-[10px] font-mono text-amber-400 uppercase font-black tracking-widest">No setup loaded</span>
           </div>
         )}
       </div>
@@ -458,7 +458,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                 </h4>
                 <button
                   onClick={handleReset}
-                  className="text-[9px] font-mono text-zinc-500 hover:text-white uppercase tracking-widest flex items-center gap-1 cursor-pointer focus-visible:outline-none transition-colors"
+                  className="text-[10px] font-mono text-zinc-500 hover:text-white uppercase tracking-widest flex items-center gap-1 cursor-pointer focus-visible:outline-none transition-colors"
                 >
                   <RefreshCw className="w-2.5 h-2.5" />
                   New Query
@@ -475,7 +475,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
 
               {/* Technique Card */}
               <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl rounded-tl-none px-4 py-3 text-xs font-sans leading-relaxed shadow-md">
-                <p className="text-[9px] font-mono font-extrabold uppercase tracking-widest text-emerald-400 mb-2 flex items-center gap-1.5">
+                <p className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-emerald-400 mb-2 flex items-center gap-1.5">
                   <Wrench className="w-2.5 h-2.5" /> Technique First
                 </p>
                 <p className="text-zinc-200 font-medium leading-relaxed">{localResult.technique}</p>
@@ -484,7 +484,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
               {/* Mechanical Adjustments Card */}
               {localResult.mechanical.length > 0 && (
                 <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl rounded-tl-none px-4 py-3 text-xs font-sans leading-relaxed shadow-md">
-                  <p className="text-[9px] font-mono font-extrabold uppercase tracking-widest text-amber-400 mb-2 flex items-center gap-1.5">
+                  <p className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-amber-400 mb-2 flex items-center gap-1.5">
                     <AlertTriangle className="w-2.5 h-2.5" /> If Technique Is Already Clean — Mechanical Adjustments
                   </p>
                   <ol className="list-decimal pl-4 space-y-1.5">
@@ -504,7 +504,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
               )}
 
               {/* Footer disclaimer */}
-              <p className="text-[9px] font-mono text-zinc-600 text-center">
+              <p className="text-[10px] font-mono text-zinc-600 text-center">
                 Always adjust in small increments (1–2 clicks) and run 3 consistent laps before evaluating.
               </p>
             </div>
@@ -532,7 +532,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                 className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
               >
                 {/* Meta label */}
-                <div className={`flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-widest font-bold mb-1.5 ${msg.role === "user" ? "text-zinc-500" : "text-emerald-400"}`}>
+                <div className={`flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest font-bold mb-1.5 ${msg.role === "user" ? "text-zinc-500" : "text-emerald-400"}`}>
                   {msg.role === "user" ? (
                     <>
                       <span>Driver</span>
@@ -562,7 +562,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                 {/* Suggestion Chips on initial greeting */}
                 {idx === 0 && messages.length <= 1 && (
                   <div className="mt-4 flex flex-col gap-2 w-full animate-fade-in">
-                    <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 font-bold ml-1">
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 font-bold ml-1">
                       💡 Select a handling feedback prompt:
                     </span>
                     <div className="flex flex-wrap gap-2">
@@ -584,7 +584,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
             {/* Streaming Bubble */}
             {isStreaming && streamingContent && (
               <div className="flex flex-col items-start animate-pulse">
-                <div className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-widest font-bold text-emerald-400 mb-1.5">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest font-bold text-emerald-400 mb-1.5">
                   <Wrench className="w-2.5 h-2.5" />
                   <span>Engineer (Streaming)</span>
                 </div>
@@ -600,7 +600,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
             {/* Loading Indicator */}
             {isStreaming && !streamingContent && (
               <div className="flex flex-col items-start">
-                <div className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-widest font-bold text-emerald-400 mb-1.5">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest font-bold text-emerald-400 mb-1.5">
                   <Wrench className="w-2.5 h-2.5" />
                   <span>Engineer</span>
                 </div>
@@ -651,7 +651,7 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
               </button>
             </form>
 
-            <div className="flex justify-between items-center text-[9px] font-mono text-zinc-600 px-1">
+            <div className="flex justify-between items-center text-[10px] font-mono text-zinc-600 px-1">
               <span>Always adjust in small increments (1-2 clicks) and test for 3 laps.</span>
               <span>{input.length} / 1000</span>
             </div>

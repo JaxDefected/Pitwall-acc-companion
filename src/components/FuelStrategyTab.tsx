@@ -413,7 +413,7 @@ export default function FuelStrategyTab({
               <Wrench className="w-4 h-4 text-red-600 shrink-0" />
               ACC Pit & Stint Strategy Planner
             </h3>
-            <p className="text-[11px] text-zinc-650 mt-0.5 font-medium">
+            <p className="text-xs text-zinc-650 mt-0.5 font-medium">
               Optimize starting fuel weight loadouts, stint timing, and MFD presets for 45m - 2h endurance sessions.
             </p>
           </div>
@@ -434,7 +434,7 @@ export default function FuelStrategyTab({
             <div className="grid grid-cols-2 gap-3">
               {/* Fuel capacity */}
               <div>
-                <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block mb-1 font-bold">
+                <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-1 font-bold">
                   Max Tank Capacity
                 </label>
                 <div className="flex items-center gap-1 bg-white border border-zinc-200 rounded px-2.5 py-1 focus-within:border-red-250">
@@ -452,7 +452,7 @@ export default function FuelStrategyTab({
 
               {/* Strategy Preference */}
               <div>
-                <label className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block mb-1 font-bold">
+                <label className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-1 font-bold">
                   Stint Strategy Style
                 </label>
                 <select
@@ -494,7 +494,7 @@ export default function FuelStrategyTab({
 
             {/* Plan Pitstops Selection Tabs */}
             <div>
-              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block mb-1.5 font-bold">
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-1.5 font-bold">
                 Target Number of Pitstops
               </span>
               <div className="grid grid-cols-3 gap-1">
@@ -526,7 +526,7 @@ export default function FuelStrategyTab({
           {/* Visual Timeline and MFD Presets (Col Span 7) */}
           <div className="lg:col-span-7 space-y-4">
             {pitStrategy.alertMsg && (
-              <div className="bg-red-55 px-3.5 py-2.5 rounded-lg border border-red-200 text-red-750 text-[11px] font-mono font-bold flex items-center gap-2.5 shadow-sm">
+              <div className="bg-red-55 px-3.5 py-2.5 rounded-lg border border-red-200 text-red-750 text-xs font-mono font-bold flex items-center gap-2.5 shadow-sm">
                 <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
                 <span>{pitStrategy.alertMsg}</span>
               </div>
@@ -534,7 +534,7 @@ export default function FuelStrategyTab({
 
             {/* Visual Timeline */}
             <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3.5 space-y-2.5 shadow-xs">
-              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">Planned Session Timeline</span>
+              <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">Planned Session Timeline</span>
 
               <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
                 {pitStrategy.stints.map((stint, sIdx) => {
@@ -549,7 +549,7 @@ export default function FuelStrategyTab({
                             : "bg-emerald-50 border-emerald-200 text-emerald-850"
                         }`}
                       >
-                        <div className="flex items-center justify-between text-[8px] font-black tracking-widest uppercase">
+                        <div className="flex items-center justify-between text-[10px] font-black tracking-widest uppercase">
                           <span>Stint {stint.index}</span>
                           <span className={stint.isOverfilled ? "text-red-700" : "text-emerald-700"}>
                             {pct.toFixed(0)}% of race
@@ -588,11 +588,11 @@ export default function FuelStrategyTab({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Starting Settings Panel */}
               <div className="bg-zinc-50 p-3.5 rounded-lg border border-zinc-200 font-mono space-y-2 shadow-xs">
-                <div className="text-[9.5px] font-bold text-zinc-500 uppercase tracking-wider pb-1.5 border-b border-zinc-200 flex items-center justify-between">
+                <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider pb-1.5 border-b border-zinc-200 flex items-center justify-between">
                   <span>GARAGE FUEL SETUP</span>
-                  <span className="font-semibold text-emerald-700 text-[9px]">BEFORE GREEN LIGHT</span>
+                  <span className="font-semibold text-emerald-700 text-[10px]">BEFORE GREEN LIGHT</span>
                 </div>
-                <div className="text-[11px] text-zinc-600 space-y-1.5 font-bold">
+                <div className="text-xs text-zinc-600 space-y-1.5 font-bold">
                   <div className="flex justify-between">
                     <span>Starting Fuel:</span>
                     <strong className="text-emerald-700 font-black text-xs">
@@ -614,11 +614,11 @@ export default function FuelStrategyTab({
 
               {/* Multi-Functional Display Preset Profile */}
               <div className="bg-zinc-50 p-3.5 rounded-lg border border-zinc-200 font-mono space-y-2 shadow-xs">
-                <div className="text-[9.5px] font-bold text-zinc-500 uppercase tracking-wider pb-1.5 border-b border-zinc-200 flex items-center justify-between">
+                <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider pb-1.5 border-b border-zinc-200 flex items-center justify-between">
                   <span>MFD PITSTOP PRESETS</span>
-                  <span className="font-semibold text-red-600 text-[9px]">ACC IN-CAR PRESET</span>
+                  <span className="font-semibold text-red-600 text-[10px]">ACC IN-CAR PRESET</span>
                 </div>
-                <div className="text-[11px] text-zinc-600 space-y-1.5 font-bold">
+                <div className="text-xs text-zinc-600 space-y-1.5 font-bold">
                   <div className="flex justify-between">
                     <span>Refueling Strategy:</span>
                     {pitMandatoryFuel && pitNumberOfStops > 0 ? (
@@ -649,8 +649,8 @@ export default function FuelStrategyTab({
             <div className="bg-emerald-50 border border-emerald-200 rounded-md p-3.5 shadow-xs">
               <div className="flex items-start gap-2.5">
                 <Gauge className="text-emerald-755 w-4.5 h-4.5 shrink-0 mt-0.5 animate-pulse" />
-                <div className="text-[10.5px] font-mono leading-relaxed space-y-1 text-zinc-700">
-                  <h5 className="font-black text-emerald-805 uppercase tracking-widest text-[9.5px]">
+                <div className="text-xs font-mono leading-relaxed space-y-1 text-zinc-700">
+                  <h5 className="font-black text-emerald-805 uppercase tracking-widest text-[10px]">
                     ENDURANCE FUEL-WEIGHT PACE DIVIDEND
                   </h5>
                   <p className="font-medium">

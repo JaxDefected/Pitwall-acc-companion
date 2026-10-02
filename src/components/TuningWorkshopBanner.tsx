@@ -46,7 +46,7 @@ export default function TuningWorkshopBanner({
           </div>
           <div>
             <p className="text-xs font-black text-zinc-900 font-sans tracking-wider uppercase">Active Tuning Sandbox Modded</p>
-            <p className="text-[10.5px] text-zinc-600 leading-normal mt-1 font-medium max-w-xl">
+            <p className="text-xs text-zinc-600 leading-normal mt-1 font-medium max-w-xl">
               Parameters edited in Tyre pressures, Alignment, Electronics, Mechanical, or Dampers. Save variant to preserve changes.
             </p>
           </div>
@@ -59,14 +59,14 @@ export default function TuningWorkshopBanner({
               placeholder="Version note (e.g. Sunset cooling adjustment)"
               value={versionNote}
               onChange={(e) => setVersionNote(e.target.value)}
-              className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-2.5 rounded-lg text-[11px] placeholder-zinc-400 outline-none focus:border-amber-500 h-11"
+              className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-2.5 rounded-lg text-xs placeholder-zinc-400 outline-none focus:border-amber-500 h-11"
             />
           </div>
 
           <select
             value={targetTrack}
             onChange={(e) => setTargetTrack(e.target.value)}
-            className="bg-white border border-zinc-200 text-zinc-900 text-[11px] px-3 py-2 rounded-lg cursor-pointer font-sans focus:outline-none focus:border-amber-500 h-11 shrink-0 w-full sm:w-auto font-mono"
+            className="bg-white border border-zinc-200 text-zinc-900 text-xs px-3 py-2 rounded-lg cursor-pointer font-sans focus:outline-none focus:border-amber-500 h-11 shrink-0 w-full sm:w-auto font-mono"
           >
             {Object.entries(ACC_TRACKS).map(([key, name]) => (
               <option key={key} value={key}>
@@ -75,7 +75,7 @@ export default function TuningWorkshopBanner({
             ))}
           </select>
 
-          <label className="flex items-center justify-center sm:justify-start gap-2.5 text-[11px] text-zinc-700 bg-white/60 hover:bg-white border border-zinc-200 hover:border-zinc-300 px-3.5 py-2 rounded-lg cursor-pointer select-none font-bold shadow-3xs transition-all active:scale-[0.98] h-11 shrink-0 w-full sm:w-auto">
+          <label className="flex items-center justify-center sm:justify-start gap-2.5 text-xs text-zinc-700 bg-white/60 hover:bg-white border border-zinc-200 hover:border-zinc-300 px-3.5 py-2 rounded-lg cursor-pointer select-none font-bold shadow-3xs transition-all active:scale-[0.98] h-11 shrink-0 w-full sm:w-auto">
             <input
               type="checkbox"
               checked={isTeamWorkspace}
@@ -104,7 +104,7 @@ export default function TuningWorkshopBanner({
           <Wrench className="w-4 h-4" />
         </div>
         <div>
-          <h4 className="font-extrabold text-amber-600 uppercase tracking-wider text-[11px]">Active Tuning Workshop Mode</h4>
+          <h4 className="font-extrabold text-amber-600 uppercase tracking-wider text-xs">Active Tuning Workshop Mode</h4>
           <p className="text-[10px] text-zinc-650 mt-0.5 leading-tight">
             Modify values using +/- controls inside the Tyre pressures, Electronics, and Mechanical sections.
           </p>
@@ -118,7 +118,7 @@ export default function TuningWorkshopBanner({
             placeholder="Version note (e.g. Sunset cooling adjustment)"
             value={versionNote}
             onChange={(e) => setVersionNote(e.target.value)}
-            className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-1.5 rounded text-base md:text-[11.5px] min-h-[44px] md:min-h-0 placeholder-zinc-400 outline-none focus:border-amber-500"
+            className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-1.5 rounded text-base md:text-xs min-h-[44px] md:min-h-0 placeholder-zinc-400 outline-none focus:border-amber-500"
           />
         </div>
 
@@ -126,7 +126,7 @@ export default function TuningWorkshopBanner({
           <select
             value={targetTrack}
             onChange={(e) => setTargetTrack(e.target.value)}
-            className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-1.5 rounded text-base md:text-[11.5px] min-h-[44px] md:min-h-0 outline-none focus:border-amber-500 cursor-pointer font-sans"
+            className="w-full bg-white border border-zinc-250 text-zinc-900 px-3 py-1.5 rounded text-base md:text-xs min-h-[44px] md:min-h-0 outline-none focus:border-amber-500 cursor-pointer font-sans"
           >
             {Object.entries(ACC_TRACKS).map(([key, name]) => (
               <option key={key} value={key}>
@@ -136,7 +136,7 @@ export default function TuningWorkshopBanner({
           </select>
         </div>
 
-        <label className="flex items-center gap-1.5 text-[10.5px] text-zinc-650 cursor-pointer select-none font-bold">
+        <label className="flex items-center gap-1.5 text-xs text-zinc-650 cursor-pointer select-none font-bold">
           <input
             type="checkbox"
             checked={isTeamWorkspace}
@@ -150,14 +150,14 @@ export default function TuningWorkshopBanner({
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="bg-amber-600 hover:bg-amber-750 disabled:opacity-50 text-white font-extrabold px-3 py-1.5 rounded cursor-pointer transition-colors text-[10.5px] uppercase tracking-wider shadow-md active:scale-95 text-center"
+            className="bg-amber-600 hover:bg-amber-750 disabled:opacity-50 text-white font-extrabold px-3 py-1.5 rounded cursor-pointer transition-colors text-xs uppercase tracking-wider shadow-md active:scale-95 text-center"
           >
             {isSaving ? "Saving..." : "Save Variant"}
           </button>
           {onCancel && (
             <button
               onClick={onCancel}
-              className="bg-zinc-200 hover:bg-zinc-300 text-zinc-705 font-extrabold px-3 py-1.5 rounded cursor-pointer transition-colors text-[10.5px] active:scale-95 text-center"
+              className="bg-zinc-200 hover:bg-zinc-300 text-zinc-705 font-extrabold px-3 py-1.5 rounded cursor-pointer transition-colors text-xs active:scale-95 text-center"
             >
               Cancel
             </button>

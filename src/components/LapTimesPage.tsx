@@ -131,7 +131,7 @@ export default function LapTimesPage() {
           <h2 className="text-xs sm:text-sm md:text-md font-extrabold uppercase font-mono tracking-wider text-zinc-900">
             ACC LFM Lap Times Reference
           </h2>
-          <p className="text-zinc-600 text-[11.5px] sm:text-xs font-medium">
+          <p className="text-zinc-600 text-xs font-medium">
             Review expected race pace benchmarks and qualifying targets across GT2, GT3, and GT4 configurations
           </p>
         </div>
@@ -267,10 +267,10 @@ export default function LapTimesPage() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 text-white">
-                  <span className="px-2.5 py-1 bg-zinc-700/65 border border-zinc-650 rounded text-[9.5px] font-extrabold font-mono uppercase tracking-wider">
+                  <span className="px-2.5 py-1 bg-zinc-700/65 border border-zinc-650 rounded text-[10px] font-extrabold font-mono uppercase tracking-wider">
                     Engine: {carNote.engine_layout || "Standard"} Layout
                   </span>
-                  <span className={`px-2.5 py-1 rounded text-[9.5px] font-black font-mono uppercase tracking-wider border ${
+                  <span className={`px-2.5 py-1 rounded text-[10px] font-black font-mono uppercase tracking-wider border ${
                     carNote.difficulty.toLowerCase().includes("beginner") ? "bg-emerald-950/45 border-emerald-800 text-emerald-400" :
                     carNote.difficulty.toLowerCase().includes("advanced") ? "bg-red-950/45 border-red-800 text-red-400" :
                     "bg-amber-950/45 border-amber-800 text-amber-400"
@@ -301,7 +301,7 @@ export default function LapTimesPage() {
                     </h4>
                     <div className="flex flex-wrap gap-1.5">
                       {carNote.driving_style.map((style, i) => (
-                        <span key={i} className="px-2.5 py-1 bg-white border border-zinc-150 text-zinc-800 text-[10.5px] font-bold font-mono rounded shadow-5xs uppercase tracking-wide">
+                        <span key={i} className="px-2.5 py-1 bg-white border border-zinc-150 text-zinc-800 text-xs font-bold font-mono rounded shadow-5xs uppercase tracking-wide">
                           {style}
                         </span>
                       ))}
@@ -313,7 +313,7 @@ export default function LapTimesPage() {
                       <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                       Setup Sensitivity
                     </h4>
-                    <p className="text-[11.5px] text-zinc-650 leading-relaxed font-sans font-medium bg-white border border-zinc-150 p-3.5 rounded-lg shadow-5xs whitespace-normal break-words">
+                    <p className="text-xs text-zinc-650 leading-relaxed font-sans font-medium bg-white border border-zinc-150 p-3.5 rounded-lg shadow-5xs whitespace-normal break-words">
                       {carNote.setup_sensitivity}
                     </p>
                   </div>
@@ -328,7 +328,7 @@ export default function LapTimesPage() {
                     </h4>
                     <ul className="flex flex-col gap-1.5 pl-0 text-xs font-semibold text-zinc-855 list-none">
                       {carNote.strengths.map((str, i) => (
-                        <li key={i} className="flex gap-2 items-start text-[11.5px]">
+                        <li key={i} className="flex gap-2 items-start text-xs">
                           <span className="text-emerald-700 shrink-0 font-bold">✓</span>
                           <span className="font-sans font-medium text-zinc-700">{str}</span>
                         </li>
@@ -343,7 +343,7 @@ export default function LapTimesPage() {
                     </h4>
                     <ul className="flex flex-col gap-1.5 pl-0 text-xs font-semibold text-zinc-855 list-none">
                       {carNote.weaknesses.map((weak, i) => (
-                        <li key={i} className="flex gap-2 items-start text-[11.5px]">
+                        <li key={i} className="flex gap-2 items-start text-xs">
                           <span className="text-rose-500 shrink-0 font-bold">⚠️</span>
                           <span className="font-sans font-medium text-zinc-750">{weak}</span>
                         </li>
@@ -371,7 +371,7 @@ export default function LapTimesPage() {
               <div className="bg-red-50/45 border border-red-155 rounded-lg p-4 flex gap-3 text-xs text-zinc-700 shadow-5xs items-start mt-1">
                 <Info className="w-4.5 h-4.5 text-red-650 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-extrabold font-mono uppercase tracking-widest text-[9.5px] text-red-700 block mb-0.5">COMPETITION OUTLOOK OVERVIEW:</span>
+                  <span className="font-extrabold font-mono uppercase tracking-widest text-[10px] text-red-700 block mb-0.5">COMPETITION OUTLOOK OVERVIEW:</span>
                   <p className="font-sans font-semibold text-zinc-750 leading-relaxed whitespace-normal break-words">{carNote.meta_note}</p>
                 </div>
               </div>
@@ -409,7 +409,7 @@ export default function LapTimesPage() {
                         <svg className="w-16 h-16 text-zinc-300 animate-pulse mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                         </svg>
-                        <span className="text-[11px] font-bold font-mono tracking-widest text-zinc-400 uppercase">Circuit Map Updating...</span>
+                        <span className="text-xs font-bold font-mono tracking-widest text-zinc-400 uppercase">Circuit Map Updating...</span>
                       </div>
                     ) : (
                       <img 
@@ -550,7 +550,7 @@ export default function LapTimesPage() {
                                   <div className="flex items-center gap-1.5">
                                     <span>{timeStr}</span>
                                     {trackData.estimated && (
-                                      <span className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0 font-sans tracking-wide animate-pulse" title="Estimated BoP Lap Time">
+                                      <span className="inline-flex items-center px-1 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 shrink-0 font-sans tracking-wide animate-pulse" title="Estimated BoP Lap Time">
                                         EST*
                                       </span>
                                     )}
@@ -569,7 +569,7 @@ export default function LapTimesPage() {
                         </tbody>
                       </table>
                       {trackData.estimated && (
-                        <div className="bg-amber-50/50 border-t border-zinc-200 px-4 py-2.5 flex items-center gap-2 text-[10.5px] font-sans text-amber-850 font-medium text-left">
+                        <div className="bg-amber-50/50 border-t border-zinc-200 px-4 py-2.5 flex items-center gap-2 text-xs font-sans text-amber-850 font-medium text-left">
                           <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0 animate-pulse" />
                           <span>* <strong>Estimated BoP Lap Time:</strong> This lap time is simulated using GT2/GT3 pace proportions and BoP offsets.</span>
                         </div>
@@ -581,7 +581,7 @@ export default function LapTimesPage() {
                       <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3.5 flex items-start gap-2.5 text-xs text-zinc-600 mt-3 shadow-5xs text-left">
                         <Info className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                         <div>
-                          <span className="font-extrabold uppercase font-mono tracking-widest text-[9.5px] text-zinc-500 block mb-0.5">BALANCE OF PERFORMANCE:</span>
+                          <span className="font-extrabold uppercase font-mono tracking-widest text-[10px] text-zinc-500 block mb-0.5">BALANCE OF PERFORMANCE:</span>
                           <span className="whitespace-normal break-words">BoP ballast at time of data collection: <strong className="text-zinc-900 font-extrabold text-xs">{trackData.bop}</strong></span>
                         </div>
                       </div>
@@ -592,8 +592,8 @@ export default function LapTimesPage() {
                       <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3.5 flex items-start gap-2.5 text-xs text-zinc-650 mt-3 shadow-5xs text-left">
                         <Info className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                         <div>
-                          <span className="font-extrabold uppercase font-mono tracking-widest text-[9.5px] text-zinc-500 block mb-0.5">SETUP SCHEMA:</span>
-                          <span className="whitespace-normal break-words">Recommended setup type: <strong className="text-zinc-900 font-extrabold uppercase text-[11px] underline font-mono tracking-wider">{trackData.setup_tag}</strong></span>
+                          <span className="font-extrabold uppercase font-mono tracking-widest text-[10px] text-zinc-500 block mb-0.5">SETUP SCHEMA:</span>
+                          <span className="whitespace-normal break-words">Recommended setup type: <strong className="text-zinc-900 font-extrabold uppercase text-xs underline font-mono tracking-wider">{trackData.setup_tag}</strong></span>
                         </div>
                       </div>
                     )}
@@ -609,16 +609,16 @@ export default function LapTimesPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 text-xs text-left">
                           <div className="flex flex-col gap-2.5">
                             <div className="bg-white border border-zinc-200/65 rounded-lg p-3 shadow-5xs">
-                              <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">General Car Character:</strong>
+                              <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[10px] tracking-wider block mb-1">General Car Character:</strong>
                               <span className="italic leading-relaxed font-sans text-xs text-zinc-700 font-medium block">
                                 "{carNote.car_notes}"
                               </span>
                             </div>
                             <div className="bg-white border border-zinc-200/65 rounded-lg p-3 shadow-5xs">
-                              <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Recommended Driving Styles:</strong>
+                              <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[10px] tracking-wider block mb-1">Recommended Driving Styles:</strong>
                               <div className="flex flex-wrap gap-1 mt-1.5">
                                 {carNote.driving_style.map((style, i) => (
-                                  <span key={i} className="px-1.5 py-0.5 bg-zinc-100 border border-zinc-200 text-zinc-750 font-mono text-[9.5px] font-bold rounded uppercase tracking-wider">
+                                  <span key={i} className="px-1.5 py-0.5 bg-zinc-100 border border-zinc-200 text-zinc-750 font-mono text-[10px] font-bold rounded uppercase tracking-wider">
                                     {style}
                                   </span>
                                 ))}
@@ -628,7 +628,7 @@ export default function LapTimesPage() {
 
                           <div className="flex flex-col gap-2.5">
                             <div className="bg-white border border-zinc-200/65 rounded-lg p-3 shadow-5xs">
-                              <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Engine & Layout Profile:</strong>
+                              <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[10px] tracking-wider block mb-1">Engine & Layout Profile:</strong>
                               <span className="text-zinc-750 font-mono text-xs uppercase font-extrabold tracking-wide block mt-1">
                                 {carNote.engine_layout || "Standard"} Layout • {carNote.difficulty} class
                               </span>
@@ -639,8 +639,8 @@ export default function LapTimesPage() {
 
                             <div className="bg-white border border-zinc-250/65 rounded-lg p-3 shadow-5xs flex flex-col sm:grid sm:grid-cols-2 gap-3 h-auto min-h-0">
                               <div className="flex flex-col h-auto">
-                                <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Key Advantages:</strong>
-                                <ul className="pl-0 flex flex-col gap-1.5 text-[10.5px]">
+                                <strong className="text-zinc-500 font-extrabold uppercase font-mono text-[10px] tracking-wider block mb-1">Key Advantages:</strong>
+                                <ul className="pl-0 flex flex-col gap-1.5 text-xs">
                                   {carNote.strengths.slice(0, 2).map((s, idx) => (
                                     <li key={idx} className="text-zinc-650 font-medium font-sans leading-relaxed text-left flex gap-1.5 items-start break-words whitespace-normal" title={s}>
                                       <span className="text-emerald-700 font-bold shrink-0">✓</span>
@@ -651,8 +651,8 @@ export default function LapTimesPage() {
                               </div>
                               
                               <div className="flex flex-col h-auto">
-                                <strong className="text-zinc-550 font-extrabold uppercase font-mono text-[9px] tracking-wider block mb-1">Key Constraints:</strong>
-                                <ul className="pl-0 flex flex-col gap-1.5 text-[10.5px]">
+                                <strong className="text-zinc-550 font-extrabold uppercase font-mono text-[10px] tracking-wider block mb-1">Key Constraints:</strong>
+                                <ul className="pl-0 flex flex-col gap-1.5 text-xs">
                                   {carNote.weaknesses.slice(0, 2).map((w, idx) => (
                                     <li key={idx} className="text-zinc-650 font-medium font-sans leading-relaxed text-left flex gap-1.5 items-start break-words whitespace-normal" title={w}>
                                       <span className="text-rose-500 font-bold shrink-0">⚠️</span>
@@ -685,7 +685,7 @@ export default function LapTimesPage() {
                           </div>
                           <div className="flex items-center gap-2.5 shrink-0">
                             {!isBriefingOpen && (
-                              <span className="hidden sm:inline-block px-2 py-0.5 bg-zinc-200 text-zinc-805 text-[8.5px] font-black font-mono rounded uppercase tracking-wider">
+                              <span className="hidden sm:inline-block px-2 py-0.5 bg-zinc-200 text-zinc-805 text-[10px] font-black font-mono rounded uppercase tracking-wider">
                                 {circ.acc_speed_category.replace(/_/g, " ")}
                               </span>
                             )}
@@ -696,16 +696,16 @@ export default function LapTimesPage() {
                         {isBriefingOpen && (
                           <div className="p-4 md:p-5 flex flex-col gap-4 animate-fadeIn transition-all text-left">
                             <div className="flex flex-wrap gap-1.5 pb-1">
-                              <span className="px-2 py-0.5 bg-zinc-200 text-zinc-800 text-[9px] font-black font-mono rounded uppercase tracking-wider whitespace-nowrap">
+                              <span className="px-2 py-0.5 bg-zinc-200 text-zinc-800 text-[10px] font-black font-mono rounded uppercase tracking-wider whitespace-nowrap">
                                 Speed: {circ.acc_speed_category.replace(/_/g, " ")}
                               </span>
-                              <span className={`px-2 py-0.5 text-white text-[9px] font-black font-mono rounded uppercase tracking-wider whitespace-nowrap ${
+                              <span className={`px-2 py-0.5 text-white text-[10px] font-black font-mono rounded uppercase tracking-wider whitespace-nowrap ${
                                 circ.acc_overtaking_difficulty === "easy" ? "bg-emerald-650" :
                                 circ.acc_overtaking_difficulty === "medium" ? "bg-amber-650" : "bg-red-700"
                               }`}>
                                 Overtaking: {circ.acc_overtaking_difficulty}
                               </span>
-                              <span className={`px-2 py-0.5 text-white text-[9px] font-black font-mono rounded uppercase tracking-wider whitespace-nowrap ${
+                              <span className={`px-2 py-0.5 text-white text-[10px] font-black font-mono rounded uppercase tracking-wider whitespace-nowrap ${
                                 circ.acc_wet_weather_risk === "low" ? "bg-blue-500" :
                                 circ.acc_wet_weather_risk === "medium" ? "bg-blue-600 animate-pulse" : "bg-blue-800 animate-pulse font-extrabold"
                               }`}>
@@ -717,7 +717,7 @@ export default function LapTimesPage() {
                               "{circ.circuit_notes}"
                             </div>
 
-                            <div className="flex flex-col gap-3 font-mono text-[11px] text-zinc-700">
+                            <div className="flex flex-col gap-3 font-mono text-xs text-zinc-700">
                               <div className="flex gap-2.5 items-start">
                                 <Zap className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                                 <div className="flex-1 min-w-0">
@@ -757,7 +757,7 @@ export default function LapTimesPage() {
                               <div className="border-t border-zinc-200 pt-3.5 flex flex-col gap-2">
                                 <div className="flex items-center gap-1.5 mb-1">
                                   <Flame className="w-4 h-4 text-red-500 shrink-0 animate-pulse" />
-                                  <span className="font-extrabold font-mono text-[11px] tracking-widest text-zinc-900 uppercase">
+                                  <span className="font-extrabold font-mono text-[10px] tracking-widest text-zinc-900 uppercase">
                                     CRUCIAL CORNERS & TELEMETRY ALIGNMENTS:
                                   </span>
                                 </div>
@@ -767,7 +767,7 @@ export default function LapTimesPage() {
                                       <span className="font-mono text-[10px] font-black text-red-500 bg-red-50 px-1.5 py-0.5 rounded leading-none mt-0.5 shrink-0">
                                         0{i + 1}
                                       </span>
-                                      <span className="leading-snug text-zinc-800 text-[11.5px] whitespace-normal break-words">{corner}</span>
+                                      <span className="leading-snug text-zinc-800 text-xs whitespace-normal break-words">{corner}</span>
                                     </li>
                                   ))}
                                 </ul>

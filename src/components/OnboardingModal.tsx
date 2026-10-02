@@ -150,9 +150,9 @@ export default function OnboardingModal({
                 <label className="block text-zinc-650 text-xs font-mono uppercase font-black tracking-wider">
                   Pinned Series Cars
                 </label>
-                <span className="text-[9px] text-zinc-450 font-semibold font-mono font-bold">OPTIONAL FILTER</span>
+                <span className="text-[10px] text-zinc-450 font-semibold font-mono font-bold">OPTIONAL FILTER</span>
               </div>
-              <p className="text-[11px] text-zinc-500 leading-tight mb-3 font-medium">
+              <p className="text-xs text-zinc-500 leading-tight mb-3 font-medium">
                 Select your current racing series cars to automatically pin them. Checking the "Series Only" toggle in the Main Registry will filter the setup list only to these choices!
               </p>
 
@@ -224,7 +224,7 @@ export default function OnboardingModal({
                                   }}
                                   className="accent-red-650 w-3.5 h-3.5 cursor-pointer shrink-0"
                                 />
-                                <span className="truncate pr-1 text-[11px] font-sans font-semibold" title={carName}>
+                                <span className="truncate pr-1 text-xs font-sans font-semibold" title={carName}>
                                   {carName}
                                 </span>
                               </label>

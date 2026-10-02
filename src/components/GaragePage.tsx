@@ -160,7 +160,7 @@ export default function GaragePage({
           <div className="lg:col-span-3 space-y-4">
             <div className="bg-white border border-zinc-250 rounded-xl p-4 shadow-3xs flex flex-col gap-4">
               <div className="flex items-center justify-between border-b border-zinc-150 pb-2.5">
-                <span className="text-[11px] font-mono font-bold tracking-widest text-zinc-500 uppercase">GARAGE FILTERS</span>
+                <span className="text-[10px] font-mono font-bold tracking-widest text-zinc-500 uppercase">GARAGE FILTERS</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 bg-zinc-100 text-zinc-600 rounded-full font-bold">
                   {mySetupsRaw.length} total
                 </span>
@@ -351,30 +351,30 @@ export default function GaragePage({
                       <div className="flex items-start justify-between gap-2.5 mb-2.5">
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="font-mono text-[9px] uppercase tracking-wider text-red-650 bg-red-100/50 font-extrabold px-1.5 py-0.5 rounded whitespace-normal break-words block w-fit">
+                            <span className="font-mono text-[10px] uppercase tracking-wider text-red-650 bg-red-100/50 font-extrabold px-1.5 py-0.5 rounded whitespace-normal break-words block w-fit">
                               {displayTrack}
                             </span>
                             {(setup.notes?.includes('[Adapted from') || setup.versionNote?.includes('[Adapted from')) && (
-                              <span className="font-mono text-[8px] uppercase tracking-wider text-amber-650 bg-amber-100 font-extrabold px-1.5 py-0.5 rounded border border-amber-200">
+                              <span className="font-mono text-[10px] uppercase tracking-wider text-amber-650 bg-amber-100 font-extrabold px-1.5 py-0.5 rounded border border-amber-200">
                                 Adapted
                               </span>
                             )}
                           </div>
-                          <h3 className="text-[13.5px] font-bold text-zinc-950 font-sans tracking-tight mt-1 leading-snug whitespace-normal break-words">
+                          <h3 className="text-sm font-bold text-zinc-950 font-sans tracking-tight mt-1 leading-snug whitespace-normal break-words">
                             {displayCar}
                           </h3>
                         </div>
 
                         {showWorkspaceBadge && (
-                          <span className="shrink-0 font-mono text-[8.5px] uppercase tracking-wider text-emerald-650 bg-emerald-100 font-extrabold px-1.5 py-0.5 rounded">
+                          <span className="shrink-0 font-mono text-[10px] uppercase tracking-wider text-emerald-650 bg-emerald-100 font-extrabold px-1.5 py-0.5 rounded">
                             Shared Team
                           </span>
                         )}
                       </div>
 
                       {/* Notes Section with visual quote border */}
-                      <div className="bg-zinc-50 border-l-2 border-red-500 p-2.5 rounded-r-lg text-[10.5px] text-zinc-650 whitespace-normal break-words min-w-0 mb-4 flex-1">
-                        <strong className="text-zinc-800 text-[10.5px]">Version Note:</strong>{" "}
+                      <div className="bg-zinc-50 border-l-2 border-red-500 p-2.5 rounded-r-lg text-xs text-zinc-650 whitespace-normal break-words min-w-0 mb-4 flex-1">
+                        <strong className="text-zinc-800 text-xs">Version Note:</strong>{" "}
                         {setup.versionNote || setup.notes || "Custom telemetry adjusted parameters."}
                       </div>
 
