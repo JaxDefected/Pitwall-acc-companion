@@ -66,8 +66,7 @@ import {
 } from "./firebase";
 import { useAuth } from "./hooks/useAuth";
 import { useGitHubSync, parseGithubPath, detectCarFromSegment, detectTrackFromSegment } from "./hooks/useGitHubSync";
-import { parseAccSetup, NormalizedAccSetup, ACC_CARS, ACC_TRACKS, formatDegrees, formatCelsius } from "./utils/accParser";
-import { calculateTransitionCoolingModel, getPressureColor } from "./utils/thermalEngine";
+import { parseAccSetup, NormalizedAccSetup, ACC_CARS, ACC_TRACKS, TRACK_FUEL_RANGES, DEFAULT_FUEL_RANGE } from "./utils/accParser";
 import { fetchWithRetry } from "./utils/fetchWithRetry";
 import { CIRCUIT_NOTES } from "./data/circuitNotes";
 import { cars } from "./data/cars";
@@ -190,8 +189,6 @@ const DEMO_SETUPS: SetupItem[] = [
     }
   }
 ];
-
-
 
 interface SetupSliderProps {
   label: string;
@@ -397,24 +394,36 @@ export default function App() {
   // GitHub Integration States
   const [activeGarageTab, setActiveGarageTab] = useState<"team" | "github">("github");
   const {
-    githubRepo, setGithubRepo,
-    githubBranch, setGithubBranch,
-    githubToken, setGithubToken,
+    githubRepo,
+    setGithubRepo,
+    githubBranch,
+    setGithubBranch,
+    githubToken,
+    setGithubToken,
     githubTree,
-    githubStatus, githubError,
+    githubStatus,
+    githubError,
     isImportingFromGithub,
     handleScanMultipleRepos,
     handleScanGithubRepo,
     handleImportGithubSetup,
   } = useGitHubSync({
-    onSetupImported: (setup) => {
+    onSetupImported: (setup, action) => {
       setActiveSetup(setup);
-      if (isMobile) setMobileView('inspection');
+      if (action === "inspect") {
+        setCurrentView("telemetry");
+      }
+      if (isMobile) {
+        setMobileView("inspection");
+      }
     },
     showToast,
     user,
-    refreshSetupsList: setSetupsList,
+    refreshSetupsList: setSetupsList
   });
+  
+  // Interactive Race Fuel Calculator states
+  const [fuelRaceTime, setFuelRaceTime] = useState<number>(20); // race duration in mins
   
   // Time of Day & Track Temperature Transition States
   const [transitionTimeStart, setTransitionTimeStart] = useState<string>("17:00");
@@ -1301,7 +1310,7 @@ export default function App() {
     }
   };
 
-
+  // GitHub search, scan, and import handlers
 
   // 3. AI Race Engineering chat trigger
   const handleSendChatMessage = async (presetText?: string) => {
