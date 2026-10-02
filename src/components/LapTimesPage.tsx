@@ -45,6 +45,14 @@ export default function LapTimesPage() {
   const [isBriefingOpen, setIsBriefingOpen] = useState<boolean>(true);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [mapSrc, setMapSrc] = useState<string>("");
+  const [isDataReady, setIsDataReady] = useState<boolean>(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsDataReady(true);
+    }, 120);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Track Map Dynamic Asset Recovery
   useEffect(() => {
@@ -129,8 +137,23 @@ export default function LapTimesPage() {
         </div>
       </div>
 
-      {/* Selector Controls Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs sticky top-[48px] md:relative md:top-auto z-30 bg-white py-3 px-3 md:p-0 border border-zinc-200 md:border-none rounded-lg shadow-sm md:shadow-none">
+      {!isDataReady ? (
+        <div className="space-y-4 animate-pulse py-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="h-14 bg-zinc-100 rounded-lg" />
+            <div className="h-14 bg-zinc-100 rounded-lg" />
+            <div className="h-14 bg-zinc-100 rounded-lg" />
+          </div>
+          <div className="space-y-3 pt-2">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-12 bg-zinc-100 rounded-lg" />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Selector Controls Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs sticky top-[48px] md:relative md:top-auto z-30 bg-white py-3 px-3 md:p-0 border border-zinc-200 md:border-none rounded-lg shadow-sm md:shadow-none">
         
         {/* Class selector */}
         <div className="flex flex-col gap-1.5" role="group" aria-label="Category Selection">
@@ -769,6 +792,8 @@ export default function LapTimesPage() {
         )}
 
       </div>
+        </>
+      )}
     </div>
   );
 }
