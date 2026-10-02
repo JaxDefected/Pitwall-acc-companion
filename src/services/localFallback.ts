@@ -16,7 +16,10 @@ export type ScenarioKey =
   | 'tyre_cold'
   | 'bouncing_kerbs'
   | 'lift_off_oversteer'
-  | 'low_top_speed';
+  | 'low_top_speed'
+  | 'wet_baseline'
+  | 'wet_understeer'
+  | 'wet_oversteer';
 
 export const ISSUE_TYPES = [
   { value: 'oversteer',      label: 'Oversteer' },
@@ -24,6 +27,7 @@ export const ISSUE_TYPES = [
   { value: 'tyre',           label: 'Tyre / Pressure' },
   { value: 'brakes',         label: 'Braking Issue' },
   { value: 'other',          label: 'Other' },
+  { value: 'wet',            label: 'Wet Conditions' },
 ] as const;
 
 export const CORNER_PHASES = [
@@ -55,23 +59,32 @@ export const OTHER_ISSUES = [
   { value: 'low_top_speed',      label: 'Low Top Speed on Straights' },
 ] as const;
 
+export const WET_ISSUES = [
+  { value: 'wet_baseline',   label: 'Dry to Wet Baseline Conversion' },
+  { value: 'wet_understeer', label: 'Understeer in Wet Conditions' },
+  { value: 'wet_oversteer',  label: 'Oversteer / Rear Instability in Wet' },
+] as const;
+
 export function resolveScenario(
   issueType: string,
   phase?: string,
   speed?: string
 ): ScenarioKey {
-  if (issueType === 'tyre' || issueType === 'brakes' || issueType === 'other') {
+  if (issueType === 'tyre' || issueType === 'brakes' || issueType === 'other' || issueType === 'wet') {
     return phase as ScenarioKey;
   }
   return `${issueType}_${phase}_${speed}` as ScenarioKey;
 }
 
-interface FallbackResponse {
+export interface FallbackResponse {
   title: string;
   technique: string;
   mechanical: string[];
   note?: string;
   setupFields?: (keyof NormalizedAccSetup)[];
+  primaryRecommendation?: string[];
+  secondaryOptions?: string[];
+  telemetryCheck?: string;
 }
 
 const RESPONSES: Record<ScenarioKey, FallbackResponse> = {
@@ -222,13 +235,91 @@ const RESPONSES: Record<ScenarioKey, FallbackResponse> = {
     mechanical: ["Reduce rear wing by 1 click", "Consider lengthening the final gear ratio for the circuit"],
     note: "Ride height generates downforce through rake — keep ride height as low as possible without grounding the car or stalling the aero.",
     setupFields: ['rearWing', 'rideHeights']
+  },
+  wet_baseline: {
+    title: "Transformation Mode: Dry to Wet Baseline",
+    technique: "Coach Dave Academy Wet Setup Workflow — Transformation Mode: When converting an existing loaded dry setup into a wet baseline, prioritize mechanical compliance, water clearance, and tyre temperature retention over pure aerodynamic stiffness.",
+    primaryRecommendation: [
+      "Tyres & Alignment: Reduce negative camber (front and rear) to flatten contact patch. Set baseline wet tyre pressures targeting 29.5–30.0 PSI hot.",
+      "Aerodynamics & Platform: Raise front ride height (prevents bottoming out/aquaplaning). Increase rear wing angle to add downforce and stability."
+    ],
+    secondaryOptions: [
+      "Mechanical Grip & Suspension: Soften front and rear wheel rates / spring rates. Soften front and rear anti-roll bars (ARB) to promote mechanical grip and compliance over standing water/kerbs.",
+      "Braking & Strategy: Shift brake bias rearward (lower percentage) and reduce brake pressure (typically 90–95%) to avoid lockups. Switch brake pad compound to Compound 3 (wet weather compound).",
+      "Electronics & Cooling: Close brake ducts (target brake duct 1 or 2 depending on ambient) to retain brake temperature in wet conditions. Step up Traction Control (TC) and Anti-lock Braking System (ABS) baseline values."
+    ],
+    telemetryCheck: "Confirm hot wet pressures settle in the 29.5–30.0 PSI window after 3 laps. Check brake disc telemetry to confirm core temps maintain green operating ranges (>300°C) down the straights, and ensure the floor does not skip or aquaplane through puddles.",
+    mechanical: [
+      "Reduce negative camber (front and rear) to flatten contact patch",
+      "Set baseline wet tyre pressures targeting 29.5–30.0 PSI hot",
+      "Soften front and rear wheel rates / spring rates",
+      "Soften front and rear anti-roll bars (ARB) for compliance over standing water and kerbs",
+      "Shift brake bias rearward (lower percentage) and reduce brake pressure (typically 90–95%)",
+      "Raise front ride height (prevents bottoming out/aquaplaning)",
+      "Increase rear wing angle to add downforce and stability",
+      "Close brake ducts (target brake duct 1 or 2) to retain brake temperature in wet conditions",
+      "Switch brake pad compound to Compound 3 (wet weather compound)",
+      "Step up Traction Control (TC) and Anti-lock Braking System (ABS) baseline values"
+    ],
+    note: "Wet setup priority: Always switch to brake pad Compound 3 (wet compound) and dial pressures for 29.5–30.0 PSI hot.",
+    setupFields: ['tyrePressures', 'cambers', 'rideHeights', 'rearWing', 'arbFront', 'arbRear', 'brakeBias', 'brakePower', 'tc1', 'abs']
+  },
+  wet_understeer: {
+    title: "Case A: Understeer in Wet Conditions",
+    technique: "Coach Dave Academy Wet Setup Workflow — Case A: Target front-end authority and turn-in rotation without destabilising the car. Trail the brakes gently into the corner to keep weight pinned over the front contact patch, and avoid aggressive steering lock snaps that exceed wet tyre grip.",
+    primaryRecommendation: [
+      "Mechanical Grip (Differential Preload): Lower Differential Preload by 1–2 steps. Decreases locking under off-throttle/turn-in, promoting yaw and entry rotation.",
+      "Aero Balance (Rear Ride Height): Raise Rear Ride Height by 2–3mm. Increases rake and shifts aerodynamic centre of pressure forward for mid-to-high speed grip."
+    ],
+    secondaryOptions: [
+      "Dampers (Front Bump): Soften Front Bump Damping by 1–2 clicks. Allows quicker load transfer onto the front axle on corner entry, aiding front mechanical grip.",
+      "Anti-Roll Bars: If mid-corner push persists, soften front ARB by 1 click to enhance front axle roll compliance."
+    ],
+    telemetryCheck: "Driver should feel sharper initial turn-in authority with reduced steering angle required to reach the apex. Check front tyre slip angle in telemetry to ensure tyres bite rather than scrub wide.",
+    mechanical: [
+      "Lower Differential Preload: Decreases locking under off-throttle/turn-in, promoting yaw and entry rotation",
+      "Raise Rear Ride Height (+2–3mm): Increases rake and shifts aerodynamic centre of pressure forward for mid-to-high speed grip",
+      "Soften Front Bump Damping (1–2 clicks): Allows quicker load transfer onto the front axle on corner entry, aiding front mechanical grip"
+    ],
+    note: "Verify wet tyre pressures are in the 29.5–30.0 PSI hot window before making mechanical balance changes.",
+    setupFields: ['preloadDifferential', 'rideHeights', 'bumpSlow', 'arbFront']
+  },
+  wet_oversteer: {
+    title: "Case B: Oversteer / Rear Instability in Wet Conditions",
+    technique: "Coach Dave Academy Wet Setup Workflow — Case B: Target rear-end compliance and throttle traction. Apply throttle progressively out of corners only after unwinding steering lock. Avoid sudden throttle jabs while the rear axle is loaded laterally.",
+    primaryRecommendation: [
+      "Mechanical Grip (Differential Preload): Raise Differential Preload by 1–2 steps. Provides more deceleration/entry stability and prevents aggressive inside wheel spin.",
+      "Aero Balance (Rear Ride Height): Lower Rear Ride Height by 2–3mm. Reduces rake, increasing rear mechanical compliance and aerodynamic stability."
+    ],
+    secondaryOptions: [
+      "Dampers (Rear Bump): Soften Rear Bump Damping by 1–2 clicks. Absorbs track imperfections and softens transient load transfer during acceleration.",
+      "Tyres & Alignment (Rear Toe-In): Increase Rear Toe-In (+0.05° to +0.10°). Adds dynamic rear tracking stability on braking and power delivery."
+    ],
+    telemetryCheck: "Driver should feel a calmer rear axle under trail braking and more progressive traction build on exit. Check rear wheel slip traces and steering corrections — throttle application should no longer induce sudden snap oversteer.",
+    mechanical: [
+      "Raise Differential Preload: Provides more deceleration/entry stability and prevents aggressive inside wheel spin",
+      "Lower Rear Ride Height (-2–3mm): Reduces rake, increasing rear mechanical compliance and aerodynamic stability",
+      "Soften Rear Bump Damping (1–2 clicks): Absorbs track imperfections and softens transient load transfer during acceleration",
+      "Increase Rear Toe-In: Adds dynamic rear tracking stability on braking and power delivery"
+    ],
+    note: "In wet conditions, excess rake or overly stiff rear suspension severely compromises throttle traction over kerbs and standing water.",
+    setupFields: ['preloadDifferential', 'rideHeights', 'bumpSlow', 'toes', 'tc1']
   }
 };
 
 export function getLocalResponse(
   scenario: ScenarioKey,
   setup: NormalizedAccSetup | null
-): { title: string; technique: string; mechanical: string[]; note?: string; setupSummary: string } {
+): {
+  title: string;
+  technique: string;
+  mechanical: string[];
+  note?: string;
+  setupSummary: string;
+  primaryRecommendation?: string[];
+  secondaryOptions?: string[];
+  telemetryCheck?: string;
+} {
   const response = RESPONSES[scenario];
 
   let setupSummary = "";
@@ -258,6 +349,9 @@ export function getLocalResponse(
     if (response.setupFields.includes('cambers')) {
       parts.push(`Camber: FL ${setup.cambers[0]} deg | FR ${setup.cambers[1]} deg | RL ${setup.cambers[2]} deg | RR ${setup.cambers[3]} deg`);
     }
+    if (response.setupFields.includes('bumpSlow') || response.setupFields.includes('reboundSlow')) {
+      parts.push(`Slow bump: FL ${setup.bumpSlow[0]} | FR ${setup.bumpSlow[1]} | RL ${setup.bumpSlow[2]} | RR ${setup.bumpSlow[3]}`);
+    }
     if (response.setupFields.includes('bumpFast') || response.setupFields.includes('reboundFast')) {
       parts.push(`Fast bump: FL ${setup.bumpFast[0]} | FR ${setup.bumpFast[1]} | Fast rebound: RL ${setup.reboundFast[2]} | RR ${setup.reboundFast[3]}`);
     }
@@ -279,5 +373,8 @@ export function getLocalResponse(
     mechanical: response.mechanical,
     note: response.note,
     setupSummary,
+    primaryRecommendation: response.primaryRecommendation,
+    secondaryOptions: response.secondaryOptions,
+    telemetryCheck: response.telemetryCheck,
   };
 }

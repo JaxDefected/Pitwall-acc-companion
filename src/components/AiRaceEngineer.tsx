@@ -14,7 +14,7 @@ import { ACC_CARS, ACC_TRACKS, NormalizedAccSetup } from "../utils/accParser";
 import { ChatMessage } from "../types/chat";
 import {
   ISSUE_TYPES, CORNER_PHASES, SPEED_TYPES,
-  TYRE_ISSUES, BRAKE_ISSUES, OTHER_ISSUES,
+  TYRE_ISSUES, BRAKE_ISSUES, OTHER_ISSUES, WET_ISSUES,
   resolveScenario, getLocalResponse
 } from "../services/localFallback";
 
@@ -63,12 +63,14 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
   const showTyreOptions = issueType === "tyre";
   const showBrakeOptions = issueType === "brakes";
   const showOtherOptions = issueType === "other";
+  const showWetOptions = issueType === "wet";
 
   const canQuery = issueType && (
     (showPhaseAndSpeed && cornerPhase) ||
     (showTyreOptions && cornerPhase) ||
     (showBrakeOptions && cornerPhase) ||
-    (showOtherOptions && cornerPhase)
+    (showOtherOptions && cornerPhase) ||
+    (showWetOptions && cornerPhase)
   );
 
   // ─── Local Handlers ───
@@ -215,14 +217,16 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
   const getContextualChips = (setup: NormalizedAccSetup | null): string[] => {
     if (!setup) return [
       "How do I diagnose understeer?",
+      "Convert loaded dry setup to wet baseline",
       "What causes exit oversteer?",
-      "How should I adjust tyre pressures?",
+      "How should I adjust tyre pressures in the wet?",
     ];
     return [
+      "Convert dry setup to wet baseline",
+      "Fix understeer in wet conditions",
+      "Oversteer / rear instability in the wet",
       "Slow corner exit oversteer under throttle",
-      "Mid-corner push in high-speed corners",
       "Brake bias feels too front biased",
-      "Tyre degradation on the rear left",
     ];
   };
 
@@ -436,6 +440,26 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
             </div>
           )}
 
+          {/* Step 2 — Wet conditions specific */}
+          {showWetOptions && (
+            <div className="space-y-2 animate-fade-in">
+              <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest">
+                2. Select wet setup scenario
+              </label>
+              <div className="flex flex-col bg-zinc-900 border border-zinc-800 p-1 rounded-lg gap-1">
+                {WET_ISSUES.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => setCornerPhase(value)}
+                    className={listBtn(cornerPhase === value)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Query CTA Button */}
           {canQuery && !hasQueried && (
             <button
@@ -473,26 +497,83 @@ export default function AiRaceEngineer({ activeSetup, parsedSetupData }: AiRaceE
                 </div>
               )}
 
-              {/* Technique Card */}
-              <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl rounded-tl-none px-4 py-3 text-xs font-sans leading-relaxed shadow-md">
-                <p className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-emerald-400 mb-2 flex items-center gap-1.5">
-                  <Wrench className="w-2.5 h-2.5" /> Technique First
-                </p>
-                <p className="text-zinc-200 font-medium leading-relaxed">{localResult.technique}</p>
-              </div>
+              {/* Structured Output for Coach Dave Academy / Wet Workflows */}
+              {localResult.primaryRecommendation && localResult.primaryRecommendation.length > 0 ? (
+                <>
+                  {/* Workflow Overview */}
+                  <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl rounded-tl-none px-4 py-3 text-xs font-sans leading-relaxed shadow-md">
+                    <p className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-sky-400 mb-2 flex items-center gap-1.5">
+                      <Sparkles className="w-2.5 h-2.5" /> Coach Dave Academy Wet Workflow
+                    </p>
+                    <p className="text-zinc-200 font-medium leading-relaxed">{localResult.technique}</p>
+                  </div>
 
-              {/* Mechanical Adjustments Card */}
-              {localResult.mechanical.length > 0 && (
-                <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl rounded-tl-none px-4 py-3 text-xs font-sans leading-relaxed shadow-md">
-                  <p className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-amber-400 mb-2 flex items-center gap-1.5">
-                    <AlertTriangle className="w-2.5 h-2.5" /> If Technique Is Already Clean — Mechanical Adjustments
-                  </p>
-                  <ol className="list-decimal pl-4 space-y-1.5">
-                    {localResult.mechanical.map((step, i) => (
-                      <li key={i} className="text-zinc-300 font-medium pl-0.5">{step}</li>
-                    ))}
-                  </ol>
-                </div>
+                  {/* 1. Primary Recommendation */}
+                  <div className="bg-zinc-900/50 border border-emerald-500/30 rounded-2xl rounded-tl-none px-4 py-3 text-xs font-sans leading-relaxed shadow-md">
+                    <p className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-emerald-400 mb-2 flex items-center gap-1.5">
+                      <Wrench className="w-2.5 h-2.5" /> 1. Primary Recommendation (Highest Impact)
+                    </p>
+                    <ul className="space-y-1.5">
+                      {localResult.primaryRecommendation.map((step, i) => (
+                        <li key={i} className="text-zinc-200 font-medium pl-1 flex items-start gap-2">
+                          <span className="text-emerald-400 font-mono font-bold">•</span>
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* 2. Secondary / Fine-Tuning Options */}
+                  {localResult.secondaryOptions && localResult.secondaryOptions.length > 0 && (
+                    <div className="bg-zinc-900/50 border border-amber-500/30 rounded-2xl rounded-tl-none px-4 py-3 text-xs font-sans leading-relaxed shadow-md">
+                      <p className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-amber-400 mb-2 flex items-center gap-1.5">
+                        <AlertTriangle className="w-2.5 h-2.5" /> 2. Secondary / Fine-Tuning Options
+                      </p>
+                      <ul className="space-y-1.5">
+                        {localResult.secondaryOptions.map((step, i) => (
+                          <li key={i} className="text-zinc-300 font-medium pl-1 flex items-start gap-2">
+                            <span className="text-amber-400 font-mono font-bold">•</span>
+                            <span>{step}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* 3. Telemetry / Driver Feedback Check */}
+                  {localResult.telemetryCheck && (
+                    <div className="bg-zinc-900/50 border border-cyan-500/30 rounded-2xl rounded-tl-none px-4 py-3 text-xs font-sans leading-relaxed shadow-md">
+                      <p className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-cyan-400 mb-2 flex items-center gap-1.5">
+                        <Info className="w-2.5 h-2.5" /> 3. Telemetry / Driver Feedback Check
+                      </p>
+                      <p className="text-zinc-300 font-medium leading-relaxed">{localResult.telemetryCheck}</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* Technique Card */}
+                  <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl rounded-tl-none px-4 py-3 text-xs font-sans leading-relaxed shadow-md">
+                    <p className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-emerald-400 mb-2 flex items-center gap-1.5">
+                      <Wrench className="w-2.5 h-2.5" /> Technique First
+                    </p>
+                    <p className="text-zinc-200 font-medium leading-relaxed">{localResult.technique}</p>
+                  </div>
+
+                  {/* Mechanical Adjustments Card */}
+                  {localResult.mechanical.length > 0 && (
+                    <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl rounded-tl-none px-4 py-3 text-xs font-sans leading-relaxed shadow-md">
+                      <p className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-amber-400 mb-2 flex items-center gap-1.5">
+                        <AlertTriangle className="w-2.5 h-2.5" /> If Technique Is Already Clean — Mechanical Adjustments
+                      </p>
+                      <ol className="list-decimal pl-4 space-y-1.5">
+                        {localResult.mechanical.map((step, i) => (
+                          <li key={i} className="text-zinc-300 font-medium pl-0.5">{step}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Note */}

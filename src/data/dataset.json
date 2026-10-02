@@ -60,6 +60,15 @@
     "strategy": {
       "trigger_keywords": ["pit window", "fuel", "stint", "stop", "safety car", "mandatory"],
       "examples": []
+    },
+    "wet_conditions": {
+      "trigger_keywords": ["wet", "rain", "damp", "standing water", "puddle", "aquaplaning", "wet setup", "dry to wet", "coach dave"],
+      "examples": [
+        {
+          "user": "How do I convert my loaded dry setup into a wet baseline for rain?",
+          "model": "1. **Primary Recommendation:**\n- **Tyres & Pressures:** Reduce negative camber front and rear to flatten the contact patch. Set wet tyre starting pressures targeting 29.5–30.0 PSI hot.\n- **Aerodynamics & Platform:** Raise front ride height (+4–6mm) to prevent bottoming out/aquaplaning, and increase rear wing by 1–2 clicks for downforce & rear stability.\n\n2. **Secondary/Fine-Tuning Options:**\n- **Mechanical Grip & Suspension:** Soften front and rear wheel rates by 1–2 steps and soften ARBs front and rear by 1–2 clicks for compliance over standing water and kerbs.\n- **Braking & Strategy:** Shift brake bias rearward (lower percentage by 1–2%) and reduce brake pressure to 90–95% to avoid lockups. Switch brake pad compound to Compound 3 (wet compound), and close brake ducts (target duct 1 or 2) to maintain brake temperature. Step up TC and ABS baseline values.\n\n3. **Telemetry/Driver Feedback Check:**\nConfirm hot wet tyre pressures settle strictly in the 29.5–30.0 PSI window after 3 laps. Check brake disc temps maintain green operating ranges (>300°C) down the straights, and monitor telemetry ride height traces to confirm the floor does not violently slap puddles."
+        }
+      ]
     }
   }
 }

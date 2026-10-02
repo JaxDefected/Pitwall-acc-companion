@@ -196,6 +196,47 @@ const DEFAULT_ACC_GUIDE = `
      1. Decrease Traction Control (TC1) by 1 click
      2. Increase Rear Anti-Roll Bar (ARB) by 1 click
      3. Decrease Front Anti-Roll Bar (ARB) by 1 click
+
+## SECTION 6: COACH DAVE ACADEMY WET SETUP WORKFLOW & DIAGNOSTICS
+
+### 1. TRANSFORMATION MODE: DRY TO WET BASELINE
+When converting an existing loaded dry setup into a wet baseline, recommend the following adjustments:
+- **Tyres & Alignment:**
+  - Reduce negative camber (front and rear) to flatten contact patch.
+  - Set baseline wet tyre pressures targeting 29.5 – 30.0 psi hot.
+- **Mechanical Grip & Suspension:**
+  - Soften front and rear wheel rates / spring rates.
+  - Soften front and rear anti-roll bars (ARB) to promote mechanical grip and compliance over standing water/kerbs.
+  - Shift brake bias rearward (lower percentage) and reduce brake pressure (typically 90–95%) to avoid lockups.
+- **Aerodynamics & Platform:**
+  - Raise front ride height (prevents bottoming out/aquaplaning).
+  - Increase rear wing angle to add downforce and stability.
+  - Close brake ducts (target brake duct 1 or 2 depending on ambient) to retain brake temperature in wet conditions.
+- **Electronics & Strategy:**
+  - Switch brake pad compound to Compound 3 (wet weather compound).
+  - Step up Traction Control (TC) and Anti-lock Braking System (ABS) baseline values.
+
+### 2. DIAGNOSTIC MODE: HANDLING BALANCE CORRECTION
+When the driver reports handling issues after running the wet baseline setup, apply the following diagnostic matrix:
+
+#### CASE A: UNDERSTEER IN WET CONDITIONS
+Target front-end authority and turn-in rotation without destabilising the car:
+1. **Mechanical Grip:** Lower Differential Preload (decreases locking under off-throttle/turn-in, promoting yaw and entry rotation).
+2. **Aero Balance:** Raise Rear Ride Height (increases rake and shifts aerodynamic centre of pressure forward for mid-to-high speed grip).
+3. **Dampers:** Soften Front Bump Damping (allows quicker load transfer onto the front axle on corner entry, aiding front mechanical grip).
+
+#### CASE B: OVERSTEER / REAR INSTABILITY IN WET CONDITIONS
+Target rear-end compliance and throttle traction:
+1. **Mechanical Grip:** Raise Differential Preload (provides more deceleration/entry stability and prevents aggressive inside wheel spin).
+2. **Aero Balance:** Lower Rear Ride Height (reduces rake, increasing rear mechanical compliance and aerodynamic stability).
+3. **Dampers:** Soften Rear Bump Damping (absorbs track imperfections and softens transient load transfer during acceleration).
+4. **Tyres & Alignment:** Increase Rear Toe-In (adds dynamic rear tracking stability on braking and power delivery).
+
+### RESPONSE FORMAT
+Provide clear, structured outputs with:
+1. **Primary Recommendation:** 1–2 highest-impact clicks/parameters to adjust first.
+2. **Secondary/Fine-Tuning Options:** Damper or alignment tweaks if the primary fix does not fully resolve the balance issue.
+3. **Telemetry/Driver Feedback Check:** Specific telemetry cue or feeling to confirm the adjustment worked (e.g. tyre pressure targets, slip angle stability, entry rotation).
 `.trim();
 
 const app = express();
@@ -375,6 +416,64 @@ app.use((req, res, next) => {
 2. **High tyre pressures** — overinflated tyres reduce contact patch and increase core temps. Lower cold starting pressure by 0.3 PSI.
 3. **Aggressive driving style** — excessive sliding heats the surface without building core temp. Focus on smooth inputs.
 4. **Toe settings** — excessive toe (in or out) scrubs the tyres laterally. Reduce toward neutral if degradation is severe.
+
+⚠️ *This is a cached offline response. The AI Race Engineer will provide personalised analysis when available.*`
+    },
+    wet_baseline: {
+      keywords: ["wet baseline", "dry to wet", "convert to wet", "rain baseline", "wet setup", "rain setup", "wet conditions conversion"],
+      response: `🏁 **Offline Engineer — Transformation Mode: Dry to Wet Baseline**
+
+**Coach Dave Academy Wet Setup Workflow — Transformation Mode:**
+
+1. **Primary Recommendation:**
+   - **Tyres & Alignment:** Reduce negative camber (front and rear) to flatten contact patch. Set wet tyre starting pressures targeting 29.5–30.0 PSI hot.
+   - **Aerodynamics & Platform:** Raise front ride height (+4–6mm) to prevent bottoming out/aquaplaning. Increase rear wing angle (+1–2 clicks) to add downforce and stability.
+
+2. **Secondary/Fine-Tuning Options:**
+   - **Mechanical Grip & Suspension:** Soften front and rear wheel rates / spring rates. Soften front and rear ARBs for compliance over standing water/kerbs.
+   - **Braking & Strategy:** Shift brake bias rearward (lower percentage) and reduce brake pressure (typically 90–95%) to avoid lockups. Switch brake pads to Compound 3 (wet compound).
+   - **Electronics & Cooling:** Close brake ducts (target duct 1 or 2) to retain brake temperature. Step up TC and ABS baseline values.
+
+3. **Telemetry/Driver Feedback Check:**
+   - Confirm hot wet pressures settle in the 29.5–30.0 PSI window after 3 laps. Check brake disc temps stay in the green operating band (>300°C) down straights, and verify car does not aquaplane over standing water.
+
+⚠️ *This is a cached offline response. The AI Race Engineer will provide personalised analysis when available.*`
+    },
+    wet_understeer: {
+      keywords: ["wet understeer", "understeer in wet", "pushing in rain", "rain understeer", "wet push", "front washing out wet"],
+      response: `🏁 **Offline Engineer — Case A: Understeer in Wet Conditions**
+
+**Coach Dave Academy Wet Setup Workflow — Case A: Target front-end authority and turn-in rotation:**
+
+1. **Primary Recommendation:**
+   - **Mechanical Grip:** Lower Differential Preload by 1–2 steps. Decreases locking under off-throttle/turn-in, promoting yaw and entry rotation.
+   - **Aero Balance:** Raise Rear Ride Height (+2–3mm). Increases rake and shifts aerodynamic centre of pressure forward for mid-to-high speed grip.
+
+2. **Secondary/Fine-Tuning Options:**
+   - **Dampers:** Soften Front Bump Damping by 1–2 clicks. Allows quicker load transfer onto the front axle on corner entry, aiding front mechanical grip.
+   - **Anti-Roll Bars:** If mid-corner push persists, soften front ARB by 1 click.
+
+3. **Telemetry/Driver Feedback Check:**
+   - Driver should feel sharper initial turn-in authority with reduced steering lock required to hit the apex. Check front tyre slip angle in telemetry to ensure tyres bite rather than scrub wide.
+
+⚠️ *This is a cached offline response. The AI Race Engineer will provide personalised analysis when available.*`
+    },
+    wet_oversteer: {
+      keywords: ["wet oversteer", "oversteer in wet", "rain oversteer", "wet instability", "rear snapping wet", "loose in wet", "wet spin", "rear instability wet"],
+      response: `🏁 **Offline Engineer — Case B: Oversteer / Rear Instability in Wet Conditions**
+
+**Coach Dave Academy Wet Setup Workflow — Case B: Target rear-end compliance and throttle traction:**
+
+1. **Primary Recommendation:**
+   - **Mechanical Grip:** Raise Differential Preload by 1–2 steps. Provides more deceleration/entry stability and prevents aggressive inside wheel spin.
+   - **Aero Balance:** Lower Rear Ride Height (-2–3mm). Reduces rake, increasing rear mechanical compliance and aerodynamic stability.
+
+2. **Secondary/Fine-Tuning Options:**
+   - **Dampers:** Soften Rear Bump Damping by 1–2 clicks. Absorbs track imperfections and softens transient load transfer during acceleration.
+   - **Tyres & Alignment:** Increase Rear Toe-In (+0.05° to +0.10°). Adds dynamic rear tracking stability on braking and power delivery.
+
+3. **Telemetry/Driver Feedback Check:**
+   - Driver should feel a calmer rear axle under trail braking and more progressive traction build on exit. Check rear wheel slip traces and steering corrections — throttle application should no longer induce sudden snap oversteer.
 
 ⚠️ *This is a cached offline response. The AI Race Engineer will provide personalised analysis when available.*`
     }
