@@ -236,7 +236,7 @@ function SetupSlider({ label, value, min, max, step, unit = "", discreteArray }:
       <div className="flex justify-between items-start gap-1 pb-1.5 border-b border-zinc-150">
         <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block font-bold">{label}</span>
         <span className="text-xs font-mono font-black text-brand bg-zinc-100/80 px-1.5 py-0.5 rounded border border-zinc-150">
-          {value.toFixed(unit === "ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
+          {value.toFixed(unit === "°" || unit === "%" ? 2 : unit === "PSI" ? 1 : 0)}
           <span className="text-[10px] font-bold text-zinc-400 ml-0.5">{unit}</span>
         </span>
       </div>
@@ -289,8 +289,10 @@ export default function App() {
   const [selectedTab, setSelectedTab] = useState<"tyres" | "electronics" | "fuel" | "mechanical" | "aero" | "dampers">("tyres");
   const [currentView, setCurrentView] = useState<"telemetry" | "laptimes" | "garage" | "engineer">(() => {
     if (typeof window === "undefined") return "telemetry";
-    const tab = new URLSearchParams(window.location.search).get("tab");
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
     if (tab === "laptimes" || tab === "garage" || tab === "engineer") return tab;
+    if (params.has("laptimes") || params.has("circuit")) return "laptimes";
     return "telemetry";
   });
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
@@ -466,7 +468,7 @@ export default function App() {
       const tabParam = params.get("tab");
       const validTab = (tabParam === "laptimes" || tabParam === "garage" || tabParam === "engineer")
         ? tabParam
-        : "telemetry";
+        : (params.has("laptimes") || params.has("circuit") ? "laptimes" : "telemetry");
       setCurrentView(validTab);
 
       // 2. Sync active setup if specified in URL
@@ -523,10 +525,17 @@ export default function App() {
 
     const params = new URLSearchParams();
     if (currentView !== "telemetry") params.set("tab", currentView);
-    if (activeSetup?.id) params.set("setup", activeSetup.id);
-    if (carFilter && carFilter !== "all") params.set("car", carFilter);
-    if (trackFilter && trackFilter !== "all") params.set("track", trackFilter);
-    if (isMobile && mobileView === "inspection") params.set("view", "inspection");
+    if (currentView === "telemetry") {
+      if (activeSetup?.id) params.set("setup", activeSetup.id);
+      if (carFilter && carFilter !== "all") params.set("car", carFilter);
+      if (trackFilter && trackFilter !== "all") params.set("track", trackFilter);
+      if (isMobile && mobileView === "inspection") params.set("view", "inspection");
+    } else if (currentView === "laptimes") {
+      const existing = new URLSearchParams(window.location.search);
+      if (existing.has("circuit")) params.set("circuit", existing.get("circuit")!);
+      if (existing.has("class")) params.set("class", existing.get("class")!);
+      if (existing.has("car")) params.set("car", existing.get("car")!);
+    }
 
     const qs = params.toString();
     const newSearch = qs ? `?${qs}` : "";
@@ -755,7 +764,7 @@ export default function App() {
     }
   };
 
-  // Memoized handler for registry list item clicks ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â prevents N function allocations per render
+  // Memoized handler for registry list item clicks — prevents N function allocations per render
   const handleSetupClick = useCallback((setup: SetupItem) => {
     setActiveSetup(setup);
     if (isMobile) setMobileView('inspection');
@@ -1233,7 +1242,7 @@ export default function App() {
         setActiveSetup(lastSavedItem);
         const carName = ACC_CARS[lastSavedItem.car] || lastSavedItem.car || "GT3 Car";
         const trackName = ACC_TRACKS[lastSavedItem.track] || lastSavedItem.track || "Circuit";
-        showToast(`${carName} ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${trackName} loaded`, "success");
+        showToast(`${carName} · ${trackName} loaded`, "success");
       }
 
       setPendingSetups([]);
@@ -1280,7 +1289,7 @@ export default function App() {
       const reader = new FileReader();
       reader.onload = (event) => {
         setCustomGuideText(event.target?.result as string);
-        showToast("Workbook imported ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â commit to save", "info");
+        showToast("Workbook imported — commit to save", "info");
       };
       reader.readAsText(file);
     }
@@ -1323,7 +1332,7 @@ export default function App() {
       if (data.error) {
         setChatMessages((prev) => [
           ...prev,
-          { role: "model", content: `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â **Engineering Radio Down:** ${data.error}` }
+          { role: "model", content: `⚠️ **Engineering Radio Down:** ${data.error}` }
         ]);
       } else {
         setChatMessages((prev) => [...prev, { role: "model", content: data.reply }]);
@@ -1331,7 +1340,7 @@ export default function App() {
     } catch (err) {
       setChatMessages((prev) => [
         ...prev,
-        { role: "model", content: "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â **Timeout Error:** Could not contact the pitwall. Ensure your dev server is active on Port 3000." }
+        { role: "model", content: "⚠️ **Timeout Error:** Could not contact the pitwall. Ensure your dev server is active on Port 3000." }
       ]);
     }
     setIsChatAnalyzing(false);
@@ -1524,8 +1533,8 @@ export default function App() {
     const startHour = parseInt(transitionTimeStart.split(":")[0]) || 17;
     const durationHrs = transitionDuration / 60;
     
-    let trackCoolingRate = 0; // ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C per hour
-    let ambientCoolingRate = 0; // ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C per hour
+    let trackCoolingRate = 0; // °C per hour
+    let ambientCoolingRate = 0; // °C per hour
     let coolingType = "Stable Ambient";
     
     if (startHour >= 12 && startHour < 16) {
@@ -1554,7 +1563,7 @@ export default function App() {
     const ambientDrop = ambientCoolingRate * durationHrs;
     
     // In ACC, base cold pressures need to increase as temps drop
-    // Factor: ~ +0.1 PSI for every 1ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C of track drop, ~ +0.12 PSI for every 1ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C of ambient drop
+    // Factor: ~ +0.1 PSI for every 1°C of track drop, ~ +0.12 PSI for every 1°C of ambient drop
     const rawOffset = (trackDrop * 0.1) + (ambientDrop * 0.12);
     // Keep offset representation clean and rounded
     const compensationPSI = Math.round(rawOffset * 10) / 10;
@@ -1737,7 +1746,7 @@ export default function App() {
             }`}
           >
             <Wrench className="w-4 h-4 text-emerald-440" />
-            <span className="hidden md:inline">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ AI RACE ENGINEER</span>
+            <span className="hidden md:inline">AI RACE ENGINEER</span>
             <span className="md:hidden">ENGINEER</span>
           </button>
         </div>
@@ -1762,6 +1771,7 @@ export default function App() {
                 id="registry-search-input"
                 type="text"
                 placeholder="Search setup notes..."
+                aria-label="Search setups"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 className="w-full bg-zinc-50 text-zinc-900 pl-9 pr-4 py-2 border border-zinc-250 rounded text-base md:text-sm focus:outline-none focus:border-red-600 focus-visible:ring-2 focus-visible:ring-red-600"
@@ -2101,19 +2111,13 @@ export default function App() {
                             
                             <div className="flex gap-1.5 mt-1.5 flex-wrap">
                               {hasTrackUnknown && (
-                                <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">
-                                  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Circuit Unspecified
-                                </span>
+                                <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">Circuit Unspecified</span>
                               )}
                               {hasCarUnknown && (
-                                <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">
-                                  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Car Unspecified
-                                </span>
+                                <span className="bg-amber-50 border border-amber-200 text-amber-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold">Car Unspecified</span>
                               )}
                               {!hasTrackUnknown && !hasCarUnknown && (
-                                <span className="bg-red-50 border border-red-200 text-brand text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">
-                                  ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ Identified
-                                </span>
+                                <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">Identified</span>
                               )}
                             </div>
                           </div>
@@ -2250,7 +2254,28 @@ export default function App() {
             </div>
 
             {activeGarageTab === "team" ? (
-              <div id="setup-registry-list" className="md:max-h-[380px] md:overflow-y-auto divide-y divide-zinc-150">
+              <div
+                id="setup-registry-list"
+                role="listbox"
+                aria-label="Setup registry"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (filteredSetups.length === 0) return;
+                  const currentIndex = filteredSetups.findIndex((s) => s.id === activeSetup?.id);
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    const nextIndex = currentIndex < filteredSetups.length - 1 ? currentIndex + 1 : 0;
+                    handleSetupClick(filteredSetups[nextIndex]);
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    const prevIndex = currentIndex > 0 ? currentIndex - 1 : filteredSetups.length - 1;
+                    handleSetupClick(filteredSetups[prevIndex]);
+                  } else if (e.key === "Enter" && activeSetup) {
+                    if (isMobile) setMobileView("inspection");
+                  }
+                }}
+                className="md:max-h-[380px] md:overflow-y-auto divide-y divide-zinc-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 rounded-b-lg"
+              >
                 {filteredSetups.length === 0 ? (
                   <div className="p-6 text-center text-zinc-500 text-xs">
                     <FileText className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -2262,25 +2287,34 @@ export default function App() {
                     return (
                       <div
                         key={setup.id}
+                        role="option"
+                        aria-selected={isActive}
+                        tabIndex={isActive ? 0 : -1}
                         onClick={() => handleSetupClick(setup)}
-                        className={`p-3.5 hover:bg-zinc-50 transition-all cursor-pointer flex items-start justify-between gap-2 group ${isActive ? "bg-red-50/60 border-l-4 border-red-600" : "bg-white"}`}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handleSetupClick(setup);
+                          }
+                        }}
+                        className={`p-3.5 hover:bg-zinc-50 transition-all cursor-pointer flex items-start justify-between gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${isActive ? "bg-red-50/60 border-l-4 border-red-600" : "bg-white"}`}
                       >
                         <div className="min-w-0 flex-1">
                           {/* Line 1: Identified Car Name Header */}
-                          <div className={`font-bold text-xs truncate max-w-[280px] tracking-tight group-hover:text-brand-hover ${isActive ? "text-red-750 font-black" : "text-zinc-900"}`}>
-                            {ACC_CARS[setup.car] || setup.car || "Unknown Car"}
+                          <div className={`font-bold text-xs truncate max-w-[280px] tracking-tight group-hover:text-brand-hover ${isActive ? "text-brand font-black" : "text-zinc-900"}`}>
+                            {ACC_CARS[setup.car] || setup.car || "—"}
                           </div>
                           {/* Line 2: Track / Circuit */}
                           <div className={`text-[10px] font-semibold truncate max-w-[280px] mt-0.5 ${isActive ? "text-zinc-700" : "text-zinc-500"}`}>
-                            Circuit: {ACC_TRACKS[setup.track] || setup.track || "Unknown Track"}
+                            {ACC_TRACKS[setup.track] || setup.track || "—"}
                           </div>
-                          {/* Line 3: Filename / Name */}
+                          {/* Line 3: Filename / Name & Author */}
                           <div className={`text-[10px] font-mono truncate max-w-[280px] mt-0.5 ${isActive ? "text-zinc-500" : "text-zinc-400"}`}>
-                            Setup: {setup.name}
+                            {setup.uploadedByName ? `${setup.uploadedByName} · ` : ""}{setup.name || "—"}
                           </div>
                           {(setup.notes?.includes('[Adapted from') || setup.versionNote?.includes('[Adapted from')) && (
                             <div className="mt-1 flex">
-                              <span className="font-mono text-[10px] uppercase tracking-wider text-amber-650 bg-amber-100/60 font-black px-1.5 py-0.5 rounded border border-amber-250/30">
+                              <span className="font-mono text-[10px] uppercase tracking-wider text-amber-700 bg-amber-100/60 font-black px-1.5 py-0.5 rounded border border-amber-250/30">
                                 Adapted
                               </span>
                             </div>
@@ -2331,7 +2365,7 @@ export default function App() {
 
                 {githubStatus === "error" && githubError && (
                   <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3.5 rounded-lg font-mono font-medium shadow-xs">
-                    <div className="font-bold uppercase tracking-wider text-[10px] text-red-800 mb-1">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Community Sync Failed</div>
+                    <div className="font-bold uppercase tracking-wider text-[10px] text-red-800 mb-1">⚠️ Community Sync Failed</div>
                     {githubError}
                   </div>
                 )}
@@ -2339,8 +2373,7 @@ export default function App() {
                 {/* Scanned Setup Files list */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between text-xs font-mono text-zinc-400 border-b border-zinc-200 pb-2">
-                    <span className="flex items-center gap-1.5 font-bold uppercase text-[10px] text-zinc-600 tracking-wider">
-                      ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Remote Community Search Results
+                    <span className="flex items-center gap-1.5 font-bold uppercase text-[10px] text-zinc-600 tracking-wider">🔍 Remote Community Search Results
                       {githubStatus === "connected" && (
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Synchronized Live" />
                       )}
@@ -2381,10 +2414,10 @@ export default function App() {
                                     className="font-mono text-[10px] sm:text-[10px] px-1.5 py-0.2 rounded bg-zinc-950 font-bold flex items-center gap-1 text-amber-500 shrink-0"
                                     title={item.meta.gradeLabel}
                                   >
-                                    {item.meta.grade === 3 && "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â [LGE]"}
-                                    {item.meta.grade === 2 && "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â  [WIP]"}
-                                    {item.meta.grade === 1 && "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â  [BAS]"}
-                                    {item.meta.grade === 0 && "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â  [PRE]"}
+                                    {item.meta.grade === 3 && "★★★ [LGE]"}
+                                    {item.meta.grade === 2 && "★★☆ [WIP]"}
+                                    {item.meta.grade === 1 && "★☆☆ [BAS]"}
+                                    {item.meta.grade === 0 && "☆☆☆ [PRE]"}
                                   </span>
                                 )}
 
@@ -2694,7 +2727,7 @@ export default function App() {
                       <div className="flex items-center gap-2.5 min-w-0">
                         <FileText className={`w-4 h-4 text-brand shrink-0 ${isCrewNotesOpen ? "animate-pulse" : ""}`} />
                         <span className="text-zinc-550 font-extrabold font-mono uppercase tracking-wider text-[10px] truncate">
-                          Uploaded by <strong className="text-zinc-800 font-extrabold">{activeSetup.uploadedByName || "Team Lead"}</strong> ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Crew Notes
+                          Uploaded by <strong className="text-zinc-800 font-extrabold">{activeSetup.uploadedByName || "Team Lead"}</strong> · Crew Notes
                         </span>
                       </div>
                       <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform duration-200 shrink-0 ${isCrewNotesOpen ? "rotate-180" : ""}`} />
@@ -2774,12 +2807,16 @@ export default function App() {
                       {/* Star Picker */}
                       <div className="flex items-center gap-1.5 shrink-0 px-1">
                         <span className="text-zinc-505 font-extrabold font-mono uppercase text-[10px] tracking-wider block shrink-0">Your Assessment:</span>
-                        <div className="flex items-center gap-0.5">
+                        <div className="flex items-center gap-0.5" role="radiogroup" aria-label="Rate setup handling quality">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <button
                               key={star}
+                              type="button"
+                              role="radio"
+                              aria-checked={userRating >= star}
+                              aria-label={`${star} star${star > 1 ? "s" : ""}`}
                               onClick={() => setUserRating(star)}
-                              className="text-zinc-350 hover:text-amber-500 cursor-pointer transition-all select-none focus:outline-none"
+                              className="text-zinc-350 hover:text-amber-500 cursor-pointer transition-all select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-amber-500 rounded p-0.5"
                             >
                               <Star className={`w-4 h-4 ${star <= userRating ? "text-amber-500 fill-amber-500" : "text-zinc-300"}`} />
                             </button>
@@ -2920,10 +2957,10 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-4 items-stretch">
+                      <div className="flex flex-col gap-4 items-stretch" role="group" aria-label="Tyre Pressures & Wheel Alignment">
                         
                         {/* Front tyres aligning card */}
-                        <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
+                        <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm" role="group" aria-label="Front Tyres & Alignment">
                           <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">FRONT TYRES & ALIGNMENT (LF/RF)</span>
                             <span className="text-[10px] text-zinc-400 font-mono font-bold">PRESSURE & CAR OUTLINES</span>
@@ -2935,7 +2972,7 @@ export default function App() {
                               const basePSI = parsedActiveSetup.tyrePressures[0];
                               const displayPSI = showCompensated ? (basePSI - coolingData.compensationPSI) : basePSI;
                               return (
-                                <div className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
+                                <div role="group" aria-label="Front Left Wheel" className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">LF Front Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
                                     <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
@@ -2944,18 +2981,20 @@ export default function App() {
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", -1, 0)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Decrease front left pressure by 0.1 PSI"
                                           title="Decrease Pressure 0.1 PSI"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
+                                      <strong aria-live="polite" className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
                                         {displayPSI.toFixed(1)} PSI
                                       </strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", 1, 0)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Increase front left pressure by 0.1 PSI"
                                           title="Increase Pressure 0.1 PSI"
                                         >
                                           +
@@ -2969,15 +3008,17 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", -1, 0)}
+                                          aria-label="Decrease front left toe"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[0]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[0]}°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 0)}
+                                          aria-label="Increase front left toe"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
@@ -2991,15 +3032,17 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", -1, 0)}
+                                          aria-label="Decrease front left camber"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[0]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[0]}°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 0)}
+                                          aria-label="Increase front left camber"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
@@ -3013,15 +3056,17 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", -1, 0)}
+                                          aria-label="Decrease front left caster"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[0]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[0]}°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 0)}
+                                          aria-label="Increase front left caster"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
@@ -3038,7 +3083,7 @@ export default function App() {
                               const basePSI = parsedActiveSetup.tyrePressures[1];
                               const displayPSI = showCompensated ? (basePSI - coolingData.compensationPSI) : basePSI;
                               return (
-                                <div className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
+                                <div role="group" aria-label="Front Right Wheel" className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">RF Front Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
                                     <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
@@ -3047,18 +3092,20 @@ export default function App() {
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", -1, 1)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Decrease front right pressure by 0.1 PSI"
                                           title="Decrease Pressure 0.1 PSI"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
+                                      <strong aria-live="polite" className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
                                         {displayPSI.toFixed(1)} PSI
                                       </strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", 1, 1)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Increase front right pressure by 0.1 PSI"
                                           title="Increase Pressure 0.1 PSI"
                                         >
                                           +
@@ -3072,15 +3119,17 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", -1, 1)}
+                                          aria-label="Decrease front right toe"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[1]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[1]}°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 1)}
+                                          aria-label="Increase front right toe"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
@@ -3094,15 +3143,17 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", -1, 1)}
+                                          aria-label="Decrease front right camber"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[1]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[1]}°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 1)}
+                                          aria-label="Increase front right camber"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
@@ -3116,15 +3167,17 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", -1, 1)}
+                                          aria-label="Decrease front right caster"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[1]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.casters[1]}°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("caster", 1, 1)}
+                                          aria-label="Increase front right caster"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
@@ -3139,7 +3192,7 @@ export default function App() {
                         </div>
 
                         {/* Rear tyres aligning card */}
-                        <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm">
+                        <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm" role="group" aria-label="Rear Tyres & Alignment">
                           <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center">
                             <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">REAR TYRES & ALIGNMENT (LR/RR)</span>
                             <span className="text-[10px] text-zinc-400 font-mono font-bold">PRESSURE & CAR OUTLINES</span>
@@ -3151,7 +3204,7 @@ export default function App() {
                               const basePSI = parsedActiveSetup.tyrePressures[2];
                               const displayPSI = showCompensated ? (basePSI - coolingData.compensationPSI) : basePSI;
                               return (
-                                <div className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
+                                <div role="group" aria-label="Rear Left Wheel" className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">LR Rear Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
                                     <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
@@ -3160,18 +3213,20 @@ export default function App() {
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", -1, 2)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Decrease rear left pressure by 0.1 PSI"
                                           title="Decrease Pressure 0.1 PSI"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
+                                      <strong aria-live="polite" className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
                                         {displayPSI.toFixed(1)} PSI
                                       </strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", 1, 2)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Increase rear left pressure by 0.1 PSI"
                                           title="Increase Pressure 0.1 PSI"
                                         >
                                           +
@@ -3185,15 +3240,17 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", -1, 2)}
+                                          aria-label="Decrease rear left toe"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[2]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[2]}°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 2)}
+                                          aria-label="Increase rear left toe"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
@@ -3207,15 +3264,17 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", -1, 2)}
+                                          aria-label="Decrease rear left camber"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[2]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[2]}°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 2)}
+                                          aria-label="Increase rear left camber"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
@@ -3232,7 +3291,7 @@ export default function App() {
                               const basePSI = parsedActiveSetup.tyrePressures[3];
                               const displayPSI = showCompensated ? (basePSI - coolingData.compensationPSI) : basePSI;
                               return (
-                                <div className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
+                                <div role="group" aria-label="Rear Right Wheel" className={`p-4 rounded-lg border hover:border-brand transition-colors ${showCompensated ? "border-amber-300 bg-amber-50/5" : "bg-zinc-50 border-zinc-200"} space-y-2.5`}>
                                   <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">RR Rear Wheel</div>
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 pb-1">
                                     <span className="text-zinc-550 font-semibold text-xs">Tyre Pressure:</span>
@@ -3241,18 +3300,20 @@ export default function App() {
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", -1, 3)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Decrease rear right pressure by 0.1 PSI"
                                           title="Decrease Pressure 0.1 PSI"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
+                                      <strong aria-live="polite" className={`font-mono font-bold text-sm ${getPressureColor(displayPSI)}`}>
                                         {displayPSI.toFixed(1)} PSI
                                       </strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("tyrePressure", 1, 3)}
                                           className="w-11 h-11 flex items-center justify-center bg-zinc-200 border border-zinc-300 hover:bg-zinc-300 rounded-lg text-sm font-black cursor-pointer active:scale-95 select-none text-zinc-800 font-mono"
+                                          aria-label="Increase rear right pressure by 0.1 PSI"
                                           title="Increase Pressure 0.1 PSI"
                                         >
                                           +
@@ -3266,15 +3327,17 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", -1, 3)}
+                                          aria-label="Decrease rear right toe"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[3]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.toes[3]}°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("toe", 1, 3)}
+                                          aria-label="Increase rear right toe"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
@@ -3288,15 +3351,17 @@ export default function App() {
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", -1, 3)}
+                                          aria-label="Decrease rear right camber"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           -
                                         </button>
                                       )}
-                                      <strong className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[3]}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
+                                      <strong aria-live="polite" className="text-zinc-955 font-extrabold">{parsedActiveSetup.cambers[3]}°</strong>
                                       {isTuneMode && (
                                         <button
                                           onClick={() => handleAdjustSetupValue("camber", 1, 3)}
+                                          aria-label="Increase rear right camber"
                                           className="w-8 h-8 flex items-center justify-center bg-zinc-200 hover:bg-zinc-300 border border-zinc-300 rounded text-xs font-black cursor-pointer active:scale-95 text-zinc-800 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                                         >
                                           +
@@ -3325,8 +3390,7 @@ export default function App() {
                           </button>
 
                           {showCompensated && (
-                            <div className="text-[10px] text-center text-amber-900 mt-2 p-2 bg-amber-50/80 rounded border border-amber-200 font-mono font-semibold">
-                              ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  Thermal pressure loss simulated. Notice tyres falling into the <strong className="text-sky-700">blue/underinflated</strong> zone as track temperature cools down.
+                            <div className="text-[10px] text-center text-amber-900 mt-2 p-2 bg-amber-50/80 rounded border border-amber-200 font-mono font-semibold">⚠️ Thermal pressure loss simulated. Notice tyres falling into the <strong className="text-sky-700">blue/underinflated</strong> zone as track temperature cools down.
                             </div>
                           )}
                         </div>
@@ -3365,7 +3429,7 @@ export default function App() {
                                   const isSunset = i === 17 || i === 18 || i === 19;
                                   return (
                                     <option key={hourStr} value={hourStr}>
-                                      {hourStr} {isSunset ? "ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¡ (Sunset Transition)" : ""}
+                                      {hourStr} {isSunset ? "🌅 (Sunset Transition)" : ""}
                                     </option>
                                   );
                                 })}
@@ -3441,7 +3505,7 @@ export default function App() {
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="flex-1 text-center font-mono text-xs font-bold text-zinc-900 select-none">
-                                  {transitionAmbientTemp}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
+                                  {transitionAmbientTemp}°C
                                 </span>
                                 <button
                                   type="button"
@@ -3475,7 +3539,7 @@ export default function App() {
                                   <Minus className="w-3.5 h-3.5" />
                                 </button>
                                 <span className="flex-1 text-center font-mono text-xs font-bold text-zinc-900 select-none">
-                                  {transitionTrackTemp}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
+                                  {transitionTrackTemp}°C
                                 </span>
                                 <button
                                   type="button"
@@ -3498,11 +3562,11 @@ export default function App() {
                               <span className="text-[10px] font-mono text-zinc-650 uppercase font-bold">Session Thermal Evolution</span>
                               <span className="text-xs font-mono text-amber-800 font-extrabold flex items-center gap-1">
                                 {parseInt(transitionTimeStart.split(":")[0]) >= 16 && parseInt(transitionTimeStart.split(":")[0]) < 21 ? (
-                                  <>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ {coolingData.coolingType}</>
+                                  <>🌅 {coolingData.coolingType}</>
                                 ) : parseInt(transitionTimeStart.split(":")[0]) >= 21 || parseInt(transitionTimeStart.split(":")[0]) < 5 ? (
-                                  <>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ {coolingData.coolingType}</>
+                                  <>🌙 {coolingData.coolingType}</>
                                 ) : (
-                                  <>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â {coolingData.coolingType}</>
+                                  <>☀️ {coolingData.coolingType}</>
                                 )}
                               </span>
                             </div>
@@ -3517,10 +3581,10 @@ export default function App() {
                                       {isLoss ? "Est. Ambient Drop" : "Est. Ambient Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-emerald-700" : "text-amber-600"}`}>
-                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
+                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}°C
                                     </span>
                                     <span className="text-[10px] font-mono text-zinc-500 block mt-0.5">
-                                      Finish: {(transitionAmbientTemp - val).toFixed(1)}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
+                                      Finish: {(transitionAmbientTemp - val).toFixed(1)}°C
                                     </span>
                                   </div>
                                 );
@@ -3535,10 +3599,10 @@ export default function App() {
                                       {isLoss ? "Est. Track Drop" : "Est. Track Rise"}
                                     </span>
                                     <span className={`text-sm font-mono font-black ${isLoss ? "text-blue-700" : "text-orange-600"}`}>
-                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
+                                      {isLoss ? "-" : "+"}{Math.abs(val).toFixed(1)}°C
                                     </span>
                                     <span className="text-[10px] font-mono text-zinc-500 block mt-0.5">
-                                      Finish: {(transitionTrackTemp - val).toFixed(1)}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°C
+                                      Finish: {(transitionTrackTemp - val).toFixed(1)}°C
                                     </span>
                                   </div>
                                 );
@@ -4246,7 +4310,7 @@ export default function App() {
                               </div>
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-semibold items-center">
                                 <span className="text-zinc-500 font-sans font-medium">Front Splitter:</span>
-                                <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.splitter}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
+                                <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.splitter}°</strong>
                               </div>
                               <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-bold items-center">
                                 <span className="text-zinc-500 font-sans font-medium">Front Brake Duct:</span>
@@ -4300,7 +4364,7 @@ export default function App() {
                                       -
                                     </button>
                                   )}
-                                  <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.rearWing}ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°</strong>
+                                  <strong className="text-zinc-900 text-sm font-extrabold">{parsedActiveSetup.rearWing}°</strong>
                                   {isTuneMode && (
                                     <button
                                       onClick={() => handleAdjustSetupValue("rearWing", 1)}
@@ -4813,7 +4877,7 @@ export default function App() {
                 loadTunedSetups();
               } catch (err) {
                 console.error(err);
-                showToast("Delete failed ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â try again", "error");
+                showToast("Delete failed — try again", "error");
               }
             }}
             onRefresh={async () => {
@@ -4839,7 +4903,7 @@ export default function App() {
       {/* 3. Footer indicator metadata */}
       <footer id="visual-garage-footer" className="bg-zinc-950 border-t border-zinc-900 py-4 px-6 text-center mt-auto font-mono text-[10px] text-zinc-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
-          <span>PITWALL COMPANION APP V1.9 ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ POWERED BY JAXTUNE</span>
+          <span>PITWALL COMPANION APP V1.9 · POWERED BY JAXTUNE</span>
           <span>CRAFTED FOR ACC AND LATE NIGHT RACING</span>
         </div>
       </footer>
@@ -4855,7 +4919,7 @@ export default function App() {
           >
             <div className={`w-2 h-2 rounded-full shrink-0 ${toast.type === "success" ? "bg-emerald-500" : toast.type === "error" ? "bg-red-500" : "bg-cyan-500"}`} />
             <span className="text-xs font-semibold leading-relaxed text-zinc-200">{toast.message}</span>
-            <button onClick={() => setToast(null)} className="ml-2 hover:text-white text-zinc-400 text-sm font-bold cursor-pointer transition-colors shrink-0">ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â</button>
+            <button onClick={() => setToast(null)} aria-label="Close notification" className="ml-2 hover:text-white text-zinc-400 text-sm font-bold cursor-pointer transition-colors shrink-0">✕</button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -4887,9 +4951,10 @@ export default function App() {
             >
               <button
                 onClick={() => setShowProfileModal(false)}
+                aria-label="Close profile modal"
                 className="absolute right-4 top-4 hover:text-zinc-800 text-zinc-400 text-xl font-bold cursor-pointer transition-colors p-1"
               >
-                ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â
+                ✕
               </button>
 
               <div className="text-center mb-6">
@@ -4955,15 +5020,15 @@ export default function App() {
                   {/* Status explanation */}
                   <span className="text-[10px] mt-1.5 block font-medium leading-normal">
                     {editUsername.trim().toLowerCase() === profile.username.toLowerCase() ? (
-                      <span className="text-emerald-600 font-bold">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ This is your current active callsigned username.</span>
+                      <span className="text-emerald-600 font-bold">✓ This is your current active callsigned username.</span>
                     ) : editUsername.trim().length < 3 ? (
                       <span className="text-amber-600 font-bold">Username must be at least 3 characters.</span>
                     ) : editCheckingUsername ? (
                       <span className="text-zinc-505">Checking username registry...</span>
                     ) : editUsernameAvailable === true ? (
-                      <span className="text-emerald-600 font-bold">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ This handle is clear and authentic!</span>
+                      <span className="text-emerald-600 font-bold">✓ This handle is clear and authentic!</span>
                     ) : editUsernameAvailable === false ? (
-                      <span className="text-red-500 font-black">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â This handle is already registered by another driver.</span>
+                      <span className="text-red-500 font-black">✕ This handle is already registered by another driver.</span>
                     ) : null}
                   </span>
                 </div>

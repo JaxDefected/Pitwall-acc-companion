@@ -39,9 +39,28 @@ const GT4_COLUMNS = [
 ];
 
 export default function LapTimesPage() {
-  const [selectedClass, setSelectedClass] = useState<"GT2" | "GT3" | "GT4">("GT3");
-  const [selectedCar, setSelectedCar] = useState<string>("");
-  const [selectedTrack, setSelectedTrack] = useState<string>("");
+  const [selectedClass, setSelectedClass] = useState<"GT2" | "GT3" | "GT4">(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      const c = p.get("class")?.toUpperCase();
+      if (c === "GT2" || c === "GT3" || c === "GT4") return c;
+    }
+    return "GT3";
+  });
+  const [selectedCar, setSelectedCar] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("car") || "";
+    }
+    return "";
+  });
+  const [selectedTrack, setSelectedTrack] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      const trk = p.get("circuit") || p.get("track") || (p.get("laptimes") !== "true" ? p.get("laptimes") : null);
+      return trk || "";
+    }
+    return "";
+  });
   const [isBriefingOpen, setIsBriefingOpen] = useState<boolean>(true);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [mapSrc, setMapSrc] = useState<string>("");
@@ -99,6 +118,63 @@ export default function LapTimesPage() {
     }
     return Array.from(allTracksSet).sort();
   }, [activeCarObj, availableCars]);
+
+  // Deep-linking recovery: resolve car & track names case-insensitively against available items
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const carParam = params.get("car");
+    const trackParam = params.get("circuit") || params.get("track") || (params.get("laptimes") !== "true" ? params.get("laptimes") : null);
+
+    if (carParam && availableCars.length > 0) {
+      const matched = availableCars.find((c: any) =>
+        c.car.toLowerCase() === carParam.toLowerCase() ||
+        c.car.toLowerCase().includes(carParam.toLowerCase())
+      );
+      if (matched && matched.car !== selectedCar) {
+        setSelectedCar(matched.car);
+      }
+    }
+
+    if (trackParam && availableTracks.length > 0) {
+      const matched = availableTracks.find((t: string) =>
+        t.toLowerCase() === trackParam.toLowerCase() ||
+        t.toLowerCase().includes(trackParam.toLowerCase())
+      );
+      if (matched && matched !== selectedTrack) {
+        setSelectedTrack(matched);
+      }
+    }
+  }, [availableCars, availableTracks]);
+
+  // Synchronize URL parameters on user selection change
+  useEffect(() => {
+    if (typeof window === "undefined" || !isDataReady) return;
+    const params = new URLSearchParams(window.location.search);
+    const isLapTimesView = params.get("tab") === "laptimes" || params.has("circuit") || params.has("laptimes");
+    if (!isLapTimesView) return;
+
+    params.set("tab", "laptimes");
+    params.set("class", selectedClass);
+    if (selectedCar) {
+      params.set("car", selectedCar);
+    } else {
+      params.delete("car");
+    }
+    if (selectedTrack) {
+      params.set("circuit", selectedTrack);
+      params.delete("track");
+    } else {
+      params.delete("circuit");
+      params.delete("track");
+    }
+
+    const qs = params.toString();
+    const newUrl = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
+    if (window.location.search !== `?${qs}`) {
+      window.history.replaceState(window.history.state, "", newUrl);
+    }
+  }, [selectedClass, selectedCar, selectedTrack, isDataReady]);
 
   // Handle class shift as clean reset
   const handleClassChange = (cls: "GT2" | "GT3" | "GT4") => {
