@@ -65,7 +65,7 @@ import {
   UserProfile
 } from "./firebase";
 import { useAuth } from "./hooks/useAuth";
-import { useGitHubSync, parseGithubPath } from "./hooks/useGitHubSync";
+import { useGitHubSync, parseGithubPath, detectCarFromSegment, detectTrackFromSegment } from "./hooks/useGitHubSync";
 import { parseAccSetup, NormalizedAccSetup, ACC_CARS, ACC_TRACKS, formatDegrees, formatCelsius } from "./utils/accParser";
 import { calculateTransitionCoolingModel, getPressureColor } from "./utils/thermalEngine";
 import { fetchWithRetry } from "./utils/fetchWithRetry";
@@ -709,7 +709,12 @@ export default function App() {
       if (requestedSetupId && list.length > 0) {
         const match = list.find((s) => s.id === requestedSetupId);
         if (match) {
-          setActiveSetup(match);
+          setActiveSetup({
+            ...match,
+            name: match.versionNote || `${match.car} @ ${match.track}`,
+            uploadedBy: match.authorUsername || "Driver",
+            uploadedByName: match.authorUsername || "Driver",
+          });
           if (isMobile) setMobileView("inspection");
         }
       }

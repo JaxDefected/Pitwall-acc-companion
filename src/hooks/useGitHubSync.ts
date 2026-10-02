@@ -95,7 +95,7 @@ function parseSetupFilenameMetadata(fileName: string): SetupFilenameMetadata {
   return { grade, gradeLabel, patch, session, sessionLabel, temp, isCustomFormat };
 }
 
-function detectCarFromSegment(segment: string): string {
+export function detectCarFromSegment(segment: string): string {
   const clean = segment.toLowerCase().trim();
   if (!clean) return "unknown";
 
@@ -128,7 +128,7 @@ function detectCarFromSegment(segment: string): string {
   return "unknown";
 }
 
-function detectTrackFromSegment(segment: string): string {
+export function detectTrackFromSegment(segment: string): string {
   const clean = segment.toLowerCase().trim();
   if (!clean) return "unknown";
   const normClean = clean.replace(/[-_\s]/g, "");
