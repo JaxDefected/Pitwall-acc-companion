@@ -167,6 +167,63 @@ export default function FuelStrategyTab({
         fuelNeeded: stint3Fuel > pitMaxFuelCapacity ? pitMaxFuelCapacity : stint3Fuel,
         isOverfilled: stint3Fuel > pitMaxFuelCapacity,
       });
+    } else if (pitNumberOfStops === 3) {
+      // 3 stops = 4 stints
+      let ratio1 = 0.25;
+      let ratio2 = 0.25;
+      let ratio3 = 0.25;
+      let ratio4 = 0.25;
+
+      if (pitStrategyPreference === "undercut") {
+        ratio1 = 0.20;
+        ratio2 = 0.25;
+        ratio3 = 0.27;
+        ratio4 = 0.28;
+      } else if (pitStrategyPreference === "overcut") {
+        ratio1 = 0.28;
+        ratio2 = 0.27;
+        ratio3 = 0.25;
+        ratio4 = 0.20;
+      }
+
+      const laps1 = Math.ceil(estTotalLaps * ratio1);
+      const laps2 = Math.ceil(estTotalLaps * ratio2);
+      const laps3 = Math.ceil(estTotalLaps * ratio3);
+      const laps4 = estTotalLaps - laps1 - laps2 - laps3;
+
+      const stint1Fuel = (laps1 + 1) * fuelPerLap;
+      const stint2Fuel = (laps2 + 1) * fuelPerLap;
+      const stint3Fuel = (laps3 + 1) * fuelPerLap;
+      const stint4Fuel = (laps4 + Math.max(0, safetyBufferLaps - 3)) * fuelPerLap;
+
+      stints.push({
+        index: 1,
+        durationMins: Math.round(fuelRaceTime * ratio1 * 10) / 10,
+        laps: laps1,
+        fuelNeeded: stint1Fuel > pitMaxFuelCapacity ? pitMaxFuelCapacity : stint1Fuel,
+        isOverfilled: stint1Fuel > pitMaxFuelCapacity,
+      });
+      stints.push({
+        index: 2,
+        durationMins: Math.round(fuelRaceTime * ratio2 * 10) / 10,
+        laps: laps2,
+        fuelNeeded: stint2Fuel > pitMaxFuelCapacity ? pitMaxFuelCapacity : stint2Fuel,
+        isOverfilled: stint2Fuel > pitMaxFuelCapacity,
+      });
+      stints.push({
+        index: 3,
+        durationMins: Math.round(fuelRaceTime * ratio3 * 10) / 10,
+        laps: laps3,
+        fuelNeeded: stint3Fuel > pitMaxFuelCapacity ? pitMaxFuelCapacity : stint3Fuel,
+        isOverfilled: stint3Fuel > pitMaxFuelCapacity,
+      });
+      stints.push({
+        index: 4,
+        durationMins: Math.round(fuelRaceTime * ratio4 * 10) / 10,
+        laps: laps4,
+        fuelNeeded: stint4Fuel > pitMaxFuelCapacity ? pitMaxFuelCapacity : stint4Fuel,
+        isOverfilled: stint4Fuel > pitMaxFuelCapacity,
+      });
     }
 
     const standardMaxInitialFuel = Math.min(pitMaxFuelCapacity, totalFuelNeeded);
@@ -497,7 +554,7 @@ export default function FuelStrategyTab({
               <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-1.5 font-bold">
                 Target Number of Pitstops
               </span>
-              <div className="grid grid-cols-3 gap-1">
+              <div className="grid grid-cols-4 gap-1">
                 {[
                   { label: "0 Stops", val: 0 },
                   { label: "1 Stop", val: 1 },
