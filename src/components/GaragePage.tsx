@@ -11,8 +11,16 @@ import {
   RefreshCw,
   Gauge,
   User,
-  Info
+  Info,
+  SlidersHorizontal,
+  ExternalLink
 } from "lucide-react";
+
+// LNR Race Calendar Google Sheets embed URL
+const LNR_CALENDAR_EMBED_URL =
+  "https://docs.google.com/spreadsheets/d/1s9m3yWd-zBLKf4An5rAJ7sxHy9ouU4y8OZjnN9pXoEs/edit?gid=1362444445#gid=1362444445";
+const LNR_CALENDAR_IFRAME_URL =
+  "https://docs.google.com/spreadsheets/d/1s9m3yWd-zBLKf4An5rAJ7sxHy9ouU4y8OZjnN9pXoEs/pubhtml?gid=1362444445&single=true&widget=true&headers=false";
 
 interface GaragePageProps {
   tunedSetupsList: SavedSetupItem[];
@@ -37,6 +45,8 @@ export default function GaragePage({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [garageMode, setGarageMode] = useState<"setups" | "calendar">("setups");
+
 
   // Filter only my setups
   const mySetupsRaw = profile
@@ -119,43 +129,125 @@ export default function GaragePage({
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2.5 py-0.5 bg-brand text-[10px] font-extrabold font-mono rounded tracking-widest text-white uppercase">PILOT PROFILE GARAGE</span>
-              <span className="px-2.5 py-0.5 bg-zinc-800 text-[10px] font-bold font-mono rounded text-zinc-300">SECURE STORAGE</span>
+              <span className="px-2.5 py-0.5 bg-zinc-800 text-[10px] font-bold font-mono rounded text-zinc-300">LNR EDITION</span>
             </div>
             <h1 className="text-2xl font-bold font-sans tracking-tight text-white flex items-center gap-2">
               <Folder className="w-6 h-6 text-red-500 shrink-0" />
-              <span>My Custom Tuning Garage</span>
+              <span>My Personalised Tunes &amp; Race Calendar</span>
             </h1>
             <p className="text-zinc-400 text-xs mt-1.5 max-w-xl font-medium leading-relaxed">
-              Explore, search, and manage setups customized by you. Any saved variant here is safe in your secure Cloud-synced profile garage, and can be loaded back into the active cockpit HUD instantly with real-time analytics.
+              {garageMode === "setups"
+                ? "Explore, search, and manage your cloud-synced personalised tune variants. Load any setup directly into the cockpit HUD for real-time analytics."
+                : "View the LNR Race Calendar below — all upcoming rounds, dates, and session info in one place. Open in Google Sheets for full editing access."}
             </p>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 rounded-lg text-xs font-mono font-bold tracking-wider transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-red-500" : ""}`} />
-              <span>SYNC CLOUD</span>
-            </button>
+            {garageMode === "setups" && (
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 rounded-lg text-xs font-mono font-bold tracking-wider transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-red-500" : ""}`} />
+                <span>SYNC CLOUD</span>
+              </button>
+            )}
+            {garageMode === "calendar" && (
+              <a
+                href={LNR_CALENDAR_EMBED_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 rounded-lg text-xs font-mono font-bold tracking-wider transition-all active:scale-95 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>OPEN SHEETS</span>
+              </a>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Profile check */}
-      {!profile ? (
-        <div className="bg-white border border-zinc-250 p-12 text-center rounded-xl shadow-sm max-w-lg mx-auto">
-          <div className="bg-amber-100/55 text-amber-600 p-4 rounded-full w-14 h-14 mx-auto mb-4 flex items-center justify-center">
-            <User className="w-7 h-7" />
+      {/* Mode Switch Toggle */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="inline-flex items-center bg-white border border-zinc-200 rounded-xl p-1 shadow-3xs gap-1">
+          <button
+            onClick={() => setGarageMode("setups")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+              garageMode === "setups"
+                ? "bg-zinc-950 text-white shadow-sm"
+                : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"
+            }`}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
+            <span>MY TUNES</span>
+          </button>
+          <button
+            onClick={() => setGarageMode("calendar")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+              garageMode === "calendar"
+                ? "bg-zinc-950 text-white shadow-sm"
+                : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"
+            }`}
+          >
+            <Calendar className="w-3.5 h-3.5 shrink-0" />
+            <span>RACE CALENDAR</span>
+          </button>
+        </div>
+        {garageMode === "calendar" && (
+          <span className="text-[10px] text-zinc-400 font-mono font-bold uppercase tracking-widest">
+            LNR Season Schedule · Powered by Google Sheets
+          </span>
+        )}
+      </div>
+
+      {/* ── CALENDAR MODE ───────────────────────────────────────────── */}
+      {garageMode === "calendar" ? (
+        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-3xs">
+          <div className="border-b border-zinc-100 px-5 py-3 flex items-center justify-between gap-3 bg-zinc-50">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-red-500 shrink-0" />
+              <span className="text-xs font-mono font-extrabold uppercase tracking-widest text-zinc-700">
+                LNR Race Calendar
+              </span>
+            </div>
+            <a
+              href={LNR_CALENDAR_EMBED_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-zinc-500 hover:text-zinc-900 transition-colors"
+            >
+              <ExternalLink className="w-3 h-3" />
+              Open in Google Sheets
+            </a>
           </div>
-          <h3 className="text-lg font-bold text-zinc-900 font-sans tracking-tight">Connect Driver Profile Needed</h3>
-          <p className="text-zinc-500 text-xs mt-2 leading-relaxed font-semibold">
-            To view, store, and manage your private garage and setup variants in the cloud, please log in and connect your Sim Racing Driver Profile via the header button.
-          </p>
+          <iframe
+            src={LNR_CALENDAR_IFRAME_URL}
+            title="LNR Race Calendar"
+            className="w-full border-0"
+            style={{ height: "680px" }}
+            loading="lazy"
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          />
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        /* ── SETUPS MODE ── */
+        <>
+        {/* Profile check */}
+        {!profile ? (
+          <div className="bg-white border border-zinc-250 p-12 text-center rounded-xl shadow-sm max-w-lg mx-auto">
+            <div className="bg-amber-100/55 text-amber-600 p-4 rounded-full w-14 h-14 mx-auto mb-4 flex items-center justify-center">
+              <User className="w-7 h-7" />
+            </div>
+            <h3 className="text-lg font-bold text-zinc-900 font-sans tracking-tight">Connect Driver Profile Needed</h3>
+            <p className="text-zinc-500 text-xs mt-2 leading-relaxed font-semibold">
+              To view, store, and manage your private garage and setup variants in the cloud, please log in and connect your Sim Racing Driver Profile via the header button.
+            </p>
+
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
           {/* Left Column: Filter Sidebar (Span 3) */}
           <div className="lg:col-span-3 space-y-4">
             <div className="bg-white border border-zinc-250 rounded-xl p-4 shadow-3xs flex flex-col gap-4">
@@ -438,6 +530,8 @@ export default function GaragePage({
             )}
           </div>
         </div>
+        )}
+        </>
       )}
     </div>
   );
