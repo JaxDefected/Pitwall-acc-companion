@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { SavedSetupItem, UserProfile, SetupItem } from "../firebase";
 import { ACC_CARS, ACC_TRACKS } from "../utils/accParser";
 import { 
@@ -13,19 +13,66 @@ import {
   User,
   Info,
   SlidersHorizontal,
-  ExternalLink
+  ExternalLink,
+  Trophy,
+  Clock,
+  MapPin,
+  Flag,
+  Lock,
+  ChevronRight
 } from "lucide-react";
 
 // LNR Race Calendar Google Sheets URLs
 const LNR_CALENDAR_EDIT_URL =
   "https://docs.google.com/spreadsheets/d/1s9m3yWd-zBLKf4An5rAJ7sxHy9ouU4y8OZjnN9pXoEs/edit?gid=1362444445#gid=1362444445";
 
-// Embed URLs using htmlembed (avoids Google Accounts sign-in redirect from pubhtml)
-const LNR_CALENDAR_SCHEDULE_EMBED =
-  "https://docs.google.com/spreadsheets/d/1s9m3yWd-zBLKf4An5rAJ7sxHy9ouU4y8OZjnN9pXoEs/htmlembed?gid=2119190192&widget=false&chrome=false";
-const LNR_CALENDAR_TIMELINE_EMBED =
-  "https://docs.google.com/spreadsheets/d/1s9m3yWd-zBLKf4An5rAJ7sxHy9ouU4y8OZjnN9pXoEs/htmlembed?gid=1362444445&widget=false&chrome=false";
+// Embed URL with hardset SQL filter: WHERE B = 'ACC' AND C IS NOT NULL (only ACC rounds)
+const LNR_CALENDAR_ACC_HTML_EMBED =
+  "https://docs.google.com/spreadsheets/d/1s9m3yWd-zBLKf4An5rAJ7sxHy9ouU4y8OZjnN9pXoEs/gviz/tq?tqx=out:html&sheet=LNR%20CAL%20v2&tq=SELECT%20A%2CB%2CC%2CD%2CE%2CF%2CH%20WHERE%20B%20%3D%20%27ACC%27%20AND%20C%20IS%20NOT%20NULL";
 
+export interface AccCalendarEvent {
+  id: string;
+  dateTime: string;
+  game: string;
+  series: string;
+  location: string;
+  dow: string;
+  notes?: string;
+  format?: string;
+  isUpcoming: boolean;
+  isNext: boolean;
+  trackKey?: string;
+}
+
+function matchTrackKey(locationName: string): string | undefined {
+  if (!locationName) return undefined;
+  const lower = locationName.toLowerCase().trim();
+  if (lower.includes("bathurst") || lower.includes("panorama")) return "mount_panorama";
+  if (lower.includes("nurburg") || lower.includes("nürburg")) return "nurburgring";
+  if (lower.includes("cota") || lower.includes("americas")) return "cota";
+  if (lower.includes("indy") || lower.includes("indianapolis")) return "indianapolis";
+  if (lower.includes("brands")) return "brands_hatch";
+  if (lower.includes("paul") || lower.includes("ricard")) return "paul_ricard";
+  if (lower.includes("donington")) return "donington";
+  if (lower.includes("oulton")) return "oulton_park";
+  if (lower.includes("snetterton")) return "snetterton";
+  if (lower.includes("zolder")) return "zolder";
+  if (lower.includes("imola")) return "imola";
+  if (lower.includes("monza")) return "monza";
+  if (lower.includes("spa")) return "spa";
+  if (lower.includes("silverstone")) return "silverstone";
+  if (lower.includes("kyalami")) return "kyalami";
+  if (lower.includes("misano")) return "misano";
+  if (lower.includes("hungaroring")) return "hungaroring";
+  if (lower.includes("valencia")) return "valencia";
+  if (lower.includes("watkins")) return "watkins_glen";
+  if (lower.includes("zandvoort")) return "zandvoort";
+  if (lower.includes("barcelona") || lower.includes("catalunya")) return "barcelona";
+  if (lower.includes("red bull") || lower.includes("spielberg")) return "red_bull_ring";
+  if (lower.includes("suzuka")) return "suzuka";
+  if (lower.includes("laguna")) return "laguna_seca";
+  return undefined;
+}
 
 interface GaragePageProps {
   tunedSetupsList: SavedSetupItem[];
@@ -51,7 +98,16 @@ export default function GaragePage({
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [garageMode, setGarageMode] = useState<"setups" | "calendar">("setups");
-  const [calendarTab, setCalendarTab] = useState<"schedule" | "timeline">("schedule");
+
+  // ACC Race Calendar states - hardset to ACC
+  const [accEvents, setAccEvents] = useState<AccCalendarEvent[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsError, setEventsError] = useState<string | null>(null);
+  const [calendarViewMode, setCalendarViewMode] = useState<"cards" | "embed">("cards");
+  const [calendarSearch, setCalendarSearch] = useState("");
+  const [calendarFilterUpcomingOnly, setCalendarFilterUpcomingOnly] = useState(true);
+  const [isFetchingCalendar, setIsFetchingCalendar] = useState(false);
+
 
 
   // Filter only my setups
@@ -71,6 +127,104 @@ export default function GaragePage({
       setIsRefreshing(false);
     }
   };
+
+  const fetchAccEvents = async () => {
+    setIsFetchingCalendar(true);
+    setEventsError(null);
+    try {
+      const query = encodeURIComponent("SELECT A, B, C, D, E, F, H WHERE B = 'ACC' AND C IS NOT NULL ORDER BY A ASC");
+      const url = `https://docs.google.com/spreadsheets/d/1s9m3yWd-zBLKf4An5rAJ7sxHy9ouU4y8OZjnN9pXoEs/gviz/tq?tqx=out:json&sheet=LNR%20CAL%20v2&tq=${query}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Could not reach Google Sheets API");
+      const text = await res.text();
+      const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?/);
+      if (!match) throw new Error("Invalid response format");
+      const data = JSON.parse(match[1]);
+
+      const now = Date.now();
+      let foundNext = false;
+      const parsed: AccCalendarEvent[] = (data.table?.rows || []).map((row: any, idx: number) => {
+        const rawDate = (row.c[0]?.f || row.c[0]?.v || "").replace(/\u00a0/g, " ");
+        const game = row.c[1]?.v || "ACC";
+        const series = row.c[2]?.v || "LNR Series";
+        const location = row.c[3]?.v || "";
+        const dow = row.c[4]?.v || "";
+        const notes = row.c[5]?.v || "";
+        const format = row.c[6]?.v || "";
+
+        // Parse date for sorting & upcoming check (Sydney time UTC+10)
+        let isUpcoming = false;
+        try {
+          const dateClean = rawDate.split(" ")[0];
+          const timeClean = rawDate.split(" ")[1] || "21:00";
+          if (dateClean) {
+            const dateObj = new Date(`${dateClean}T${timeClean}:00+10:00`);
+            isUpcoming = !isNaN(dateObj.getTime()) && dateObj.getTime() >= (now - 6 * 3600 * 1000);
+          }
+        } catch {
+          isUpcoming = true;
+        }
+
+        let isNext = false;
+        if (isUpcoming && !foundNext && series.toLowerCase() !== "break week") {
+          isNext = true;
+          foundNext = true;
+        }
+
+        const trackKey = matchTrackKey(location);
+
+        return {
+          id: `acc-round-${idx}`,
+          dateTime: rawDate,
+          game,
+          series,
+          location: location || "TBD",
+          dow,
+          notes,
+          format: format || "-",
+          isUpcoming,
+          isNext,
+          trackKey
+        };
+      });
+
+      setAccEvents(parsed);
+    } catch (err: any) {
+      console.error("Error fetching ACC calendar events:", err);
+      setEventsError("Live ACC calendar fetch was blocked. Displaying embedded table view.");
+    } finally {
+      setIsFetchingCalendar(false);
+      setEventsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (garageMode === "calendar" && accEvents.length === 0) {
+      setEventsLoading(true);
+      fetchAccEvents();
+    }
+  }, [garageMode]);
+
+  // Filtered ACC events based on search & upcoming toggle
+  const filteredAccEvents = useMemo(() => {
+    return accEvents.filter((ev) => {
+      if (calendarFilterUpcomingOnly && !ev.isUpcoming) {
+        return false;
+      }
+      if (!calendarSearch.trim()) return true;
+      const q = calendarSearch.toLowerCase().trim();
+      const seriesMatch = ev.series.toLowerCase().includes(q);
+      const trackMatch = ev.location.toLowerCase().includes(q);
+      const notesMatch = (ev.notes || "").toLowerCase().includes(q);
+      const dowMatch = ev.dow.toLowerCase().includes(q);
+      return seriesMatch || trackMatch || notesMatch || dowMatch;
+    });
+  }, [accEvents, calendarFilterUpcomingOnly, calendarSearch]);
+
+  const nextAccRace = useMemo(() => {
+    return accEvents.find((e) => e.isNext);
+  }, [accEvents]);
+
 
   const myFilteredSetups = mySetupsRaw.filter((setup) => {
     const searchLower = internalSearch.toLowerCase().trim();
@@ -209,65 +363,299 @@ export default function GaragePage({
 
       {/* ── CALENDAR MODE ───────────────────────────────────────────── */}
       {garageMode === "calendar" ? (
-        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-3xs space-y-0">
-          <div className="border-b border-zinc-200 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-50">
+        <div className="space-y-4">
+          {/* Calendar Top Control Header */}
+          <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-3xs flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
-              <Calendar className="w-4 h-4 text-red-500 shrink-0" />
-              <span className="text-xs font-mono font-extrabold uppercase tracking-widest text-zinc-800">
-                LNR Race Calendar
-              </span>
-              <div className="ml-2 inline-flex items-center bg-zinc-200/80 p-0.5 rounded-lg text-[10px] font-mono font-bold">
-                <button
-                  onClick={() => setCalendarTab("schedule")}
-                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                    calendarTab === "schedule"
-                      ? "bg-white text-zinc-900 shadow-3xs font-extrabold"
-                      : "text-zinc-500 hover:text-zinc-800"
-                  }`}
-                >
-                  Schedule Grid
-                </button>
-                <button
-                  onClick={() => setCalendarTab("timeline")}
-                  className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                    calendarTab === "timeline"
-                      ? "bg-white text-zinc-900 shadow-3xs font-extrabold"
-                      : "text-zinc-500 hover:text-zinc-800"
-                  }`}
-                >
-                  Timeline View
-                </button>
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-red-500 shrink-0" />
+                <span className="text-xs font-mono font-extrabold uppercase tracking-widest text-zinc-900">
+                  LNR Race Calendar
+                </span>
+              </div>
+
+              {/* Hardset ACC Filter Indicator */}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 border border-red-200/80 rounded-full text-red-700 text-[10px] font-mono font-extrabold tracking-wider shadow-3xs">
+                <Lock className="w-3 h-3 text-red-600" />
+                <span>ACC ONLY (HARDSET)</span>
               </div>
             </div>
 
-            <a
-              href={LNR_CALENDAR_EDIT_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-[11px] font-mono font-bold transition-all shadow-3xs w-fit"
-            >
-              <ExternalLink className="w-3.5 h-3.5 text-red-400" />
-              <span>Open in Google Sheets ↗</span>
-            </a>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* View Switcher: Interactive Cards vs Google Sheets Embed */}
+              <div className="inline-flex items-center bg-zinc-100 p-0.5 rounded-lg text-[10px] font-mono font-bold">
+                <button
+                  onClick={() => setCalendarViewMode("cards")}
+                  className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+                    calendarViewMode === "cards"
+                      ? "bg-white text-zinc-900 shadow-3xs font-extrabold"
+                      : "text-zinc-500 hover:text-zinc-800"
+                  }`}
+                >
+                  Race Cards
+                </button>
+                <button
+                  onClick={() => setCalendarViewMode("embed")}
+                  className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${
+                    calendarViewMode === "embed"
+                      ? "bg-white text-zinc-900 shadow-3xs font-extrabold"
+                      : "text-zinc-500 hover:text-zinc-800"
+                  }`}
+                >
+                  Google Sheet
+                </button>
+              </div>
+
+              {/* Refresh Button */}
+              <button
+                onClick={fetchAccEvents}
+                disabled={isFetchingCalendar}
+                title="Refresh Calendar"
+                className="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200 text-zinc-700 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isFetchingCalendar ? "animate-spin text-red-500" : ""}`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
+
+              {/* Open in Google Sheets */}
+              <a
+                href={LNR_CALENDAR_EDIT_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-[11px] font-mono font-bold transition-all shadow-3xs"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-red-400" />
+                <span>Open in Sheets ↗</span>
+              </a>
+            </div>
           </div>
 
-          {calendarTab === "timeline" && (
-            <div className="bg-amber-50/80 border-b border-amber-200 px-4 py-2 text-[11px] font-sans text-amber-800">
-              <span>
-                <strong>Note:</strong> Google Sheets timeline/canvas views can be restricted by browser third-party cookie settings. If it prompts you to log in, switch to the <strong>Schedule Grid</strong> tab above or click <strong>Open in Google Sheets</strong>.
-              </span>
+          {/* Featured Hero Banner: Next Upcoming ACC Race */}
+          {nextAccRace && calendarViewMode === "cards" && (
+            <div className="bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-zinc-800 rounded-xl p-5 text-white shadow-xl relative overflow-hidden">
+              <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-48 h-48 bg-red-600/15 rounded-full blur-2xl pointer-events-none" />
+              <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-red-600 text-[10px] font-mono font-black rounded tracking-widest text-white uppercase flex items-center gap-1">
+                      <Flag className="w-3 h-3" />
+                      NEXT ACC ROUND
+                    </span>
+                    <span className="text-[11px] font-mono text-zinc-400 font-bold">
+                      {nextAccRace.dow} · {nextAccRace.dateTime} (Sydney)
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-bold font-sans tracking-tight text-white flex items-center gap-2">
+                    <span>{nextAccRace.series}</span>
+                  </h2>
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-300 font-medium">
+                    <span className="flex items-center gap-1 text-red-400 font-bold font-mono">
+                      <MapPin className="w-3.5 h-3.5" />
+                      {nextAccRace.location}
+                    </span>
+                    {nextAccRace.format && (
+                      <span className="flex items-center gap-1 text-zinc-400 font-mono text-[11px]">
+                        <Clock className="w-3 h-3" />
+                        {nextAccRace.format}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {nextAccRace.trackKey && (
+                  <button
+                    onClick={() => {
+                      if (nextAccRace.trackKey) {
+                        setInternalTrackFilter(nextAccRace.trackKey);
+                        setGarageMode("setups");
+                      }
+                    }}
+                    className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-mono font-black tracking-wider transition-all shadow-md active:scale-95 flex items-center gap-2 shrink-0 cursor-pointer self-start md:self-center"
+                  >
+                    <Gauge className="w-4 h-4" />
+                    <span>VIEW {nextAccRace.location.toUpperCase()} TUNES</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
-          <iframe
-            key={calendarTab}
-            src={calendarTab === "schedule" ? LNR_CALENDAR_SCHEDULE_EMBED : LNR_CALENDAR_TIMELINE_EMBED}
-            title="LNR Race Calendar"
-            className="w-full border-0 bg-white"
-            style={{ height: "720px" }}
-            loading="lazy"
-            allow="clipboard-write"
-          />
+          {/* Cards View */}
+          {calendarViewMode === "cards" && (
+            <div className="space-y-3">
+              {/* Search & Upcoming Filter Bar */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-zinc-200 shadow-3xs">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+                  <input
+                    type="text"
+                    placeholder="Search ACC rounds, series, or circuits..."
+                    value={calendarSearch}
+                    onChange={(e) => setCalendarSearch(e.target.value)}
+                    className="w-full bg-zinc-50 text-zinc-900 pl-9 pr-4 py-2 border border-zinc-250 rounded-lg text-xs placeholder-zinc-400 font-semibold focus:outline-none focus:border-brand focus:bg-white transition-all"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCalendarFilterUpcomingOnly(!calendarFilterUpcomingOnly)}
+                    className={`px-3 py-2 rounded-lg text-xs font-mono font-bold tracking-wider transition-all cursor-pointer border ${
+                      calendarFilterUpcomingOnly
+                        ? "bg-zinc-900 text-white border-zinc-900"
+                        : "bg-zinc-50 text-zinc-600 border-zinc-250 hover:bg-zinc-100"
+                    }`}
+                  >
+                    {calendarFilterUpcomingOnly ? "Upcoming Only" : "All ACC Races (History)"}
+                  </button>
+                  <span className="text-[10px] font-mono text-zinc-400 font-bold px-2">
+                    {filteredAccEvents.length} events
+                  </span>
+                </div>
+              </div>
+
+              {/* Event Cards Grid */}
+              {eventsLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 animate-pulse">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="bg-white border border-zinc-200 rounded-xl p-4 space-y-3">
+                      <div className="h-4 bg-zinc-200 rounded w-1/3" />
+                      <div className="h-5 bg-zinc-200 rounded w-3/4" />
+                      <div className="h-4 bg-zinc-100 rounded w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              ) : filteredAccEvents.length === 0 ? (
+                <div className="bg-white border border-dashed border-zinc-300 p-12 text-center rounded-xl">
+                  <p className="text-zinc-600 text-sm font-semibold">No ACC rounds match your filter.</p>
+                  <button
+                    onClick={() => {
+                      setCalendarSearch("");
+                      setCalendarFilterUpcomingOnly(false);
+                    }}
+                    className="mt-3 px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-mono font-bold rounded-lg cursor-pointer"
+                  >
+                    Clear Filter
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {filteredAccEvents.map((event) => {
+                    const isBreakWeek = event.series.toLowerCase().includes("break week");
+                    const userTunesForTrack = event.trackKey
+                      ? tunedSetupsList.filter((s) => s.track === event.trackKey && s.authorUsername === profile?.username)
+                      : [];
+
+                    return (
+                      <div
+                        key={event.id}
+                        className={`bg-white border rounded-xl p-4 shadow-3xs flex flex-col justify-between transition-all ${
+                          event.isNext
+                            ? "border-red-500 ring-2 ring-red-500/20"
+                            : "border-zinc-250 hover:border-zinc-400"
+                        }`}
+                      >
+                        <div>
+                          {/* Card Header: Date & Status */}
+                          <div className="flex items-center justify-between gap-2 pb-2 border-b border-zinc-150">
+                            <span className="text-[10px] font-mono font-black text-zinc-500 uppercase tracking-wider flex items-center gap-1">
+                              <Calendar className="w-3 h-3 text-red-500" />
+                              {event.dow} · {event.dateTime}
+                            </span>
+                            {event.isNext && (
+                              <span className="px-1.5 py-0.5 bg-red-600 text-[9px] font-mono font-black text-white rounded uppercase tracking-widest">
+                                NEXT
+                              </span>
+                            )}
+                            {event.format && event.format !== "-" && !event.isNext && (
+                              <span className="px-1.5 py-0.5 bg-zinc-100 text-zinc-700 text-[10px] font-mono font-bold rounded">
+                                {event.format}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Series Title */}
+                          <h3 className={`text-sm font-bold font-sans tracking-tight mt-2.5 ${isBreakWeek ? "text-zinc-500 italic" : "text-zinc-950"}`}>
+                            {event.series}
+                          </h3>
+
+                          {/* Location / Track */}
+                          <div className="mt-2 flex items-center gap-1.5 text-xs">
+                            <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                            <span className="font-semibold text-zinc-800">
+                              {event.location}
+                            </span>
+                            {event.trackKey && (
+                              <span className="text-[10px] font-mono text-zinc-400 ml-auto uppercase">
+                                ACC Circuit
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Footer Action: Link directly to tunes in Garage */}
+                        <div className="pt-3 mt-3 border-t border-zinc-150 flex items-center justify-between gap-2">
+                          {event.trackKey ? (
+                            <button
+                              onClick={() => {
+                                if (event.trackKey) {
+                                  setInternalTrackFilter(event.trackKey);
+                                  setGarageMode("setups");
+                                }
+                              }}
+                              className="text-[10px] font-mono font-bold text-red-600 hover:text-red-700 flex items-center gap-1 transition-colors cursor-pointer group"
+                            >
+                              <span>
+                                {userTunesForTrack.length > 0
+                                  ? `⭐ View My ${userTunesForTrack.length} Tune${userTunesForTrack.length > 1 ? "s" : ""}`
+                                  : `Search My Tunes`}
+                              </span>
+                              <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                            </button>
+                          ) : (
+                            <span className="text-[10px] font-mono text-zinc-400">
+                              {isBreakWeek ? "No official session" : "Circuit TBD"}
+                            </span>
+                          )}
+
+                          <span className="text-[10px] font-mono text-zinc-400">
+                            ACC
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Embedded Google Sheet Table (Filtered to ACC only via Google SQL) */}
+          {calendarViewMode === "embed" && (
+            <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-3xs space-y-0">
+              <div className="border-b border-zinc-200 px-4 py-2.5 flex items-center justify-between gap-3 bg-zinc-50 text-xs">
+                <span className="font-mono text-zinc-600 text-[11px]">
+                  <strong>ACC-Filtered Google Sheets View</strong> (via SQL: <code className="bg-zinc-200 px-1 py-0.5 rounded text-[10px]">WHERE Game = 'ACC'</code>)
+                </span>
+                <a
+                  href={LNR_CALENDAR_EDIT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-[10px] font-bold text-red-600 hover:text-red-700 flex items-center gap-1"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Full Spreadsheet
+                </a>
+              </div>
+              <iframe
+                src={LNR_CALENDAR_ACC_HTML_EMBED}
+                title="LNR ACC Race Calendar"
+                className="w-full border-0 bg-white"
+                style={{ height: "680px" }}
+                loading="lazy"
+              />
+            </div>
+          )}
         </div>
       ) : (
         /* ── SETUPS MODE ── */
