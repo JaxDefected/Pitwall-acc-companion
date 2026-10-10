@@ -44,6 +44,15 @@ const OUT_DIR = path.join(ROOT, "public", "data", "imported", WORKSHOP_SOURCE_ID
 const REPORT_PATH = path.join(ROOT, "reports", "workshop-acc-import-report.md");
 const EXPECTED_SETUPS = 8325;
 const EXPECTED_VALUES = 76;
+const EXPECTED_SLOT_COUNTS: Readonly<Record<WorkshopSlot, number>> = {
+  "Q-ATTACK": 1350,
+  "Q-STEADY": 1350,
+  "R-ATTACK": 1350,
+  "R-STEADY": 1350,
+  WET: 1350,
+  HYBRID: 925,
+  LFM: 650,
+};
 
 /** Source car id -> existing app car id, for cars the source names differently. */
 const CAR_ID_ALIASES: Readonly<Record<string, string>> = {
@@ -348,14 +357,13 @@ function main(): void {
     const match = carMatches[carIdx];
     const rows = rowsByCar.get(carIdx) ?? [];
 
-    const decodedRows = rows.map((r) => ({ row: r, fields: decodeSetup(car, layout, r[8]) }));
-    const flatStatus = (fields: ReturnType<typeof decodeSetup>) => fields.flatMap((f) => f.values);
+    const decodedRows = rows.map((r) => ({ row: r, flat: decodeSetup(car, layout, r[8]).flatMap((f) => f.values) }));
 
     // Car-level default status/note per flat index = most common across this car's setups
     const status: DecodeStatus[] = [];
     const notes: Record<number, string> = {};
     for (let i = 0; i < EXPECTED_VALUES; i++) {
-      const perRow = decodedRows.map((d) => flatStatus(d.fields)[i]);
+      const perRow = decodedRows.map((d) => d.flat[i]);
       const s = mostCommon(perRow.map((v) => v.status)) ?? "raw";
       status.push(s);
       const note = perRow.find((v) => v.status === s && v.note)?.note;
@@ -367,15 +375,14 @@ function main(): void {
       return col.length ? [Math.min(...col), Math.max(...col)] : [0, 0];
     });
 
-    const setups: ImportedSetupRow[] = decodedRows.map(({ row, fields }) => {
-      const flat = flatStatus(fields);
+    const setups: ImportedSetupRow[] = decodedRows.map(({ row, flat }) => {
       const overrides: Record<number, { status: DecodeStatus; note?: string }> = {};
       flat.forEach((v, i) => {
+        if (v.status === "undecoded") {
+          decodeIssues.push(`${match.appId} @ ${trackMatches[row[1]].appId} ${slots[row[2]]}: ${layout.find((l) => i >= l.offset && i < l.offset + l.width)?.path} – ${v.note ?? ""}`);
+        }
         if (v.status !== status[i]) {
           overrides[i] = v.note ? { status: v.status, note: v.note } : { status: v.status };
-          if (v.status === "undecoded") {
-            decodeIssues.push(`${match.appId} @ ${trackMatches[row[1]].appId} ${slots[row[2]]}: ${layout.find((l) => i >= l.offset && i < l.offset + l.width)?.path} – ${v.note ?? ""}`);
-          }
         }
       });
       const setup: ImportedSetupRow = {
@@ -414,7 +421,10 @@ function main(): void {
       matched: match.matched,
       file,
       setupCount: setups.length,
-      keys: setups.map((s) => `${s.track}|${s.slot}`),
+      slotMask: setups.reduce<Record<string, number>>((acc, s) => {
+        acc[s.track] = (acc[s.track] ?? 0) | (1 << slots.indexOf(s.slot));
+        return acc;
+      }, {}),
     });
 
     // Slot coverage: each slot a car has should cover every track
@@ -440,8 +450,13 @@ function main(): void {
   fs.writeFileSync(path.join(OUT_DIR, "manifest.json"), JSON.stringify(manifest));
 
   // --- Row count check --------------------------------------------------------
-  const carsPerSlot = slots.map((s) => ({ slot: s, cars: carIndex.filter((c) => c.keys.some((k) => k.endsWith(`|${s}`))).length, rows: slotCounts[s] }));
-  const rowCountOk = written === EXPECTED_SETUPS && uniqueKeys.size === EXPECTED_SETUPS && carsPerSlot.every((c) => c.rows === c.cars * data.tracks.length);
+  const carsPerSlot = slots.map((s, si) => ({
+    slot: s,
+    cars: carIndex.filter((c) => Object.values(c.slotMask).some((m) => (m & (1 << si)) !== 0)).length,
+    rows: slotCounts[s],
+    expected: EXPECTED_SLOT_COUNTS[s],
+  }));
+  const rowCountOk = written === EXPECTED_SETUPS && uniqueKeys.size === EXPECTED_SETUPS && carsPerSlot.every((c) => c.rows === c.expected);
 
   // --- Report -----------------------------------------------------------------
   const unmatchedCars = carMatches.filter((m) => !m.matched);
@@ -466,9 +481,12 @@ function main(): void {
   md.push(`## Row counts`, ``);
   md.push(`- Imported setups: **${written}** (expected ${EXPECTED_SETUPS}) – unique car/track/slot keys: ${uniqueKeys.size} – ${rowCountOk ? "✅ OK" : "❌ MISMATCH"}`);
   md.push(`- Cars: ${data.cars.length}, tracks: ${data.tracks.length}`, ``);
-  md.push(`| Slot | Rows | Cars × Tracks |`, `|---|---|---|`);
-  for (const c of carsPerSlot) md.push(`| ${c.slot} | ${c.rows} | ${c.cars} × ${data.tracks.length} = ${c.cars * data.tracks.length} |`);
-  md.push(``, slotCoverage.length ? `Partial slot coverage:\n${slotCoverage.map((s) => `- ${s}`).join("\n")}` : `Every car/slot combination covers all ${data.tracks.length} tracks.`, ``);
+  md.push(`| Slot | Rows | Expected | Cars with slot | Tracks per car |`, `|---|---|---|---|---|`);
+  for (const c of carsPerSlot) {
+    const full = c.rows === c.cars * data.tracks.length;
+    md.push(`| ${c.slot} | ${c.rows} | ${c.expected} ${c.rows === c.expected ? "✅" : "❌"} | ${c.cars} | ${full ? `all ${data.tracks.length}` : "partial (see below)"} |`);
+  }
+  md.push(``, slotCoverage.length ? `Partial track coverage (data property, not an import loss):\n${slotCoverage.map((s) => `- ${s}`).join("\n")}` : `Every car/slot combination covers all ${data.tracks.length} tracks.`, ``);
 
   md.push(`## Car matching`, ``);
   md.push(`- Matched to existing app ids: ${carMatches.length - unmatchedCars.length}/${carMatches.length}`);

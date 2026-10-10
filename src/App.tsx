@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback, DragEvent, ChangeEvent, MouseEvent } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense, DragEvent, ChangeEvent, MouseEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import {
@@ -79,6 +79,10 @@ import FuelStrategyTab from "./components/FuelStrategyTab";
 import TuningWorkshopBanner from "./components/TuningWorkshopBanner";
 import OnboardingModal from "./components/OnboardingModal";
 import SectionErrorBoundary from "./components/SectionErrorBoundary";
+
+// Imported (third-party) setup library – separate chunk, data fetched lazily per car.
+// Remove this line, the "imported" garage tab and public/data/imported/workshop-acc/ to drop the import.
+const ImportedSetupViewer = lazy(() => import("./components/ImportedSetupViewer"));
 
 export interface PendingSetup {
   id: string;
@@ -395,7 +399,7 @@ export default function App() {
   }, [toast]);
   
   // GitHub Integration States
-  const [activeGarageTab, setActiveGarageTab] = useState<"team" | "github">("github");
+  const [activeGarageTab, setActiveGarageTab] = useState<"team" | "github" | "imported">("github");
   const {
     githubRepo, setGithubRepo,
     githubBranch, setGithubBranch,
@@ -2215,9 +2219,39 @@ export default function App() {
                 <Folder className="w-3.5 h-3.5" />
                 TEAM WORKSPACE ({filteredSetups.length})
               </button>
+              <button
+                id="tab-btn-imported-library"
+                onClick={() => setActiveGarageTab("imported")}
+                className={`flex-1 text-center py-3 font-mono text-[10px] sm:text-xs font-bold tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                  activeGarageTab === "imported"
+                    ? "bg-white text-brand border-b-2 border-red-600 font-extrabold"
+                    : "text-zinc-550 hover:text-zinc-900 font-semibold"
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                IMPORTED
+              </button>
             </div>
 
-            {activeGarageTab === "team" ? (
+            {activeGarageTab === "imported" ? (
+              <div id="imported-library-panel" className="p-4 space-y-3 text-xs text-zinc-650">
+                <p className="font-mono font-extrabold text-zinc-900 uppercase tracking-wider text-[11px]">Imported setup library</p>
+                <p className="leading-relaxed">
+                  Imported setups for 54 cars and 25 circuits, in 7 slots (Q-ATTACK, Q-STEADY, R-ATTACK, R-STEADY, WET, HYBRID, LFM). Choose the car, circuit and slot in the viewer.
+                </p>
+                <p className="text-[11px] font-mono text-amber-800 bg-amber-500/10 border border-amber-500/30 rounded p-2 leading-relaxed">
+                  Source: Workshop ACC export. Original author unverified. Kept separate from team workspace setups.
+                </p>
+                {isMobile && (
+                  <button
+                    onClick={() => setMobileView("inspection")}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded font-extrabold text-xs uppercase tracking-wider font-mono cursor-pointer shadow-md min-h-[44px]"
+                  >
+                    Open imported setups
+                  </button>
+                )}
+              </div>
+            ) : activeGarageTab === "team" ? (
               <div
                 id="setup-registry-list"
                 role="listbox"
@@ -2581,6 +2615,16 @@ export default function App() {
         <section id="column-inspection-engineer" className={`lg:col-span-8 flex flex-col gap-6 w-full ${isMobile && mobileView === 'registry' ? 'hidden' : ''} ${isMobile && mobileView === 'inspection' ? 'mobile-slide-in' : ''}`}>
           
           {/* Main Inspection Terminal */}
+          {activeGarageTab === "imported" ? (
+            <SectionErrorBoundary
+              fallbackTitle="Imported setup viewer error"
+              fallbackMessage="The imported setup library couldn't be displayed."
+            >
+              <Suspense fallback={<div className="bg-white border border-zinc-200 shadow-xs rounded-lg p-12 text-center text-xs font-mono text-zinc-500">Loading imported setup library…</div>}>
+                <ImportedSetupViewer initialCar={activeSetup?.car} initialTrack={activeSetup ? setupFilterTrack(activeSetup.track) : undefined} />
+              </Suspense>
+            </SectionErrorBoundary>
+          ) : (
           <SectionErrorBoundary
             fallbackTitle="Setup viewer error"
             fallbackMessage="This setup file couldn't be displayed. It may be malformed or missing data."

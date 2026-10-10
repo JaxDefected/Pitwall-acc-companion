@@ -218,8 +218,8 @@ export interface ImportedCarIndexEntry {
   matched: boolean;
   file: string;
   setupCount: number;
-  /** "trackId|slot" keys available for this car */
-  keys: string[];
+  /** trackId -> bitmask of available slots (bit i = WORKSHOP_SLOTS[i]) */
+  slotMask: Record<string, number>;
 }
 
 export interface ImportedManifest {
