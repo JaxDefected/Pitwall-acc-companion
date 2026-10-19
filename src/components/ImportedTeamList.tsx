@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Layers, Loader2 } from "lucide-react";
 import { ACC_CARS, ACC_TRACKS } from "../utils/accParser";
 import { loadImportedCar, loadImportedManifest, slotsFor } from "../services/importedSetups";
-import { WORKSHOP_SLOTS, type ImportedCarFile, type ImportedManifest, type WorkshopSlot } from "../types/workshopAcc";
+import { SLOT_LABELS, WORKSHOP_SLOTS, type ImportedCarFile, type ImportedManifest, type WorkshopSlot } from "../types/workshopAcc";
 
 export interface ImportedSelection {
   car: string;
@@ -85,7 +85,7 @@ export default function ImportedTeamList({ carFilter, trackFilter, searchText, s
     if (!carFile || !carEntry || carFile.appId !== carEntry.appId) return [];
     return carFile.setups
       .filter((s) => trackFilter === "all" || s.track === trackFilter)
-      .filter((s) => q === "" || trackName(s.track).toLowerCase().includes(q) || s.slot.toLowerCase().includes(q) || carName(carFile.appId, carFile.name).toLowerCase().includes(q))
+      .filter((s) => q === "" || trackName(s.track).toLowerCase().includes(q) || s.slot.toLowerCase().includes(q) || SLOT_LABELS[s.slot].toLowerCase().includes(q) || carName(carFile.appId, carFile.name).toLowerCase().includes(q))
       .sort((a, b) => trackName(a.track).localeCompare(trackName(b.track)) || WORKSHOP_SLOTS.indexOf(a.slot) - WORKSHOP_SLOTS.indexOf(b.slot));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [carFile, carEntry, trackFilter, q]);
@@ -122,7 +122,7 @@ export default function ImportedTeamList({ carFilter, trackFilter, searchText, s
                 key={entry.appId}
                 onClick={() => {
                   const track = trackFilter !== "all" ? trackFilter : manifest.tracks[0]?.id ?? "";
-                  const slot = slotsFor(entry, track)[0] ?? "Qualli-Fast";
+                  const slot = slotsFor(entry, track)[0] ?? "Q-ATTACK";
                   onSelect({ car: entry.appId, track, slot });
                 }}
                 className={`w-full text-left p-3 hover:bg-zinc-50 transition-all cursor-pointer flex items-center justify-between gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
@@ -164,7 +164,7 @@ export default function ImportedTeamList({ carFilter, trackFilter, searchText, s
                     {carName(carFile?.appId ?? carFilter, carFile?.name ?? carFilter)}
                   </span>
                   <span className="block text-[10px] font-semibold text-zinc-500 mt-0.5">{trackName(s.track)}</span>
-                  <span className="block text-[10px] font-mono text-zinc-400 mt-0.5">{s.slot} · Workshop ACC export</span>
+                  <span className="block text-[10px] font-mono text-zinc-400 mt-0.5">{SLOT_LABELS[s.slot]} · Workshop ACC export</span>
                 </span>
                 {badge}
               </button>

@@ -83,6 +83,8 @@ import SectionErrorBoundary from "./components/SectionErrorBoundary";
 // Imported (third-party) setup library – separate chunk, data fetched lazily per car.
 // Remove this line, the "imported" garage tab and public/data/imported/workshop-acc/ to drop the import.
 const ImportedSetupViewer = lazy(() => import("./components/ImportedSetupViewer"));
+const ImportedTeamList = lazy(() => import("./components/ImportedTeamList"));
+import type { ImportedSelection } from "./components/ImportedTeamList";
 
 export interface PendingSetup {
   id: string;
@@ -774,8 +776,16 @@ export default function App() {
     }
   };
 
+  // Imported (Workshop ACC export) setup chosen from the Team Workspace list, if any
+  const [importedSelection, setImportedSelection] = useState<ImportedSelection | null>(null);
+  const handleImportedSelect = useCallback((sel: ImportedSelection) => {
+    setImportedSelection(sel);
+    if (isMobile) setMobileView('inspection');
+  }, [isMobile]);
+
   // Memoized handler for registry list item clicks - prevents N function allocations per render
   const handleSetupClick = useCallback((setup: SetupItem) => {
+    setImportedSelection(null);
     setActiveSetup(setup);
     if (isMobile) setMobileView('inspection');
   }, [isMobile]);
@@ -2252,6 +2262,7 @@ export default function App() {
                 )}
               </div>
             ) : activeGarageTab === "team" ? (
+              <>
               <div
                 id="setup-registry-list"
                 role="listbox"
@@ -2347,6 +2358,17 @@ export default function App() {
                   })
                 )}
               </div>
+              {/* Imported (Workshop ACC export) setups – static, read-only, loaded per car */}
+              <Suspense fallback={null}>
+                <ImportedTeamList
+                  carFilter={carFilter}
+                  trackFilter={trackFilter}
+                  searchText={searchText}
+                  selected={importedSelection}
+                  onSelect={handleImportedSelect}
+                />
+              </Suspense>
+              </>
             ) : (
               <div className="p-4 flex flex-col gap-4 md:max-h-[500px] md:overflow-y-auto w-full">
                 {githubStatus === "loading" && (
@@ -2615,13 +2637,22 @@ export default function App() {
         <section id="column-inspection-engineer" className={`lg:col-span-8 flex flex-col gap-6 w-full ${isMobile && mobileView === 'registry' ? 'hidden' : ''} ${isMobile && mobileView === 'inspection' ? 'mobile-slide-in' : ''}`}>
           
           {/* Main Inspection Terminal */}
-          {activeGarageTab === "imported" ? (
+          {activeGarageTab === "imported" || (activeGarageTab === "team" && importedSelection) ? (
             <SectionErrorBoundary
               fallbackTitle="Imported setup viewer error"
               fallbackMessage="The imported setup library couldn't be displayed."
             >
               <Suspense fallback={<div className="bg-white border border-zinc-200 shadow-xs rounded-lg p-12 text-center text-xs font-mono text-zinc-500">Loading imported setup library…</div>}>
-                <ImportedSetupViewer initialCar={activeSetup?.car} initialTrack={activeSetup ? setupFilterTrack(activeSetup.track) : undefined} />
+                {activeGarageTab === "team" && importedSelection ? (
+                  <ImportedSetupViewer
+                    key={`${importedSelection.car}|${importedSelection.track}|${importedSelection.slot}`}
+                    initialCar={importedSelection.car}
+                    initialTrack={importedSelection.track}
+                    initialSlot={importedSelection.slot}
+                  />
+                ) : (
+                  <ImportedSetupViewer initialCar={activeSetup?.car} initialTrack={activeSetup ? setupFilterTrack(activeSetup.track) : undefined} />
+                )}
               </Suspense>
             </SectionErrorBoundary>
           ) : (

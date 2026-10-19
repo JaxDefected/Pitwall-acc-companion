@@ -11,6 +11,7 @@ import {
 import {
   AXLE_LABELS,
   WHEEL_LABELS,
+  SLOT_LABELS,
   WORKSHOP_SLOTS,
   type DecodedField,
   type DecodedValue,
@@ -255,7 +256,7 @@ export default function ImportedSetupViewer({ initialCar, initialTrack, initialS
   const [manifestError, setManifestError] = useState<string | null>(null);
   const [carId, setCarId] = useState<string>("");
   const [trackId, setTrackId] = useState<string>("");
-  const [slot, setSlot] = useState<WorkshopSlot>(initialSlot ?? "Qualli-Fast");
+  const [slot, setSlot] = useState<WorkshopSlot>(initialSlot ?? "Q-ATTACK");
   const [carFile, setCarFile] = useState<ImportedCarFile | null>(null);
   const [carLoading, setCarLoading] = useState(false);
   const [carError, setCarError] = useState<string | null>(null);
@@ -351,7 +352,7 @@ export default function ImportedSetupViewer({ initialCar, initialTrack, initialS
             {carEntry ? carLabel(carEntry.appId, carEntry.name, carEntry.matched) : "Select a car"}
           </h2>
           <p className="text-xs text-zinc-650 font-mono font-semibold">
-            {trackStats ? ACC_TRACKS[trackStats.id] ?? trackStats.name : ""} · {slot}
+            {trackStats ? ACC_TRACKS[trackStats.id] ?? trackStats.name : ""} · {SLOT_LABELS[slot]}
           </p>
         </div>
 
@@ -396,12 +397,12 @@ export default function ImportedSetupViewer({ initialCar, initialTrack, initialS
                   aria-checked={active}
                   disabled={!enabled}
                   onClick={() => setSlot(s)}
-                  title={enabled ? s : `${s} not available for this car/circuit`}
+                  title={enabled ? SLOT_LABELS[s] : `${SLOT_LABELS[s]} not available for this car/circuit`}
                   className={`px-2.5 py-1.5 rounded border text-[10px] sm:text-xs font-mono font-extrabold tracking-wider transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${
                     active ? "bg-red-600 border-red-700 text-white" : "bg-white border-zinc-250 text-zinc-700 hover:border-red-300"
                   }`}
                 >
-                  {s}
+                  {SLOT_LABELS[s]}
                 </button>
               );
             })}

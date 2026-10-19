@@ -14,16 +14,31 @@
 // Constants shared by the build script, decoder and UI
 // ---------------------------------------------------------------------------
 
+/**
+ * Slot IDs exactly as stored in the source dataset and the generated data files.
+ * Do not rename these – lookups and the import script depend on them. Change SLOT_LABELS for display.
+ */
 export const WORKSHOP_SLOTS = [
-  "Qualli-Fast",
-  "Qualli-Safe",
-  "Race-Fast",
-  "Race-Safe",
-  "Wet",
-  "Mixed",
-  "Aggressive",
+  "Q-ATTACK",
+  "Q-STEADY",
+  "R-ATTACK",
+  "R-STEADY",
+  "WET",
+  "HYBRID",
+  "LFM",
 ] as const;
 export type WorkshopSlot = (typeof WORKSHOP_SLOTS)[number];
+
+/** Display names shown in the UI for each slot. */
+export const SLOT_LABELS: Readonly<Record<WorkshopSlot, string>> = {
+  "Q-ATTACK": "Qualli-Fast",
+  "Q-STEADY": "Qualli-Safe",
+  "R-ATTACK": "Race-Fast",
+  "R-STEADY": "Race-Safe",
+  WET: "Wet",
+  HYBRID: "Mixed",
+  LFM: "Aggressive",
+};
 
 export const WHEEL_LABELS = ["FL", "FR", "RL", "RR"] as const;
 export const AXLE_LABELS = ["Front", "Rear"] as const;

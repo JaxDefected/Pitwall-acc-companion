@@ -12,6 +12,10 @@ const hasData = fs.existsSync(path.join(DIR, "manifest.json"));
 describe.skipIf(!hasData)("Workshop ACC imported data", () => {
   const manifest = hasData ? readJson<ImportedManifest>("manifest.json") : null;
 
+  it("app slot IDs match the slot IDs stored in the data (rename via SLOT_LABELS, not WORKSHOP_SLOTS)", () => {
+    expect([...WORKSHOP_SLOTS]).toEqual(manifest?.slots);
+  });
+
   it("contains 8,325 setups with the expected per-slot counts", () => {
     expect(manifest?.totalSetups).toBe(8325);
     expect(manifest?.slotCounts).toEqual({
