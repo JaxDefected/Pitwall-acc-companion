@@ -2237,7 +2237,7 @@ export default function App() {
               <div id="imported-library-panel" className="p-4 space-y-3 text-xs text-zinc-650">
                 <p className="font-mono font-extrabold text-zinc-900 uppercase tracking-wider text-[11px]">JaxTune Setup Library</p>
                 <p className="leading-relaxed">
-                  The most comprehensive list of Cars, Tracks, and Setups for ACC. <b>Qualifying, Race, Wet, </b>and <b>Aggressive</b> setups available. Choose the <b>car, circuit</b> and <b>slot</b> in the viewer.
+                  The most comprehensive list of Cars, Tracks, and Setups for ACC. <b>Qualifying, Race, Wet, </b>and <b>Aggressive</b> setups available. Choose the <b>car, circuit</b> and <b>setup type</b> in the viewer.
                 </p>
                 <p className="text-[11px] font-mono text-amber-800 bg-amber-500/10 border border-amber-500/30 rounded p-2 leading-relaxed">
                   Note: JaxTune by PitWall for use by Late Night Racing. Some setups may be incorrectly displaying as this is a work in progress
