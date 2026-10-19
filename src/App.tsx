@@ -2237,10 +2237,10 @@ export default function App() {
               <div id="imported-library-panel" className="p-4 space-y-3 text-xs text-zinc-650">
                 <p className="font-mono font-extrabold text-zinc-900 uppercase tracking-wider text-[11px]">Imported setup library</p>
                 <p className="leading-relaxed">
-                  Imported setups for 54 cars and 25 circuits, in 7 slots (Q-ATTACK, Q-STEADY, R-ATTACK, R-STEADY, WET, HYBRID, LFM). Choose the car, circuit and slot in the viewer.
+                  The most comprehensive list of Cars, Tracks, and Setups for ACC. <b>Qualifying, Race, Wet, and Aggressive</b> setups available. Choose the <b>car, circuit</b> and <b>slot</b> in the viewer.
                 </p>
                 <p className="text-[11px] font-mono text-amber-800 bg-amber-500/10 border border-amber-500/30 rounded p-2 leading-relaxed">
-                  Source: Workshop ACC export. Original author unverified. Kept separate from team workspace setups.
+                  Source: JaxTune by PitWall for use by Late Night Racing. Some setups may be incorrectly displaying as this is a work in progress
                 </p>
                 {isMobile && (
                   <button
