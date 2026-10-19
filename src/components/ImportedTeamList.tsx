@@ -122,7 +122,7 @@ export default function ImportedTeamList({ carFilter, trackFilter, searchText, s
                 key={entry.appId}
                 onClick={() => {
                   const track = trackFilter !== "all" ? trackFilter : manifest.tracks[0]?.id ?? "";
-                  const slot = slotsFor(entry, track)[0] ?? "Q-ATTACK";
+                  const slot = slotsFor(entry, track)[0] ?? "Qualli-Fast";
                   onSelect({ car: entry.appId, track, slot });
                 }}
                 className={`w-full text-left p-3 hover:bg-zinc-50 transition-all cursor-pointer flex items-center justify-between gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
