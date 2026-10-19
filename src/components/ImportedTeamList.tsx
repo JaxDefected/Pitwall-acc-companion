@@ -164,7 +164,7 @@ export default function ImportedTeamList({ carFilter, trackFilter, searchText, s
                     {carName(carFile?.appId ?? carFilter, carFile?.name ?? carFilter)}
                   </span>
                   <span className="block text-[10px] font-semibold text-zinc-500 mt-0.5">{trackName(s.track)}</span>
-                  <span className="block text-[10px] font-mono text-zinc-400 mt-0.5">{SLOT_LABELS[s.slot]} · Workshop ACC export</span>
+                  <span className="block text-[10px] font-mono text-zinc-400 mt-0.5">{SLOT_LABELS[s.slot]} · JaxTune PitWall Import</span>
                 </span>
                 {badge}
               </button>
