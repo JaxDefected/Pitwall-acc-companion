@@ -384,7 +384,7 @@ export default function ImportedSetupViewer({ initialCar, initialTrack, initialS
 
         {/* Slot selector */}
         <div>
-          <span className="block text-[10px] font-mono font-black uppercase text-zinc-500 tracking-wider mb-1">Slot</span>
+          <span className="block text-[10px] font-mono font-black uppercase text-zinc-500 tracking-wider mb-1">Setup Type</span>
           <div role="radiogroup" aria-label="Setup slot" className="flex flex-wrap gap-1.5">
             {WORKSHOP_SLOTS.map((s) => {
               const enabled = availableSlots.includes(s);
@@ -445,7 +445,7 @@ export default function ImportedSetupViewer({ initialCar, initialTrack, initialS
                 <Loader2 className="w-4 h-4 animate-spin" /> Loading setups for this car…
               </>
             ) : (
-              "No imported setup for this car, circuit and slot."
+              "No imported setup for this car, circuit and setup type."
             )}
           </div>
         ) : (
