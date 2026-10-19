@@ -2229,18 +2229,18 @@ export default function App() {
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
-                IMPORTED
+                JaxTune
               </button>
             </div>
 
             {activeGarageTab === "imported" ? (
               <div id="imported-library-panel" className="p-4 space-y-3 text-xs text-zinc-650">
-                <p className="font-mono font-extrabold text-zinc-900 uppercase tracking-wider text-[11px]">Imported setup library</p>
+                <p className="font-mono font-extrabold text-zinc-900 uppercase tracking-wider text-[11px]">JaxTune Setup Library</p>
                 <p className="leading-relaxed">
-                  The most comprehensive list of Cars, Tracks, and Setups for ACC. <b>Qualifying, Race, Wet, and Aggressive</b> setups available. Choose the <b>car, circuit</b> and <b>slot</b> in the viewer.
+                  The most comprehensive list of Cars, Tracks, and Setups for ACC. <b>Qualifying, Race, Wet, </b>and <b>Aggressive</b> setups available. Choose the <b>car, circuit</b> and <b>slot</b> in the viewer.
                 </p>
                 <p className="text-[11px] font-mono text-amber-800 bg-amber-500/10 border border-amber-500/30 rounded p-2 leading-relaxed">
-                  Source: JaxTune by PitWall for use by Late Night Racing. Some setups may be incorrectly displaying as this is a work in progress
+                  Note: JaxTune by PitWall for use by Late Night Racing. Some setups may be incorrectly displaying as this is a work in progress
                 </p>
                 {isMobile && (
                   <button
