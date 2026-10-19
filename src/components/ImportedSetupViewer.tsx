@@ -457,10 +457,9 @@ export default function ImportedSetupViewer({ initialCar, initialTrack, initialS
             })}
           </div>
         )}
-        <p className="mt-4 text-[10px] font-mono text-zinc-400 leading-relaxed">
-          Real units are decoded from per-car tables in the imported data (inferred, unverified); the raw ACC click is shown in [brackets].
-          Tyre pressures and pit-strategy values are shown as raw clicks.
-        </p>
+        <div className="mt-4 p-3 rounded border border-zinc-200 bg-zinc-50 text-xs font-mono text-zinc-800 leading-relaxed">
+  <span className="font-bold text-zinc-900">Note:</span> Setup units are decoded from per-car tables in the imported data (inferred, unverified); the raw ACC click is shown in [brackets]. Tyre pressures and pit-strategy values are shown as raw clicks.
+</div>
       </div>
 
       {trackStats && <TrackStatsCard stats={trackStats} />}
