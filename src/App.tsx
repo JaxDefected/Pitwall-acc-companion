@@ -4838,6 +4838,7 @@ export default function App() {
             )}
           </div>
           </SectionErrorBoundary>
+          )}
         </section>
       </main>
       ) : currentView === "laptimes" ? (
