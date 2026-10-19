@@ -2371,7 +2371,7 @@ export default function App() {
                 {/* Scanned Setup Files list */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between text-xs font-mono text-zinc-400 border-b border-zinc-200 pb-2">
-                    <span className="flex items-center gap-1.5 font-bold uppercase text-[10px] text-zinc-600 tracking-wider">🔍 Remote Community Search Results
+                    <span className="flex items-center gap-1.5 font-bold uppercase text-[10px] text-zinc-600 tracking-wider">🔍 Remote Community Search Results from Fri3dolf, OhneSpeed and More!
                       {githubStatus === "connected" && (
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Synchronized Live" />
                       )}
