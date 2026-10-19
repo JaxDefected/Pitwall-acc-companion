@@ -255,7 +255,7 @@ export default function ImportedSetupViewer({ initialCar, initialTrack, initialS
   const [manifestError, setManifestError] = useState<string | null>(null);
   const [carId, setCarId] = useState<string>("");
   const [trackId, setTrackId] = useState<string>("");
-  const [slot, setSlot] = useState<WorkshopSlot>(initialSlot ?? "Q-ATTACK");
+  const [slot, setSlot] = useState<WorkshopSlot>(initialSlot ?? "Qualli-Fast");
   const [carFile, setCarFile] = useState<ImportedCarFile | null>(null);
   const [carLoading, setCarLoading] = useState(false);
   const [carError, setCarError] = useState<string | null>(null);
