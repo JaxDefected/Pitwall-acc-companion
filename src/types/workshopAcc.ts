@@ -15,13 +15,13 @@
 // ---------------------------------------------------------------------------
 
 export const WORKSHOP_SLOTS = [
-  "Q-ATTACK",
-  "Q-STEADY",
-  "R-ATTACK",
-  "R-STEADY",
-  "WET",
-  "HYBRID",
-  "LFM",
+  "Qualli-Fast",
+  "Qualli-Safe",
+  "Race-Fast",
+  "Race-Safe",
+  "Wet",
+  "Mixed",
+  "Aggressive",
 ] as const;
 export type WorkshopSlot = (typeof WORKSHOP_SLOTS)[number];
 
