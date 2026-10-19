@@ -246,14 +246,16 @@ export interface ImportedSetupViewerProps {
   initialCar?: string;
   /** Optional initial track id */
   initialTrack?: string;
+  /** Optional initial slot */
+  initialSlot?: WorkshopSlot;
 }
 
-export default function ImportedSetupViewer({ initialCar, initialTrack }: ImportedSetupViewerProps) {
+export default function ImportedSetupViewer({ initialCar, initialTrack, initialSlot }: ImportedSetupViewerProps) {
   const [manifest, setManifest] = useState<ImportedManifest | null>(null);
   const [manifestError, setManifestError] = useState<string | null>(null);
   const [carId, setCarId] = useState<string>("");
   const [trackId, setTrackId] = useState<string>("");
-  const [slot, setSlot] = useState<WorkshopSlot>("Q-ATTACK");
+  const [slot, setSlot] = useState<WorkshopSlot>(initialSlot ?? "Q-ATTACK");
   const [carFile, setCarFile] = useState<ImportedCarFile | null>(null);
   const [carLoading, setCarLoading] = useState(false);
   const [carError, setCarError] = useState<string | null>(null);
