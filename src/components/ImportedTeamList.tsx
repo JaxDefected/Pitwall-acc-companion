@@ -108,7 +108,7 @@ export default function ImportedTeamList({ carFilter, trackFilter, searchText, s
           <Layers className="w-3.5 h-3.5" /> Imported setups ({total})
         </span>
         <span className="text-[9px] font-mono text-amber-800 truncate" title={manifest.source.label}>
-          Workshop ACC export · v{manifest.source.version} · author unverified
+          JaxTune PitWall Import · v{manifest.source.version} · Where setup states 'clicks' start at the minimal or far left value and increase by 'x' clicks
         </span>
       </div>
 
