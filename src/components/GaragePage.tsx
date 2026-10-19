@@ -19,8 +19,35 @@ import {
   MapPin,
   Flag,
   Lock,
-  ChevronRight
+  ChevronRight,
+  Download,
+  Check,
+  X
 } from "lucide-react";
+
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: "accepted" | "dismissed";
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
+
+let globalDeferredPrompt: BeforeInstallPromptEvent | null = null;
+const promptListeners = new Set<() => void>();
+
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    globalDeferredPrompt = e as BeforeInstallPromptEvent;
+    promptListeners.forEach((listener) => listener());
+  });
+  window.addEventListener("appinstalled", () => {
+    globalDeferredPrompt = null;
+    promptListeners.forEach((listener) => listener());
+  });
+}
 
 // LNR Race Calendar Google Sheets URLs
 const LNR_CALENDAR_EDIT_URL =
@@ -108,7 +135,43 @@ export default function GaragePage({
   const [calendarFilterUpcomingOnly, setCalendarFilterUpcomingOnly] = useState(true);
   const [isFetchingCalendar, setIsFetchingCalendar] = useState(false);
 
+  // PWA install states
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(globalDeferredPrompt);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [showInstallHint, setShowInstallHint] = useState(false);
 
+  useEffect(() => {
+    const checkStandalone = () => {
+      const standalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as any).standalone === true;
+      setIsStandalone(standalone);
+      setDeferredPrompt(globalDeferredPrompt);
+    };
+    checkStandalone();
+    promptListeners.add(checkStandalone);
+    return () => {
+      promptListeners.delete(checkStandalone);
+    };
+  }, []);
+
+  const handleInstallPwa = async () => {
+    if (deferredPrompt) {
+      try {
+        await deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if (choice.outcome === "accepted") {
+          globalDeferredPrompt = null;
+          setDeferredPrompt(null);
+          setShowInstallHint(false);
+        }
+      } catch (err) {
+        console.error("PWA install prompt failed:", err);
+      }
+    } else {
+      setShowInstallHint((prev) => !prev);
+    }
+  };
 
   // Filter only my setups
   const mySetupsRaw = profile
@@ -302,12 +365,12 @@ export default function GaragePage({
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
             {garageMode === "setups" && (
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 rounded-lg text-xs font-mono font-bold tracking-wider transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                className="px-3.5 py-2 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/80 rounded-lg text-xs font-mono font-bold tracking-wider transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-red-500" : ""}`} />
                 <span>SYNC CLOUD</span>
@@ -318,14 +381,54 @@ export default function GaragePage({
                 href={LNR_CALENDAR_EDIT_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 rounded-lg text-xs font-mono font-bold tracking-wider transition-all active:scale-95 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                className="px-3.5 py-2 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/80 rounded-lg text-xs font-mono font-bold tracking-wider transition-all active:scale-95 flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>OPEN FULL SHEET</span>
               </a>
             )}
+            <button
+              onClick={handleInstallPwa}
+              className="px-4 py-2 bg-brand hover:bg-brand-hover text-white border border-red-500/40 shadow-md shadow-red-950/50 rounded-lg text-xs font-mono font-extrabold tracking-wider uppercase transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+            >
+              {isStandalone ? (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  <span>PITWALL INSTALLED</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-3.5 h-3.5" />
+                  <span>INSTALL PITWALL</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
+
+        {showInstallHint && (
+          <div className="relative mt-4 pt-3.5 border-t border-zinc-800/80 flex items-start justify-between gap-3 text-xs text-zinc-300 animate-fade-in">
+            <div className="flex items-start gap-2">
+              <Info className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+              {isStandalone ? (
+                <span>
+                  <strong className="text-white font-mono">PitWall App Active:</strong> You are already running PitWall as an installed standalone application.
+                </span>
+              ) : (
+                <span>
+                  <strong className="text-white font-mono">Install PitWall as an App:</strong> In Chrome or Edge, click the <strong className="text-white">Install</strong> icon on the right side of your address bar (or open <strong className="text-white">Menu ⋮ &rarr; Cast, save, and share &rarr; Install page as app...</strong>). On iOS Safari, tap <strong className="text-white">Share &rarr; Add to Home Screen</strong>.
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => setShowInstallHint(false)}
+              aria-label="Close install instructions"
+              className="text-zinc-500 hover:text-zinc-200 p-0.5 rounded transition-colors cursor-pointer shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Mode Switch Toggle */}
