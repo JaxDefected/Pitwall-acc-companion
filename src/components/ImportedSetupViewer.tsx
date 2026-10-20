@@ -25,7 +25,7 @@ import {
 // Garage-screen grouping (mirrors ACC's setup screens)
 // ---------------------------------------------------------------------------
 
-type GroupId = "tyres" | "alignment" | "electronics" | "strategy" | "mechanical" | "dampers" | "aero";
+type GroupId = "tyres" | "alignment" | "electronics" | "mechanical" | "dampers" | "aero";
 
 const GROUPS: { id: GroupId; label: string; paths: string[] }[] = [
   { id: "tyres", label: "Tyres", paths: ["basicSetup.tyres.tyreCompound", "basicSetup.tyres.tyrePressure"] },
@@ -34,24 +34,6 @@ const GROUPS: { id: GroupId; label: string; paths: string[] }[] = [
     id: "electronics",
     label: "Electronics",
     paths: ["basicSetup.electronics.tC1", "basicSetup.electronics.tC2", "basicSetup.electronics.abs", "basicSetup.electronics.eCUMap", "basicSetup.electronics.telemetryLaps"],
-  },
-  {
-    id: "strategy",
-    label: "Strategy",
-    paths: [
-      "basicSetup.strategy.fuel",
-      "basicSetup.strategy.fuelPerLap",
-      "basicSetup.strategy.tyreSet",
-      "basicSetup.strategy.frontBrakePadCompound",
-      "basicSetup.strategy.rearBrakePadCompound",
-      "basicSetup.strategy.nPitStops",
-      "PIT.fuelToAdd",
-      "PIT.tyres.tyreCompound",
-      "PIT.tyreSet",
-      "PIT.tyres.tyrePressure",
-      "PIT.frontBrakePadCompound",
-      "PIT.rearBrakePadCompound",
-    ],
   },
   {
     id: "mechanical",
