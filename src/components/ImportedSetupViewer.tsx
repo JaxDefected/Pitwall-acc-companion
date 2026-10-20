@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Database, Gauge, Info, Loader2 } from "lucide-react";
 import { ACC_CARS, ACC_TRACKS } from "../utils/accParser";
+import FuelStrategyTab from "./FuelStrategyTab";
 import {
   expandImportedSetup,
   findImportedSetup,
@@ -295,6 +296,12 @@ export default function ImportedSetupViewer({ initialCar, initialTrack, initialS
 
   const fieldsByPath = useMemo(() => new Map((fields ?? []).map((f) => [f.path, f])), [fields]);
 
+  const importedFuel = useMemo(() => {
+    const dv = fieldsByPath.get("basicSetup.strategy.fuel")?.values[0];
+    const v = dv?.value ?? dv?.click;
+    return typeof v === "number" && Number.isFinite(v) ? v : 20;
+  }, [fieldsByPath]);
+
   const carsByClass = useMemo(() => {
     const groups = new Map<string, NonNullable<typeof manifest>["cars"]>();
     for (const c of manifest?.cars ?? []) groups.set(c.cls, [...(groups.get(c.cls) ?? []), c]);
@@ -445,6 +452,15 @@ export default function ImportedSetupViewer({ initialCar, initialTrack, initialS
       </div>
 
       {trackStats && <TrackStatsCard stats={trackStats} />}
+
+      <div className="border-t border-zinc-200 bg-zinc-50/60 p-4 sm:p-5">
+        <FuelStrategyTab
+          fuel={importedFuel}
+          activeTrack={trackId}
+          isTuneMode={false}
+          onAdjustSetupValue={() => {}}
+        />
+      </div>
     </div>
   );
 }
