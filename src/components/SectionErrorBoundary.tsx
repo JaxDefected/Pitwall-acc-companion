@@ -31,6 +31,14 @@ class SectionErrorBoundary extends Component<Props, State> {
   }
 
   private handleReset = () => {
+    const msg = this.state.error?.message || '';
+    if (
+      msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('Importing a module script failed')
+    ) {
+      window.location.reload();
+      return;
+    }
     this.setState({ hasError: false, error: undefined });
     this.props.onReset?.();
   };
@@ -50,8 +58,8 @@ class SectionErrorBoundary extends Component<Props, State> {
           <p className="text-xs text-zinc-500 mb-4 max-w-sm mx-auto">
             {this.props.fallbackMessage || 'This section encountered an error. Try resetting or refreshing the page.'}
           </p>
-          {process.env.NODE_ENV === 'development' && this.state.error && (
-            <pre className="text-left bg-zinc-50 border border-zinc-200 rounded p-3 mb-4 overflow-auto max-h-24 text-[10px] font-mono text-red-600">
+          {this.state.error && (
+            <pre className="text-left bg-zinc-50 border border-zinc-200 rounded p-3 mb-4 overflow-auto max-h-24 text-[10px] font-mono text-red-600 max-w-md mx-auto">
               {this.state.error.toString()}
             </pre>
           )}
