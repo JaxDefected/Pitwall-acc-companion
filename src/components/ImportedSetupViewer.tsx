@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Database, Flame, Gauge, Info, Loader2 } from "lucide-react";
 import { ACC_CARS, ACC_TRACKS } from "../utils/accParser";
+import { cars } from "../data/cars";
 import FuelStrategyTab from "./FuelStrategyTab";
 import {
   expandImportedSetup,
@@ -108,7 +109,7 @@ const fmtLap = (secs: number) => {
   return `${m}:${(secs - m * 60).toFixed(3).padStart(6, "0")}`;
 };
 
-function ValueCell({ dv }: { dv: DecodedValue }) {
+function ValueCell({ dv, carId }: { dv: DecodedValue; carId: string }) {
   const click = <span className="text-[10px] font-bold text-zinc-400 ml-1">[{dv.click}]</span>;
   const badge = (text: string, cls: string) => (
     <span title={dv.note} className={`ml-1.5 text-[9px] font-mono font-extrabold uppercase tracking-wider px-1 py-0.5 rounded border ${cls}`}>
@@ -117,18 +118,38 @@ function ValueCell({ dv }: { dv: DecodedValue }) {
   );
 
   switch (dv.status) {
-    case "raw":
-      return dv.unit === "click" ? (
-        <span>
-          <strong className="text-zinc-900 font-extrabold">{dv.click}</strong>
-          <span className="text-[10px] font-bold text-zinc-400 ml-1">clicks</span>
-        </span>
-      ) : (
+    case "raw": {
+      if (dv.unit === "click") {
+        const carCfg = cars[carId] ?? (carId === "lamborghini_huracan_st" ? cars.lamborghini_huracan_st_evo2 : undefined);
+        const minPsi = carCfg?.tyrePressureRange?.[0];
+        const stepPsi = carCfg?.tyrePressureStep ?? 0.1;
+        const psi = typeof minPsi === "number" && Number.isFinite(dv.click) ? minPsi + dv.click * stepPsi : null;
+        return (
+          <span>
+            {psi !== null ? (
+              <>
+                <strong className="text-zinc-900 font-extrabold">
+                  {psi.toFixed(1)}
+                  <span className="text-[10px] font-bold text-zinc-400 ml-0.5">PSI</span>
+                </strong>
+                <span className="text-[10px] font-bold text-zinc-400 ml-1">[{dv.click} clicks]</span>
+              </>
+            ) : (
+              <>
+                <strong className="text-zinc-900 font-extrabold">{dv.click}</strong>
+                <span className="text-[10px] font-bold text-zinc-400 ml-1">clicks</span>
+              </>
+            )}
+          </span>
+        );
+      }
+      return (
         <strong className="text-zinc-900 font-extrabold">
           {dv.value === null ? dv.click : fmtNum(dv.value)}
           {dv.unit && <span className="text-[10px] font-bold text-zinc-400 ml-0.5">{dv.unit}</span>}
         </strong>
       );
+    }
     case "undecoded":
       return (
         <span>
@@ -159,7 +180,7 @@ function ValueCell({ dv }: { dv: DecodedValue }) {
   }
 }
 
-function FieldCard({ field }: { field: DecodedField }) {
+function FieldCard({ field, carId }: { field: DecodedField; carId: string }) {
   const label = FIELD_LABELS[field.path] ?? field.path;
   const width = field.values.length;
 
@@ -180,7 +201,7 @@ function FieldCard({ field }: { field: DecodedField }) {
         {cells.map((c, i) => (
           <div key={i} className="flex items-baseline justify-between gap-2">
             {c.label && <span className="text-[10px] text-zinc-400 font-bold uppercase">{c.label}</span>}
-            <ValueCell dv={c.dv} />
+            <ValueCell dv={c.dv} carId={carId} />
           </div>
         ))}
       </div>
@@ -496,7 +517,7 @@ export default function ImportedSetupViewer({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {(GROUPS.find((g) => g.id === group)?.paths ?? []).map((p) => {
               const f = fieldsByPath.get(p);
-              return f ? <FieldCard key={p} field={f} /> : null;
+              return f ? <FieldCard key={p} field={f} carId={carId} /> : null;
             })}
           </div>
         )}
