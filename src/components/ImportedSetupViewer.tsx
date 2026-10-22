@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Database, Gauge, Info, Loader2 } from "lucide-react";
+import { AlertTriangle, Database, Flame, Gauge, Info, Loader2 } from "lucide-react";
 import { ACC_CARS, ACC_TRACKS } from "../utils/accParser";
 import FuelStrategyTab from "./FuelStrategyTab";
 import {
@@ -232,9 +232,22 @@ export interface ImportedSetupViewerProps {
   initialTrack?: string;
   /** Optional initial slot */
   initialSlot?: WorkshopSlot;
+  /** Optional pinned series cars from user profile */
+  pinnedCars?: string[];
+  /** Whether to filter cars to only pinned series cars */
+  onlyPinnedCars?: boolean;
+  /** Callback to toggle the "Series Only" filter */
+  onToggleOnlyPinnedCars?: (checked: boolean) => void;
 }
 
-export default function ImportedSetupViewer({ initialCar, initialTrack, initialSlot }: ImportedSetupViewerProps) {
+export default function ImportedSetupViewer({
+  initialCar,
+  initialTrack,
+  initialSlot,
+  pinnedCars,
+  onlyPinnedCars,
+  onToggleOnlyPinnedCars,
+}: ImportedSetupViewerProps) {
   const [manifest, setManifest] = useState<ImportedManifest | null>(null);
   const [manifestError, setManifestError] = useState<string | null>(null);
   const [carId, setCarId] = useState<string>("");
@@ -302,11 +315,29 @@ export default function ImportedSetupViewer({ initialCar, initialTrack, initialS
     return typeof v === "number" && Number.isFinite(v) ? v : 20;
   }, [fieldsByPath]);
 
+  const hasPinnedCars = Boolean(pinnedCars && pinnedCars.length > 0);
+  const isFilteringPinned = Boolean(hasPinnedCars && onlyPinnedCars);
+
+  const visibleCars = useMemo(() => {
+    const all = manifest?.cars ?? [];
+    if (!isFilteringPinned || !pinnedCars) return all;
+    const filtered = all.filter((c) => pinnedCars.includes(c.appId));
+    return filtered.length > 0 ? filtered : all;
+  }, [manifest, isFilteringPinned, pinnedCars]);
+
+  useEffect(() => {
+    if (!visibleCars.length) return;
+    if (!visibleCars.some((c) => c.appId === carId)) {
+      const preferred = (initialCar && visibleCars.find((c) => c.appId === initialCar)) ?? visibleCars[0];
+      if (preferred) setCarId(preferred.appId);
+    }
+  }, [visibleCars, carId, initialCar]);
+
   const carsByClass = useMemo(() => {
     const groups = new Map<string, NonNullable<typeof manifest>["cars"]>();
-    for (const c of manifest?.cars ?? []) groups.set(c.cls, [...(groups.get(c.cls) ?? []), c]);
+    for (const c of visibleCars) groups.set(c.cls, [...(groups.get(c.cls) ?? []), c]);
     return [...groups.entries()];
-  }, [manifest]);
+  }, [visibleCars]);
 
   const carLabel = (id: string, name: string, matched: boolean) => `${ACC_CARS[id] ?? name}${matched ? "" : " (not in Pitwall car list)"}`;
 
@@ -344,6 +375,29 @@ export default function ImportedSetupViewer({ initialCar, initialTrack, initialS
             {trackStats ? ACC_TRACKS[trackStats.id] ?? trackStats.name : ""} · {SLOT_LABELS[slot]}
           </p>
         </div>
+
+        {hasPinnedCars && (
+          <div className="flex items-center justify-between bg-red-50/45 border border-red-200/50 rounded-lg p-2.5 hover:bg-red-50/60 transition-all">
+            <div className="flex items-center gap-2">
+              <Flame className="w-4 h-4 text-red-500 animate-pulse shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs font-black text-red-700 tracking-tight leading-none">Series Vehicles Active</p>
+                <p className="text-[10px] text-zinc-500 mt-0.5 font-mono leading-none">Pin list: {pinnedCars!.length} cars configured</p>
+              </div>
+            </div>
+            {onToggleOnlyPinnedCars && (
+              <label className="flex items-center gap-2 text-xs text-red-600 font-bold bg-white border border-red-200 hover:border-red-350 shadow-3xs px-3 py-1.5 rounded-lg cursor-pointer select-none active:scale-95 transition-all h-9 shrink-0">
+                <input
+                  type="checkbox"
+                  checked={Boolean(onlyPinnedCars)}
+                  onChange={(e) => onToggleOnlyPinnedCars(e.target.checked)}
+                  className="accent-brand w-4 h-4 cursor-pointer block shrink-0"
+                />
+                <span className="font-mono text-[10px] font-black uppercase tracking-wider">Series Only</span>
+              </label>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="block">

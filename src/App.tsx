@@ -383,7 +383,7 @@ export default function App() {
   const [isSavingRating, setIsSavingRating] = useState<boolean>(false);
 
   // Car registry filter configurations
-  const [onlyPinnedCarsFilter, setOnlyPinnedCarsFilter] = useState<boolean>(false);
+  const [onlyPinnedCarsFilter, setOnlyPinnedCarsFilter] = useState<boolean>(true);
 
   // Premium Toast States and Helpers
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
@@ -1797,13 +1797,14 @@ export default function App() {
                         return "unknown";
                       }
                     }).filter(c => c !== "unknown");
-                    let allCars = Array.from(new Set([...localCars, ...githubCars])).sort((a, b) => {
+                    const pinnedCars = profile?.pinnedSeriesCars ?? [];
+                    let allCars = Array.from(new Set([...localCars, ...githubCars, ...pinnedCars])).sort((a, b) => {
                       const nameA = ACC_CARS[a] || a;
                       const nameB = ACC_CARS[b] || b;
                       return nameA.localeCompare(nameB);
                     });
-                    if (profile?.pinnedSeriesCars && profile.pinnedSeriesCars.length > 0 && onlyPinnedCarsFilter) {
-                      allCars = allCars.filter(carKey => profile.pinnedSeriesCars.includes(carKey));
+                    if (pinnedCars.length > 0 && onlyPinnedCarsFilter) {
+                      allCars = allCars.filter(carKey => pinnedCars.includes(carKey));
                     }
 
                     // Group cars by class
@@ -2364,6 +2365,8 @@ export default function App() {
                 searchText={searchText}
                 selected={importedSelection}
                 onSelect={handleImportedSelect}
+                pinnedCars={profile?.pinnedSeriesCars}
+                onlyPinnedCars={onlyPinnedCarsFilter}
               />
               </>
             ) : (
@@ -2645,9 +2648,18 @@ export default function App() {
                   initialCar={importedSelection.car}
                   initialTrack={importedSelection.track}
                   initialSlot={importedSelection.slot}
+                  pinnedCars={profile?.pinnedSeriesCars}
+                  onlyPinnedCars={onlyPinnedCarsFilter}
+                  onToggleOnlyPinnedCars={setOnlyPinnedCarsFilter}
                 />
               ) : (
-                <ImportedSetupViewer initialCar={activeSetup?.car} initialTrack={activeSetup ? setupFilterTrack(activeSetup.track) : undefined} />
+                <ImportedSetupViewer
+                  initialCar={activeSetup?.car}
+                  initialTrack={activeSetup ? setupFilterTrack(activeSetup.track) : undefined}
+                  pinnedCars={profile?.pinnedSeriesCars}
+                  onlyPinnedCars={onlyPinnedCarsFilter}
+                  onToggleOnlyPinnedCars={setOnlyPinnedCarsFilter}
+                />
               )}
             </SectionErrorBoundary>
           ) : (

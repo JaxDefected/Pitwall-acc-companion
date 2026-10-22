@@ -16,6 +16,8 @@ export interface ImportedTeamListProps {
   searchText: string;
   selected: ImportedSelection | null;
   onSelect: (sel: ImportedSelection) => void;
+  pinnedCars?: string[];
+  onlyPinnedCars?: boolean;
 }
 
 const countBits = (n: number) => {
@@ -29,7 +31,7 @@ const countBits = (n: number) => {
  * Read-only, static data: nothing is written to Firestore. Each car's file is
  * only fetched once a car filter is chosen (or a car row is opened).
  */
-export default function ImportedTeamList({ carFilter, trackFilter, searchText, selected, onSelect }: ImportedTeamListProps) {
+export default function ImportedTeamList({ carFilter, trackFilter, searchText, selected, onSelect, pinnedCars, onlyPinnedCars }: ImportedTeamListProps) {
   const [manifest, setManifest] = useState<ImportedManifest | null>(null);
   const [carFile, setCarFile] = useState<ImportedCarFile | null>(null);
   const [loadingCar, setLoadingCar] = useState(false);
@@ -67,10 +69,13 @@ export default function ImportedTeamList({ carFilter, trackFilter, searchText, s
   const carName = (id: string, fallback: string) => ACC_CARS[id] ?? fallback;
   const trackName = (id: string) => ACC_TRACKS[id] ?? manifest?.tracks.find((t) => t.id === id)?.name ?? id;
 
+  const isFilteringPinned = Boolean(onlyPinnedCars && pinnedCars && pinnedCars.length > 0);
+
   /** No car filter: one row per car, with the number of setups matching the track filter. */
   const carRows = useMemo(() => {
     if (!manifest || carFilter !== "all") return [];
     return manifest.cars
+      .filter((c) => !isFilteringPinned || pinnedCars!.includes(c.appId))
       .map((c) => {
         const count = trackFilter === "all" ? c.setupCount : countBits(c.slotMask[trackFilter] ?? 0);
         return { entry: c, count, name: carName(c.appId, c.name) };
@@ -78,17 +83,18 @@ export default function ImportedTeamList({ carFilter, trackFilter, searchText, s
       .filter((r) => r.count > 0 && (q === "" || r.name.toLowerCase().includes(q) || r.entry.appId.includes(q)))
       .sort((a, b) => a.name.localeCompare(b.name));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [manifest, carFilter, trackFilter, q]);
+  }, [manifest, carFilter, trackFilter, q, isFilteringPinned, pinnedCars]);
 
   /** Car filter set: one row per setup (track × slot). */
   const setupRows = useMemo(() => {
     if (!carFile || !carEntry || carFile.appId !== carEntry.appId) return [];
+    if (isFilteringPinned && !pinnedCars!.includes(carFile.appId)) return [];
     return carFile.setups
       .filter((s) => trackFilter === "all" || s.track === trackFilter)
       .filter((s) => q === "" || trackName(s.track).toLowerCase().includes(q) || s.slot.toLowerCase().includes(q) || SLOT_LABELS[s.slot].toLowerCase().includes(q) || carName(carFile.appId, carFile.name).toLowerCase().includes(q))
       .sort((a, b) => trackName(a.track).localeCompare(trackName(b.track)) || WORKSHOP_SLOTS.indexOf(a.slot) - WORKSHOP_SLOTS.indexOf(b.slot));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [carFile, carEntry, trackFilter, q]);
+  }, [carFile, carEntry, trackFilter, q, isFilteringPinned, pinnedCars]);
 
   if (error) return null; // keep Team Workspace usable if the static library is missing
   if (!manifest) return null;
