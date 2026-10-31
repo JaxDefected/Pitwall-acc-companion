@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AlertTriangle, Database, Flame, Gauge, Info, Loader2 } from "lucide-react";
 import { ACC_CARS, ACC_TRACKS } from "../utils/accParser";
+import { getTargetRacePaceSeconds } from "../data/carNameMap";
 import { cars } from "../data/cars";
 import FuelStrategyTab from "./FuelStrategyTab";
 import {
@@ -11,8 +12,6 @@ import {
   slotsFor,
 } from "../services/importedSetups";
 import {
-  AXLE_LABELS,
-  WHEEL_LABELS,
   SLOT_LABELS,
   WORKSHOP_SLOTS,
   type DecodedField,
@@ -24,79 +23,60 @@ import {
 } from "../types/workshopAcc";
 
 // ---------------------------------------------------------------------------
-// Garage-screen grouping (mirrors ACC's setup screens)
+// Tabs & field paths
+// Laid out like the native Cloud Sync setup viewer: values are grouped per axle
+// and then per corner (LF/RF/LR/RR) instead of by field type.
 // ---------------------------------------------------------------------------
 
-type GroupId = "tyres" | "alignment" | "electronics" | "mechanical" | "dampers" | "aero";
+export type TabId = "tyres" | "electronics" | "mechanical" | "dampers" | "aero";
 
-const GROUPS: { id: GroupId; label: string; paths: string[] }[] = [
-  { id: "tyres", label: "Tyres", paths: ["basicSetup.tyres.tyreCompound", "basicSetup.tyres.tyrePressure"] },
-  { id: "alignment", label: "Alignment", paths: ["basicSetup.alignment.camber", "basicSetup.alignment.toe", "basicSetup.alignment.casterLF"] },
-  {
-    id: "electronics",
-    label: "Electronics",
-    paths: ["basicSetup.electronics.tC1", "basicSetup.electronics.tC2", "basicSetup.electronics.abs", "basicSetup.electronics.eCUMap", "basicSetup.electronics.telemetryLaps"],
-  },
-  {
-    id: "mechanical",
-    label: "Mechanical Balance",
-    paths: [
-      "advancedSetup.mechanicalBalance.aRBFront",
-      "advancedSetup.mechanicalBalance.aRBRear",
-      "advancedSetup.mechanicalBalance.brakeTorque",
-      "advancedSetup.mechanicalBalance.brakeBias",
-      "basicSetup.alignment.steerRatio",
-      "advancedSetup.drivetrain.preload",
-      "advancedSetup.mechanicalBalance.wheelRate",
-      "advancedSetup.mechanicalBalance.bumpStopRateUp",
-      "advancedSetup.mechanicalBalance.bumpStopWindow",
-    ],
-  },
-  { id: "dampers", label: "Dampers", paths: ["advancedSetup.dampers.bumpSlow", "advancedSetup.dampers.bumpFast", "advancedSetup.dampers.reboundSlow", "advancedSetup.dampers.reboundFast"] },
-  { id: "aero", label: "Aero", paths: ["advancedSetup.aeroBalance.rideHeight", "advancedSetup.aeroBalance.splitter", "advancedSetup.aeroBalance.rearWing", "advancedSetup.aeroBalance.brakeDuct"] },
+export const TABS: { id: TabId; label: string }[] = [
+  { id: "tyres", label: "Tyres & Alignment" },
+  { id: "electronics", label: "Electronics" },
+  { id: "mechanical", label: "Mechanical Grip" },
+  { id: "dampers", label: "Suspension Dampers" },
+  { id: "aero", label: "Aero & Ducts" },
 ];
 
-const FIELD_LABELS: Record<string, string> = {
-  "basicSetup.tyres.tyreCompound": "Tyre Compound",
-  "basicSetup.tyres.tyrePressure": "Tyre Pressure",
-  "basicSetup.alignment.camber": "Camber",
-  "basicSetup.alignment.toe": "Toe",
-  "basicSetup.alignment.casterLF": "Caster",
-  "basicSetup.alignment.steerRatio": "Steer Ratio",
-  "basicSetup.electronics.tC1": "TC",
-  "basicSetup.electronics.tC2": "TC Cut",
-  "basicSetup.electronics.abs": "ABS",
-  "basicSetup.electronics.eCUMap": "ECU Map",
-  "basicSetup.electronics.telemetryLaps": "Telemetry Laps",
-  "basicSetup.strategy.fuel": "Fuel",
-  "basicSetup.strategy.fuelPerLap": "Fuel per Lap",
-  "basicSetup.strategy.tyreSet": "Tyre Set",
-  "basicSetup.strategy.frontBrakePadCompound": "Front Brake Pads",
-  "basicSetup.strategy.rearBrakePadCompound": "Rear Brake Pads",
-  "basicSetup.strategy.nPitStops": "Pit Stops",
-  "PIT.fuelToAdd": "Pit: Fuel to Add",
-  "PIT.tyres.tyreCompound": "Pit: Tyre Compound",
-  "PIT.tyreSet": "Pit: Tyre Set",
-  "PIT.tyres.tyrePressure": "Pit: Tyre Pressure",
-  "PIT.frontBrakePadCompound": "Pit: Front Brake Pads",
-  "PIT.rearBrakePadCompound": "Pit: Rear Brake Pads",
-  "advancedSetup.mechanicalBalance.aRBFront": "Front Anti-Roll Bar",
-  "advancedSetup.mechanicalBalance.aRBRear": "Rear Anti-Roll Bar",
-  "advancedSetup.mechanicalBalance.wheelRate": "Wheel Rate",
-  "advancedSetup.mechanicalBalance.bumpStopRateUp": "Bumpstop Rate",
-  "advancedSetup.mechanicalBalance.bumpStopWindow": "Bumpstop Range",
-  "advancedSetup.mechanicalBalance.brakeTorque": "Brake Power",
-  "advancedSetup.mechanicalBalance.brakeBias": "Brake Bias",
-  "advancedSetup.drivetrain.preload": "Preload Differential",
-  "advancedSetup.dampers.bumpSlow": "Bump (Slow)",
-  "advancedSetup.dampers.bumpFast": "Bump (Fast)",
-  "advancedSetup.dampers.reboundSlow": "Rebound (Slow)",
-  "advancedSetup.dampers.reboundFast": "Rebound (Fast)",
-  "advancedSetup.aeroBalance.rideHeight": "Ride Height",
-  "advancedSetup.aeroBalance.splitter": "Splitter",
-  "advancedSetup.aeroBalance.rearWing": "Rear Wing",
-  "advancedSetup.aeroBalance.brakeDuct": "Brake Ducts",
-};
+const P = {
+  compound: "basicSetup.tyres.tyreCompound",
+  pressure: "basicSetup.tyres.tyrePressure",
+  camber: "basicSetup.alignment.camber",
+  toe: "basicSetup.alignment.toe",
+  caster: "basicSetup.alignment.casterLF",
+  steerRatio: "basicSetup.alignment.steerRatio",
+  tc1: "basicSetup.electronics.tC1",
+  tc2: "basicSetup.electronics.tC2",
+  abs: "basicSetup.electronics.abs",
+  ecuMap: "basicSetup.electronics.eCUMap",
+  telemetryLaps: "basicSetup.electronics.telemetryLaps",
+  arbFront: "advancedSetup.mechanicalBalance.aRBFront",
+  arbRear: "advancedSetup.mechanicalBalance.aRBRear",
+  wheelRate: "advancedSetup.mechanicalBalance.wheelRate",
+  bumpStopRate: "advancedSetup.mechanicalBalance.bumpStopRateUp",
+  bumpStopRange: "advancedSetup.mechanicalBalance.bumpStopWindow",
+  brakePower: "advancedSetup.mechanicalBalance.brakeTorque",
+  brakeBias: "advancedSetup.mechanicalBalance.brakeBias",
+  preload: "advancedSetup.drivetrain.preload",
+  bumpSlow: "advancedSetup.dampers.bumpSlow",
+  bumpFast: "advancedSetup.dampers.bumpFast",
+  reboundSlow: "advancedSetup.dampers.reboundSlow",
+  reboundFast: "advancedSetup.dampers.reboundFast",
+  rideHeight: "advancedSetup.aeroBalance.rideHeight",
+  splitter: "advancedSetup.aeroBalance.splitter",
+  rearWing: "advancedSetup.aeroBalance.rearWing",
+  brakeDuct: "advancedSetup.aeroBalance.brakeDuct",
+} as const;
+
+/** Wheel indexes inside the 4-wide fields: 0 = LF, 1 = RF, 2 = LR, 3 = RR. */
+const FRONT_WHEELS = [
+  { idx: 0, short: "LF", aria: "Front Left Wheel" },
+  { idx: 1, short: "RF", aria: "Front Right Wheel" },
+] as const;
+const REAR_WHEELS = [
+  { idx: 2, short: "LR", aria: "Rear Left Wheel" },
+  { idx: 3, short: "RR", aria: "Rear Right Wheel" },
+] as const;
 
 // ---------------------------------------------------------------------------
 // Formatting
@@ -180,43 +160,348 @@ function ValueCell({ dv, carId }: { dv: DecodedValue; carId: string }) {
   }
 }
 
-function FieldCard({ field, carId }: { field: DecodedField; carId: string }) {
-  const label = FIELD_LABELS[field.path] ?? field.path;
-  const width = field.values.length;
+// ---------------------------------------------------------------------------
+// Layout building blocks (mirror the native Cloud Sync setup viewer's cards)
+// ---------------------------------------------------------------------------
 
-  // Ride height: ACC array is [front, unused, rear, unused] – show only the used slots.
-  const isRideHeight = field.path === "advancedSetup.aeroBalance.rideHeight";
-  const cells: { label: string; dv: DecodedValue }[] = isRideHeight
-    ? field.values.map((dv, i) => ({ label: i < 2 ? "Front" : "Rear", dv })).filter((c) => c.dv.status !== "unused")
-    : width === 4
-      ? field.values.map((dv, i) => ({ label: WHEEL_LABELS[i] ?? String(i), dv }))
-      : width === 2
-        ? field.values.map((dv, i) => ({ label: AXLE_LABELS[i] ?? String(i), dv }))
-        : field.values.map((dv) => ({ label: "", dv }));
+export type GetValue = (path: string, index?: number) => DecodedValue | undefined;
+
+interface PanelProps {
+  get: GetValue;
+  carId: string;
+}
+
+function ValueOrDash({ dv, carId }: { dv?: DecodedValue; carId: string }) {
+  return dv ? <ValueCell dv={dv} carId={carId} /> : <span className="text-zinc-400 font-bold">—</span>;
+}
+
+/** One "Label: value" line inside a wheel block. */
+function SetupRow({ label, dv, carId, labelClass = "text-zinc-500" }: { label: string; dv?: DecodedValue; carId: string; labelClass?: string }) {
+  return (
+    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1 text-xs">
+      <span className={labelClass}>{label}:</span>
+      <ValueOrDash dv={dv} carId={carId} />
+    </div>
+  );
+}
+
+/** Axle card (front / rear) holding one block per corner. */
+function AxleCard({ title, subtitle, ariaLabel, children }: { title: string; subtitle: string; ariaLabel: string; children: ReactNode }) {
+  return (
+    <div className="bg-white border border-zinc-200 p-4 rounded-lg shadow-sm" role="group" aria-label={ariaLabel}>
+      <div className="border-b border-zinc-200 pb-2 mb-3.5 flex justify-between items-center gap-2">
+        <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">{title}</span>
+        <span className="text-[10px] text-zinc-400 font-mono font-bold text-right">{subtitle}</span>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs text-zinc-900">{children}</div>
+    </div>
+  );
+}
+
+/** Single corner (LF / RF / LR / RR) block. */
+function WheelBlock({ title, ariaLabel, compact = false, children }: { title: string; ariaLabel: string; compact?: boolean; children: ReactNode }) {
+  return (
+    <div
+      role="group"
+      aria-label={ariaLabel}
+      className={`${compact ? "p-3" : "p-4"} rounded-lg border bg-zinc-50 border-zinc-200 hover:border-brand transition-colors space-y-2.5`}
+    >
+      <div className="text-[10px] text-zinc-500 uppercase border-b border-zinc-200 pb-1.5 font-black tracking-wider">{title}</div>
+      {children}
+    </div>
+  );
+}
+
+/** Label / value / description card used for single (non per-corner) values. */
+function StatCard({ label, dv, carId, valueClass = "", children }: { label: string; dv?: DecodedValue; carId: string; valueClass?: string; children: ReactNode }) {
+  return (
+    <div className="bg-white border border-zinc-200 p-4 rounded-lg flex justify-between items-center gap-3 font-mono shadow-sm">
+      <div>
+        <span className="text-zinc-500 text-[10px] uppercase block font-bold">{label}</span>
+        <div className={`mt-1 text-xl font-extrabold text-zinc-900 ${valueClass}`}>
+          <ValueOrDash dv={dv} carId={carId} />
+        </div>
+      </div>
+      <span className="text-[10px] text-zinc-500 max-w-[200px] text-right font-medium font-sans">{children}</span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Tab panels
+// ---------------------------------------------------------------------------
+
+function TyresPanel({ get, carId }: PanelProps) {
+  const compound = get(P.compound);
+  const compoundName = compound ? (compound.click === 0 ? "Dry" : compound.click === 1 ? "Wet" : `Type ${compound.click}`) : null;
+
+  const wheelBlock = (w: { idx: number; short: string; aria: string }, axle: "Front" | "Rear") => (
+    <WheelBlock key={w.idx} title={`${w.short} ${axle} Wheel`} ariaLabel={w.aria}>
+      <SetupRow label="Tyre Pressure" dv={get(P.pressure, w.idx)} carId={carId} labelClass="text-zinc-600 font-semibold" />
+      <SetupRow label="Toe" dv={get(P.toe, w.idx)} carId={carId} />
+      <SetupRow label="Camber" dv={get(P.camber, w.idx)} carId={carId} />
+      {/* ACC stores a single caster value (casterLF) shared by both front wheels */}
+      {axle === "Front" && <SetupRow label="Caster" dv={get(P.caster, 0)} carId={carId} />}
+    </WheelBlock>
+  );
 
   return (
-    <div className="bg-zinc-50 border border-zinc-200/60 rounded p-3 text-zinc-900 shadow-3xs">
-      <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest block font-bold pb-1.5 border-b border-zinc-150">{label}</span>
-      <div className={`mt-2 grid gap-x-4 gap-y-1.5 text-xs font-mono ${cells.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
-        {cells.map((c, i) => (
-          <div key={i} className="flex items-baseline justify-between gap-2">
-            {c.label && <span className="text-[10px] text-zinc-400 font-bold uppercase">{c.label}</span>}
-            <ValueCell dv={c.dv} carId={carId} />
+    <div className="space-y-4">
+      {compound && (
+        <div className="bg-white border border-zinc-200 shadow-sm rounded-lg px-4 py-3 flex items-center justify-between gap-3 font-mono text-xs">
+          <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-black">Tyre Compound</span>
+          <span>
+            <strong className="text-zinc-900 font-extrabold">{compoundName}</strong>
+            <span className="text-[10px] font-bold text-zinc-400 ml-1">[{compound.click}]</span>
+          </span>
+        </div>
+      )}
+      <AxleCard title="FRONT TYRES & ALIGNMENT (LF/RF)" subtitle="PRESSURE & CAR OUTLINES" ariaLabel="Front Tyres & Alignment">
+        {FRONT_WHEELS.map((w) => wheelBlock(w, "Front"))}
+      </AxleCard>
+      <AxleCard title="REAR TYRES & ALIGNMENT (LR/RR)" subtitle="PRESSURE & CAR OUTLINES" ariaLabel="Rear Tyres & Alignment">
+        {REAR_WHEELS.map((w) => wheelBlock(w, "Rear"))}
+      </AxleCard>
+    </div>
+  );
+}
+
+function BigStatCard({ title, hoverClass, valueClass, dv, carId, children }: { title: string; hoverClass: string; valueClass: string; dv?: DecodedValue; carId: string; children: ReactNode }) {
+  return (
+    <div className={`bg-white border border-zinc-200 rounded-lg p-5 text-center shadow-sm ${hoverClass} transition-all`}>
+      <span className="text-zinc-500 font-mono text-[10px] tracking-wider uppercase block font-bold">{title}</span>
+      <div className={`text-4xl font-mono font-black mt-2 flex items-center justify-center ${valueClass}`}>
+        <ValueOrDash dv={dv} carId={carId} />
+      </div>
+      <p className="text-[10px] text-zinc-600 mt-2.5 leading-relaxed bg-zinc-50 p-2 rounded-lg font-medium">{children}</p>
+    </div>
+  );
+}
+
+function ElectronicsPanel({ get, carId }: PanelProps) {
+  const ecuMap = get(P.ecuMap);
+  const telemetryLaps = get(P.telemetryLaps);
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <BigStatCard title="Traction Control 1 (TC1)" hoverClass="hover:border-brand" valueClass="[&_strong]:text-brand" dv={get(P.tc1)} carId={carId}>
+          Initial slip detection severity. Lower is more aggressive, permitting greater slide slip angle before deployment.
+        </BigStatCard>
+        <BigStatCard title="Traction Control 2 (TC2 / Cut)" hoverClass="hover:border-blue-500" valueClass="[&_strong]:text-blue-700" dv={get(P.tc2)} carId={carId}>
+          Engine torque cut depth once traction loss occurs. Higher numbers initiate deeper fuel cuts to limit wheelspin.
+        </BigStatCard>
+        <BigStatCard title="Anti-Lock Braking System (ABS)" hoverClass="hover:border-emerald-600" valueClass="[&_strong]:text-emerald-700" dv={get(P.abs)} carId={carId}>
+          Wheel speed lock threshold limit. Lower limits create tighter threshold braking but raise the lock up risk on bumps.
+        </BigStatCard>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+        <div className="bg-zinc-50 border border-zinc-200 p-3 rounded-lg text-center shadow-xs">
+          <span className="text-zinc-500 font-mono text-[10px] block font-bold">ECU Engine Map</span>
+          <div className="flex items-center justify-center gap-1.5 mt-1.5 text-sm font-mono font-black text-zinc-900">
+            {ecuMap && <span>Map</span>}
+            <ValueOrDash dv={ecuMap} carId={carId} />
           </div>
-        ))}
+        </div>
+        <div className="bg-zinc-50 border border-zinc-200 p-3 rounded-lg text-center shadow-xs flex flex-col justify-center items-center">
+          <span className="text-zinc-500 font-mono text-[10px] block font-bold">Recorded Telemetry Laps</span>
+          <div className="flex items-center justify-center gap-1.5 mt-1.5 text-sm font-mono font-black text-zinc-900">
+            <ValueOrDash dv={telemetryLaps} carId={carId} />
+            {telemetryLaps && <span>Laps</span>}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-function TrackStatsCard({ stats }: { stats: ImportedTrackStats }) {
+function TopStat({ label, dv, carId, valueClass, captions }: { label: string; dv?: DecodedValue; carId: string; valueClass: string; captions: string[] }) {
+  return (
+    <div className="px-2 flex flex-col items-center justify-center md:border-r md:border-zinc-200 md:last:border-0">
+      <span className="text-zinc-500 font-mono text-[10px] uppercase block tracking-wider font-bold">{label}</span>
+      <div className={`mt-1 text-2xl font-mono font-extrabold text-zinc-900 ${valueClass}`}>
+        <ValueOrDash dv={dv} carId={carId} />
+      </div>
+      {captions.map((c) => (
+        <span key={c} className="text-[10px] text-zinc-500 font-mono block mt-0.5 font-medium">
+          {c}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function MechanicalPanel({ get, carId }: PanelProps) {
+  const springBlock = (w: { idx: number; short: string; aria: string }) => (
+    <WheelBlock key={w.idx} title={`${w.short} Wheel`} ariaLabel={w.aria} compact>
+      <SetupRow label="Wheel Rate" dv={get(P.wheelRate, w.idx)} carId={carId} labelClass="text-zinc-600 font-normal" />
+      <SetupRow label="Bumpstop Rate" dv={get(P.bumpStopRate, w.idx)} carId={carId} labelClass="text-zinc-600 font-normal" />
+      <SetupRow label="Bumpstop Range" dv={get(P.bumpStopRange, w.idx)} carId={carId} labelClass="text-zinc-600 font-normal" />
+    </WheelBlock>
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Top chassis setup bar */}
+      <div className="bg-white border border-zinc-200 p-4 rounded-lg grid grid-cols-2 md:grid-cols-4 gap-4 text-center shadow-sm text-zinc-900">
+        <TopStat label="Front ARB" dv={get(P.arbFront)} carId={carId} valueClass="" captions={["Anti-Roll Bar Steps"]} />
+        <TopStat label="Brake Power" dv={get(P.brakePower)} carId={carId} valueClass="[&_strong]:text-emerald-600" captions={["Typically 100% but can try above figure if running no ABS"]} />
+        <TopStat label="Brake Bias" dv={get(P.brakeBias)} carId={carId} valueClass="[&_strong]:text-blue-600" captions={["Towards the front of the car"]} />
+        <TopStat label="Steer Ratio" dv={get(P.steerRatio)} carId={carId} valueClass="[&_strong]:text-amber-600" captions={["Low = Faster & Sharper", "High = Smoother & Slower"]} />
+      </div>
+
+      <AxleCard title="FRONT WHEELS (LF/RF)" subtitle="FRONT AXLE SPRING RATES" ariaLabel="Front Wheels Spring Rates">
+        {FRONT_WHEELS.map(springBlock)}
+      </AxleCard>
+      <AxleCard title="REAR WHEELS (LR/RR)" subtitle="REAR AXLE SPRING RATES" ariaLabel="Rear Wheels Spring Rates">
+        {REAR_WHEELS.map(springBlock)}
+      </AxleCard>
+
+      {/* Rear stabilizer and Diff Preload */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-1">
+        <StatCard label="Rear Anti-Roll Bar (Rear ARB)" dv={get(P.arbRear)} carId={carId}>
+          Rear lateral roll resistance step settings.
+        </StatCard>
+        <StatCard label="Diff Preload Torque" dv={get(P.preload)} carId={carId} valueClass="[&_strong]:text-amber-700">
+          Clutch spring threshold to lock the rear differential.
+        </StatCard>
+      </div>
+    </div>
+  );
+}
+
+function DampersPanel({ get, carId }: PanelProps) {
+  const damperBlock = (w: { idx: number; short: string; aria: string }) => (
+    <WheelBlock key={w.idx} title={`${w.short} Wheel`} ariaLabel={w.aria} compact>
+      <SetupRow label="Bump (Slow)" dv={get(P.bumpSlow, w.idx)} carId={carId} />
+      <SetupRow label="Fast Bump" dv={get(P.bumpFast, w.idx)} carId={carId} labelClass="text-orange-600 font-semibold" />
+      <SetupRow label="Rebound" dv={get(P.reboundSlow, w.idx)} carId={carId} labelClass="text-zinc-600 font-semibold" />
+      <SetupRow label="Fast Rebound" dv={get(P.reboundFast, w.idx)} carId={carId} labelClass="text-teal-600 font-semibold" />
+    </WheelBlock>
+  );
+
+  return (
+    <div className="space-y-4">
+      <AxleCard title="FRONT DAMPERS (LF/RF)" subtitle="BUMP / REBOUND" ariaLabel="Front Dampers">
+        {FRONT_WHEELS.map(damperBlock)}
+      </AxleCard>
+      <AxleCard title="REAR DAMPERS (LR/RR)" subtitle="BUMP / REBOUND" ariaLabel="Rear Dampers">
+        {REAR_WHEELS.map(damperBlock)}
+      </AxleCard>
+    </div>
+  );
+}
+
+function AeroRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex justify-between bg-zinc-50 border border-zinc-200 p-2 rounded text-zinc-900 font-semibold items-center gap-2">
+      <span className="text-zinc-500 font-sans font-medium">{label}:</span>
+      {children}
+    </div>
+  );
+}
+
+function AeroPanel({ get, carId }: PanelProps) {
+  // ACC ride height array is [front, unused, rear, unused]
+  const frontRide = get(P.rideHeight, 0);
+  const rearRide = get(P.rideHeight, 2);
+  const rake = frontRide?.value != null && rearRide?.value != null ? rearRide.value - frontRide.value : null;
+  const ductMax = cars[carId]?.brakeDuctRange?.[1] ?? 6;
+
+  const duct = (i: number) => {
+    const dv = get(P.brakeDuct, i);
+    return (
+      <span className="flex items-center">
+        <ValueOrDash dv={dv} carId={carId} />
+        {dv && <span className="text-[10px] font-bold text-zinc-400 ml-1">/ {ductMax}</span>}
+      </span>
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Front Aero */}
+        <div className="bg-white border border-zinc-200 p-4 rounded-lg flex flex-col justify-between shadow-sm">
+          <div>
+            <div className="border-b border-zinc-200 pb-2 mb-3 flex justify-between items-center">
+              <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">FRONT AERODYNAMICS & DUCTS</span>
+              <span className="text-[10px] font-mono font-bold text-zinc-400">GRIP INPUTS</span>
+            </div>
+            <div className="space-y-3 font-mono text-xs">
+              <AeroRow label="Front Ride Height">
+                <ValueOrDash dv={frontRide} carId={carId} />
+              </AeroRow>
+              <AeroRow label="Front Splitter">
+                <ValueOrDash dv={get(P.splitter)} carId={carId} />
+              </AeroRow>
+              <AeroRow label="Front Brake Duct">{duct(0)}</AeroRow>
+            </div>
+          </div>
+          <div className="text-[10px] text-zinc-500 mt-3 pt-3 border-t border-zinc-200 font-sans leading-relaxed font-semibold">
+            Lowers static nose height to force air over hood creating downforce, cooling tires via Front Brake Ducts.
+          </div>
+        </div>
+
+        {/* Rear Aero */}
+        <div className="bg-white border border-zinc-200 p-4 rounded-lg flex flex-col justify-between shadow-sm">
+          <div>
+            <div className="border-b border-zinc-200 pb-2 mb-3 flex justify-between items-center">
+              <span className="text-xs font-mono font-extrabold tracking-widest text-emerald-700 uppercase">REAR AERODYNAMICS & DUCTS</span>
+              <span className="text-[10px] font-mono font-bold text-zinc-400">DOWNFORCE STABILITY</span>
+            </div>
+            <div className="space-y-3 font-mono text-xs">
+              <AeroRow label="Rear Ride Height">
+                <ValueOrDash dv={rearRide} carId={carId} />
+              </AeroRow>
+              <AeroRow label="Aero (Rear Wing Angle)">
+                <ValueOrDash dv={get(P.rearWing)} carId={carId} />
+              </AeroRow>
+              <AeroRow label="Rear Brake Duct">{duct(1)}</AeroRow>
+            </div>
+          </div>
+          <div className="text-[10px] text-zinc-500 mt-3 pt-3 border-t border-zinc-200 font-sans leading-relaxed font-semibold">
+            High tail heights combined with rear wing angles generate exponential suction drag (ground effect rake).
+          </div>
+        </div>
+      </div>
+
+      {rake !== null && (
+        <div className="bg-white border border-zinc-200 p-3 rounded font-mono text-xs text-center flex justify-between items-center shadow-sm">
+          <span className="text-zinc-500 uppercase text-[10px] font-bold">Aero Rake Height Difference</span>
+          <span className="font-black text-emerald-700 text-sm">
+            {fmtNum(Math.abs(rake))} mm {rake >= 0 ? "Nose-Down" : "Nose-Up"} angle
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function SetupPanel({ tab, get, carId }: PanelProps & { tab: TabId }) {
+  switch (tab) {
+    case "tyres":
+      return <TyresPanel get={get} carId={carId} />;
+    case "electronics":
+      return <ElectronicsPanel get={get} carId={carId} />;
+    case "mechanical":
+      return <MechanicalPanel get={get} carId={carId} />;
+    case "dampers":
+      return <DampersPanel get={get} carId={carId} />;
+    case "aero":
+      return <AeroPanel get={get} carId={carId} />;
+  }
+}
+
+function TrackStatsCard({ stats, carId }: { stats: ImportedTrackStats; carId: string }) {
+  const targetRacePaceSecs = getTargetRacePaceSeconds(carId, stats.id);
   const items: [string, string][] = [
     ["Avg speed", `${fmtNum(stats.avgKmh)} km/h`],
     ["Top speed", `${fmtNum(stats.topKmh)} km/h`],
     ["Brake zones", fmtNum(stats.brakeZones)],
     ["Hot pressure", `${fmtNum(stats.hotPsi)} psi`],
     ["Brake peak", `${fmtNum(stats.brakePeakC)} °C`],
-    ["Lap time", fmtLap(stats.lapSeconds)],
+    // No LFM reference for this car/track -> show N/A rather than the generic imported average
+    ["Target Race Pace", targetRacePaceSecs !== null ? fmtLap(targetRacePaceSecs) : "N/A"],
     ["Length", `${fmtNum(stats.lengthKm)} km`],
   ];
   return (
@@ -277,7 +562,7 @@ export default function ImportedSetupViewer({
   const [carFile, setCarFile] = useState<ImportedCarFile | null>(null);
   const [carLoading, setCarLoading] = useState(false);
   const [carError, setCarError] = useState<string | null>(null);
-  const [group, setGroup] = useState<GroupId>("tyres");
+  const [tab, setTab] = useState<TabId>("tyres");
 
   // Load manifest once
   useEffect(() => {
@@ -329,6 +614,9 @@ export default function ImportedSetupViewer({
   }, [manifest, carFile, carId, trackId, slot]);
 
   const fieldsByPath = useMemo(() => new Map((fields ?? []).map((f) => [f.path, f])), [fields]);
+
+  /** Looks up one decoded value: `index` is the wheel (0 = LF, 1 = RF, 2 = LR, 3 = RR) or axle slot. */
+  const getValue: GetValue = (path, index = 0) => fieldsByPath.get(path)?.values[index];
 
   const importedFuel = useMemo(() => {
     const dv = fieldsByPath.get("basicSetup.strategy.fuel")?.values[0];
@@ -480,19 +768,21 @@ export default function ImportedSetupViewer({
         <span>{manifest.source.label}</span>
       </div>
 
-      {/* Group tabs */}
-      <div role="tablist" className="flex overflow-x-auto bg-white border-b border-zinc-200 text-xs font-mono">
-        {GROUPS.map((g) => (
+      {/* Setup tabs (same tab strip as the native setup viewer) */}
+      <div className="bg-zinc-100/85 border-b border-zinc-200 flex font-mono text-xs overflow-x-auto scrollbar-none" role="tablist" aria-label="Setup Parameters">
+        {TABS.map((t) => (
           <button
-            key={g.id}
+            key={t.id}
+            id={`imported-tab-btn-${t.id}`}
             role="tab"
-            aria-selected={group === g.id}
-            onClick={() => setGroup(g.id)}
-            className={`px-4 py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 uppercase tracking-wider focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${
-              group === g.id ? "border-red-600 text-brand" : "border-transparent text-zinc-500 hover:text-zinc-900"
+            aria-selected={tab === t.id}
+            aria-controls={`imported-tabpanel-${t.id}`}
+            onClick={() => setTab(t.id)}
+            className={`px-5 py-3.5 md:py-3 border-b-2 font-bold cursor-pointer transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 ${
+              tab === t.id ? "border-red-600 text-brand bg-white font-black" : "border-transparent text-zinc-500 hover:text-zinc-900 font-medium"
             }`}
           >
-            {g.label}
+            {t.label}
           </button>
         ))}
       </div>
@@ -514,19 +804,16 @@ export default function ImportedSetupViewer({
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {(GROUPS.find((g) => g.id === group)?.paths ?? []).map((p) => {
-              const f = fieldsByPath.get(p);
-              return f ? <FieldCard key={p} field={f} carId={carId} /> : null;
-            })}
+          <div id={`imported-tabpanel-${tab}`} role="tabpanel" aria-labelledby={`imported-tab-btn-${tab}`}>
+            <SetupPanel tab={tab} get={getValue} carId={carId} />
           </div>
         )}
         <div className="mt-4 p-3 rounded border border-zinc-200 bg-zinc-50 text-xs font-mono text-zinc-800 leading-relaxed">
-  <span className="font-bold text-zinc-900">Note:</span> Setup units are decoded from per-car tables in the imported data (inferred, unverified); the raw ACC click is shown in [brackets]. Tyre pressures and pit-strategy values are shown as raw clicks.
+  <span className="font-bold text-zinc-900">Note:</span> Setup units are decoded from per-car tables in the imported data (inferred, unverified); the raw ACC click is shown in [brackets]. Tyre pressures are shown in PSI (the car's minimum pressure plus 0.1 PSI per click).
 </div>
       </div>
 
-      {trackStats && <TrackStatsCard stats={trackStats} />}
+      {trackStats && <TrackStatsCard stats={trackStats} carId={carId} />}
 
       <div className="border-t border-zinc-200 bg-zinc-50/60 p-4 sm:p-5">
         <FuelStrategyTab

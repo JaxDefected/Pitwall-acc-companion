@@ -31,17 +31,18 @@ export const CAR_NAME_MAP: Record<string, string> = {
   "porsche_991ii_gt3_r": "Porsche 991II GT3 R (2019)",
   "porsche_992_gt3_r": "Porsche 992 GT3 R (2023)",
   "aston_martin_v12_vantage_gt3": "AMR V12 Vantage GT3 (2013)",
+  "amr_v12_vantage_gt3": "AMR V12 Vantage GT3 (2013)",
   "jaguar_g3": "Emil Frey Jaguar G3 (2012)",
   "audi_r8_lms": "Audi R8 LMS (2015)",
-  "bentley_continental_gt3_2016": "Bentley Continental GT3 (2016)",
-  "ferrari_488_gt3": "Ferrari 488 GT3 (2015)",
-  "honda_nsx_gt3": "Honda NSX GT3 (2016)",
-  "lamborghini_gallardo_rex": "Reiter Engineering R-EX GT3 (Gallardo) (2015)",
-  "lamborghini_huracan_gt3": "Lamborghini Huracán GT3 (2015)",
+  "bentley_continental_gt3_2016": "Bentley Continental (2015)",
+  "ferrari_488_gt3": "Ferrari 488 GT3 (2018)",
+  "honda_nsx_gt3": "Honda NSX GT3 (2017)",
+  "lamborghini_gallardo_rex": "Reiter Engineering R-EX GT3 (2017)",
+  "lamborghini_huracan_gt3": "Lamborghini Huracan GT3 (2015)",
   "mclaren_650s_gt3": "McLaren 650S GT3 (2015)",
   "mercedes_amg_gt3": "Mercedes-AMG GT3 (2015)",
-  "nissan_gt_r_gt3_2017": "Nissan GT-R Nismo GT3 (2017)",
-  "porsche_991_gt3_r": "Porsche 911 GT3 R (2015)",
+  "nissan_gt_r_gt3_2017": "Nissan GT-R Nismo GT3 (2015)",
+  "porsche_991_gt3_r": "Porsche 991 GT3 R (2018)",
   
   // GT4 Cars
   "chevrolet_camaro_gt4r": "Chevrolet Camaro GT4 (2017)",
@@ -50,8 +51,10 @@ export const CAR_NAME_MAP: Record<string, string> = {
   "audi_r8_lms_gt4": "Audi R8 LMS GT4 (2018)",
   "mercedes_amg_gt4": "Mercedes AMG GT4 (2016)",
   "porsche_718_cayman_gt4_cs": "Porsche 718 Cayman GT4 Clubsport (2019)",
+  "porsche_718_cayman_gt4_mr": "Porsche 718 Cayman GT4 Clubsport (2019)",
   "alpine_a110_gt4": "Alpine A110 GT4 (2018)",
   "aston_martin_vantage_gt4": "Aston Martin Vantage GT4 (2018)",
+  "amr_v8_vantage_gt4": "Aston Martin Vantage GT4 (2018)",
   "ginetta_g55_gt4": "Ginetta G55 GT4 (2012)",
   "ktm_xbow_gt4": "KTM X-Bow GT4 (2016)",
   "maserati_mc_gt4": "Maserati MC GT4 (2016)",
@@ -60,10 +63,10 @@ export const CAR_NAME_MAP: Record<string, string> = {
   "bmw_m2_cs_racing": "BMW M2 CS Racing (2020)",
   "audi_r8_lms_gt2": "Audi R8 LMS GT2 (2022)",
   "ktm_xbow_gt2": "KTM X-BOW GT2 (2021)",
-  "maserati_mc20_gt2": "Maserati MC20 GT2 (2023)",
-  "mercedes_amg_gt2": "Mercedes-AMG GT2 (2023)",
-  "porsche_935": "Porsche 935 GT2 (2019)",
-  "porsche_991_gt2_rs_mr": "Porsche 991II GT2 RS CS Evo (2023)",
+  "maserati_mc20_gt2": "Maserati GT2 (2023)",
+  "mercedes_amg_gt2": "Mercedes AMG GT2 (2023)",
+  "porsche_935": "Porsche 935 (2019)",
+  "porsche_991_gt2_rs_mr": "Porsche 911 GT2 RS CS Evo (2023)",
   "porsche_991ii_gt3_cup": "Porsche 991II GT3 Cup (2017)",
   "porsche_992_gt3_cup": "Porsche 992 GT3 Cup (2021)",
   "lamborghini_huracan_st_evo2": "Lamborghini Huracan ST EVO2 (2021)",
@@ -84,6 +87,7 @@ export const TRACK_KEY_MAP: Record<string, string> = {
   "monza": "Monza",
   "mount_panorama": "Mount Panorama",
   "nordschleife": "Nordschleife",
+  "nurburgring_24h": "Nordschleife",
   "nuerburgring_24h": "Nordschleife",
   "nurburgring": "Nürburgring",
   "nuerburgring": "Nürburgring",
@@ -102,7 +106,7 @@ export const TRACK_KEY_MAP: Record<string, string> = {
 
 
 interface CarIndexData {
-  carClass: "GT3" | "GT4";
+  carClass: "GT3" | "GT4" | "GT2";
   carObj: any;
 }
 
@@ -118,6 +122,24 @@ for (let i = 0; i < gt4Cars.length; i++) {
   carIndexMap[gt4Cars[i].car] = { carClass: "GT4", carObj: gt4Cars[i] };
 }
 
+const gt2Cars = laptimesData?.classes?.GT2?.cars || [];
+for (let i = 0; i < gt2Cars.length; i++) {
+  carIndexMap[gt2Cars[i].car] = { carClass: "GT2", carObj: gt2Cars[i] };
+}
+
+export function getTargetRacePaceSeconds(carKey: string, trackKey: string): number | null {
+  const mappedCarName = CAR_NAME_MAP[carKey];
+  const mappedTrackName = TRACK_KEY_MAP[trackKey];
+  if (!mappedCarName || !mappedTrackName) return null;
+
+  const match = carIndexMap[mappedCarName];
+  if (!match) return null;
+
+  const trackInfo = match.carObj?.tracks?.[mappedTrackName];
+  const p102 = trackInfo?.p102;
+  return typeof p102 === "number" && Number.isFinite(p102) ? p102 : null;
+}
+
 export function secondsToLapTimeNotes(secs: number | null | undefined): string {
 
   if (secs === null || secs === undefined) return "N/A";
@@ -131,7 +153,7 @@ export function getLapTimesText(carKey: string, trackKey: string): string {
   const mappedTrackName = TRACK_KEY_MAP[trackKey];
   if (!mappedCarName || !mappedTrackName) return "";
 
-  let carClass: "GT3" | "GT4" | null = null;
+  let carClass: "GT3" | "GT4" | "GT2" | null = null;
   let foundCarObj: any = null;
 
   const match = carIndexMap[mappedCarName];
@@ -152,7 +174,7 @@ export function getLapTimesText(carKey: string, trackKey: string): string {
   } else {
     const p101 = secondsToLapTimeNotes(trackInfo.p101);
     const p104 = secondsToLapTimeNotes(trackInfo.p104);
-    notesText = `ACC Benchmarks (GT4) ➔ Alien Pace (101%): ${p101} | Aim for (104%): ${p104}`;
+    notesText = `ACC Benchmarks (${carClass}) ➔ Alien Pace (101%): ${p101} | Aim for (104%): ${p104}`;
   }
 
   const circ = CIRCUIT_NOTES[mappedTrackName];
