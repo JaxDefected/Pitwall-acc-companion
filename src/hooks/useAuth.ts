@@ -152,12 +152,19 @@ export function useAuth() {
     }
   };
 
-  const saveProfileData = async (username: string, pinnedSeriesCars: string[]): Promise<void> => {
+  const saveProfileData = async (
+    username: string,
+    pinnedSeriesCars: string[],
+    extra?: { claimedDriverId?: string; claimStatus?: "pending" | "approved" | "none"; bio?: string }
+  ): Promise<void> => {
     if (!user) throw new Error("No active authenticated session.");
     const newProfile: UserProfile = {
       uid: user.uid,
       username: username.trim(),
-      pinnedSeriesCars
+      pinnedSeriesCars,
+      claimedDriverId: extra?.claimedDriverId !== undefined ? extra.claimedDriverId : profile?.claimedDriverId,
+      claimStatus: extra?.claimStatus !== undefined ? extra.claimStatus : profile?.claimStatus,
+      bio: extra?.bio !== undefined ? extra.bio : profile?.bio,
     };
     
     // 1. Instantly update the local React states optimistically

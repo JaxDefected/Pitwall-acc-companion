@@ -5,10 +5,20 @@
       "maxDuration": 60
     }
   },
+  "crons": [
+    {
+      "path": "/api/sync-league",
+      "schedule": "0 * * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/:path*",
       "destination": "/api"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

@@ -83,7 +83,10 @@ describe("JaxTune setup panels (grouped per axle / corner like the native viewer
       const html = renderTab("dampers", ...args);
       expect(html).toContain("FRONT DAMPERS (LF/RF)");
       expect(html).toContain("REAR DAMPERS (LR/RR)");
-      for (const label of ["Bump (Slow):", "Fast Bump:", "Rebound:", "Fast Rebound:"]) expect(count(html, label)).toBe(4);
+      for (const label of ["Bump (Slow):", "Fast Bump:", "Rebound:", "Fast Rebound:"]) {
+        const needle = label === "Rebound:" ? `>${label}` : label;
+        expect(count(html, needle)).toBe(4);
+      }
     });
 
     it("Aero & Ducts: front/rear ride height, splitter, wing, ducts and the rake difference", () => {

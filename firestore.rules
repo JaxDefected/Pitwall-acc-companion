@@ -12,6 +12,13 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'lowther.jack@gmail.com' && request.auth.token.email_verified == true)
+        || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
     // ID validation to prevent system resource poisoning
     function isValidId(id) {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
@@ -91,7 +98,7 @@ service cloud.firestore {
                             
       allow delete: if isSignedIn()
                     && isValidId(guideId)
-                    && (('createdBy' in existing() && existing().createdBy == request.auth.uid) || (!('createdBy' in existing()) && existing().updatedBy == request.auth.uid) || (request.auth.token.email == 'lowther.jack@gmail.com' && request.auth.token.email_verified == true))
+                    && (('createdBy' in existing() && existing().createdBy == request.auth.uid) || (!('createdBy' in existing()) && existing().updatedBy == request.auth.uid) || isAdmin())
                     && (!('authorId' in existing()) ? true : existing().authorId == request.auth.uid);
     }
 
@@ -151,6 +158,82 @@ service cloud.firestore {
                     && isValidId(ratingId)
                     && existing().userId == request.auth.uid
                     && existing().uid == request.auth.uid;
+    }
+
+    // Precomputed Home Screen Document (Single read per visit)
+    match /home/{seriesId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Series Calendar and Structure
+    match /series/{seriesId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /rounds/{roundId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+
+      match /results/{roundId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+
+      match /standings/{classId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    // Drivers Public Profile Collection (Section 7.2)
+    match /drivers/{driverId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Driver Detailed Stats & Telemetry (Signed-in only, Section 7.3)
+    match /driverStats/{driverId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Public Leaderboard Headline Columns (Section 7.2)
+    match /leaderboard/{seriesId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Driver Identity Verification Claims (Section 7.2 & 7.3)
+    match /claims/{claimId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() 
+                    && isValidId(claimId)
+                    && incoming().userId == request.auth.uid
+                    && incoming().status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
+    match /driverClaims/{claimId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() 
+                    && isValidId(claimId)
+                    && incoming().userId == request.auth.uid
+                    && incoming().status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
+    // Sync Run Audit Logs (Admin only, Section 7.3)
+    match /syncRuns/{runId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Admins registry (Section 7.2 & 7.3)
+    match /admins/{uid} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
   }
 }

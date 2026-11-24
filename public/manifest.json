@@ -1,14 +1,14 @@
 {
   "id": "/",
-  "name": "PitWall ACC Setup Lab",
-  "short_name": "PitWall",
-  "description": "Assetto Corsa Competizione Setup & Telemetry Companion App",
+  "name": "Pitwall — LNR ACC Series Companion & Setup Toolkit",
+  "short_name": "Pitwall",
+  "description": "Late Night Racing ACC Series league companion, race telemetry, and ACC setup toolkit.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0c0d10",
-  "theme_color": "#0c0d10",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
   "icons": [
     {
       "src": "/icon.svg",

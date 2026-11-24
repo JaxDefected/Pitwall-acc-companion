@@ -8,6 +8,7 @@ import {
   getDocs,
   setDoc,
   deleteDoc,
+  updateDoc,
   query,
   where,
   orderBy,
@@ -489,6 +490,9 @@ export interface UserProfile {
   uid: string;
   username: string;
   pinnedSeriesCars: string[];
+  claimedDriverId?: string;
+  claimStatus?: "pending" | "approved" | "none";
+  bio?: string;
 }
 
 export interface SavedSetupItem {
@@ -742,4 +746,66 @@ export async function dbFetchAllSetupRatings(): Promise<SetupRatingItem[]> {
   } else {
     return fetchAllSetupRatingsLocal();
   }
+}
+
+// ---------------------------------------------------------------------------
+// DRIVER IDENTITY VERIFICATION CLAIMS (Section 6.3 & 7.2)
+// ---------------------------------------------------------------------------
+
+export interface DriverClaimItem {
+  id: string;
+  userId: string;
+  userEmail: string;
+  driverId: string;
+  driverName: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+}
+
+export async function dbCreateClaim(claim: DriverClaimItem): Promise<void> {
+  const path = `claims/${claim.id}`;
+  if (isCloudEnabled && db) {
+    try {
+      await setDoc(doc(db, "claims", claim.id), claim);
+    } catch (err) {
+      console.warn("Could not save claim to Firestore, saving to localStorage:", err);
+    }
+  }
+  const existingStr = localStorage.getItem("acc_driver_claims_v1") || "[]";
+  const existing = JSON.parse(existingStr) as DriverClaimItem[];
+  localStorage.setItem("acc_driver_claims_v1", JSON.stringify([...existing.filter(c => c.id !== claim.id), claim]));
+}
+
+export async function dbFetchPendingClaims(): Promise<DriverClaimItem[]> {
+  if (isCloudEnabled && db) {
+    try {
+      const q = query(collection(db, "claims"), where("status", "==", "pending"));
+      const snap = await getDocs(q);
+      const items: DriverClaimItem[] = [];
+      snap.forEach((d) => items.push(d.data() as DriverClaimItem));
+      if (items.length > 0) return items;
+    } catch (err) {
+      console.warn("Could not fetch claims from Firestore, reading local:", err);
+    }
+  }
+  const existingStr = localStorage.getItem("acc_driver_claims_v1") || "[]";
+  return (JSON.parse(existingStr) as DriverClaimItem[]).filter(c => c.status === "pending");
+}
+
+export async function dbUpdateClaimStatus(claimId: string, driverId: string, userId: string, status: "approved" | "rejected"): Promise<void> {
+  if (isCloudEnabled && db) {
+    try {
+      await updateDoc(doc(db, "claims", claimId), { status });
+      if (status === "approved") {
+        await setDoc(doc(db, "drivers", driverId), { uid: userId }, { merge: true });
+        await setDoc(doc(db, "users", userId), { claimedDriverId: driverId, claimStatus: "approved" }, { merge: true });
+      }
+    } catch (err) {
+      console.warn("Could not update claim status in Firestore:", err);
+    }
+  }
+  const existingStr = localStorage.getItem("acc_driver_claims_v1") || "[]";
+  const existing = JSON.parse(existingStr) as DriverClaimItem[];
+  const updated = existing.map(c => c.id === claimId ? { ...c, status } : c);
+  localStorage.setItem("acc_driver_claims_v1", JSON.stringify(updated));
 }

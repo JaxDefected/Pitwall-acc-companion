@@ -3,6 +3,7 @@ import path from "path";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { buildSystemInstruction } from "../src/services/chatService.js";
+import { syncLeagueCalendar } from "./sync-league.js";
 
 dotenv.config();
 
@@ -890,6 +891,37 @@ Engineer, please analyze this data and give me your setup adjustments.
     } catch (err: any) {
       console.error("AI Race Engineer Adjustment Error:", err);
       res.status(500).json({ error: err.message || "An unexpected error occurred during diagnosis." });
+    }
+  });
+
+  // Google Sheets -> Firestore League Sync Route
+  app.all("/api/sync-league", async (req, res) => {
+    try {
+      // Security check: verify CRON_SECRET or Admin authorization
+      const cronSecret = process.env.CRON_SECRET;
+      const authHeader = req.headers.authorization;
+      const secretHeader = req.headers["x-cron-secret"];
+
+      if (cronSecret) {
+        const isAuthorized =
+          secretHeader === cronSecret ||
+          (authHeader && authHeader === `Bearer ${cronSecret}`) ||
+          req.query.secret === cronSecret;
+
+        if (!isAuthorized && process.env.NODE_ENV === "production" && process.env.VERCEL) {
+          return res.status(401).json({ error: "Unauthorized sync request" });
+        }
+      }
+
+      const result = await syncLeagueCalendar({
+        sheetId: (req.query.sheetId as string) || req.body?.sheetId,
+        seriesId: (req.query.seriesId as string) || req.body?.seriesId,
+      });
+
+      res.json(result);
+    } catch (err: any) {
+      console.error("Sync League Error:", err);
+      res.status(500).json({ error: err.message || "Failed to execute sync job" });
     }
   });
 

@@ -1,39 +1,45 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;750;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-:root { --pitwall-cache-v: 2; }
+:root { --pitwall-cache-v: 3; }
+
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* Semantic Brand Tokens (P2.2) */
+  /* Semantic Brand Tokens */
   --color-brand: #dc2626;
   --color-brand-hover: #b91c1c;
-  --color-brand-subtle: #fef2f2;
-  --color-brand-border: #fca5a5;
+  --color-brand-subtle: rgba(220, 38, 38, 0.12);
+  --color-brand-border: rgba(220, 38, 38, 0.3);
   --color-brand-dark: #991b1b;
 
-  /* Theme Color Mappings */
+  /* Deprecated color token fallbacks mapped to standard zinc/brand to prevent styling breakages */
   --color-red-650: #dc2626;
   --color-red-655: #dc2626;
-  --color-zinc-150: #ececef;
-  --color-zinc-250: #dcdee2;
-  --color-zinc-350: #b6b8c0;
-  --color-zinc-450: #888995;
-  --color-zinc-550: #5f616e;
-  --color-zinc-650: #464853;
-  --color-zinc-750: #33343d;
-  --color-zinc-850: #202127;
-  --color-zinc-955: #0c0d10;
+  --color-red-755: #b91c1c;
+  --color-zinc-150: #27272a;
+  --color-zinc-250: #3f3f46;
+  --color-zinc-350: #71717a;
+  --color-zinc-450: #a1a1aa;
+  --color-zinc-550: #d4d4d8;
+  --color-zinc-650: #e4e4e7;
+  --color-zinc-705: #f4f4f5;
+  --color-zinc-750: #f4f4f5;
+  --color-zinc-805: #27272a;
+  --color-zinc-850: #18181b;
+  --color-zinc-955: #09090b;
 }
 
 body {
-  background-color: #fafafa;
-  color: #18181b;
+  background-color: #09090b;
+  color: #f4f4f5;
+  font-family: var(--font-sans);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   /* Safe-area padding integration for notch devices and Dynamic Islands */
   padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 16px);
+  padding-bottom: 0px;
+  min-height: 100vh;
 }
 
 /* Prevent accidental text highlighting and disable double-tap zoom on all interactive elements on mobile fast taps */
@@ -55,6 +61,7 @@ a,
 /* Ensure inputs are fully text-selectable but keep touch-action optimal */
 input[type="text"],
 input[type="number"],
+input[type="password"],
 textarea {
   -webkit-user-select: text;
   -moz-user-select: text;
@@ -72,7 +79,7 @@ div {
   scrollbar-gutter: stable;
 }
 
-/* Global custom elite racing scrollbars */
+/* Global custom racing scrollbars in dark theme */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -81,11 +88,11 @@ div {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(180, 180, 180, 0.4);
+  background: rgba(82, 82, 91, 0.4);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(180, 180, 180, 0.6);
+  background: rgba(113, 113, 122, 0.6);
 }
 
 /* Fade-in animation for diagnostic results and dropdown transitions */
@@ -99,7 +106,7 @@ div {
 
 /* Mobile view slide-in transition for setup inspection view */
 @keyframes mobile-slide-in {
-  from { transform: translateX(40px); opacity: 0; }
+  from { transform: translateX(30px); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
 }
 .mobile-slide-in {
