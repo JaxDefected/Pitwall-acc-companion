@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useHomeSnapshot } from "../hooks/useHomeSnapshot";
+import { calculateCountdown } from "../utils/countdown";
 
 function formatSessionTime(isoString?: string) {
   if (!isoString) return { local: "—", sydney: "—" };
@@ -57,19 +58,16 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!nextRound?.startAt) return;
-    const target = new Date(nextRound.startAt).getTime();
 
     const updateTimer = () => {
       if (document.hidden) return; // Pause timer when tab is hidden
-      const now = Date.now();
-      const diff = Math.max(0, target - now);
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-      setTimeLeft({ days, hours, minutes, seconds });
+      const res = calculateCountdown(nextRound.startAt);
+      setTimeLeft({
+        days: res.days,
+        hours: res.hours,
+        minutes: res.minutes,
+        seconds: res.seconds,
+      });
     };
 
     updateTimer();

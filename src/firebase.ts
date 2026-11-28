@@ -12,6 +12,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   serverTimestamp,
   getDocFromServer,
   writeBatch,
@@ -752,6 +753,24 @@ export async function dbFetchAllSetupRatings(): Promise<SetupRatingItem[]> {
 // DRIVER IDENTITY VERIFICATION CLAIMS (Section 6.3 & 7.2)
 // ---------------------------------------------------------------------------
 
+function safeStorageGet(key: string, defaultVal: string = "[]"): string {
+  if (typeof localStorage !== "undefined") {
+    return localStorage.getItem(key) || defaultVal;
+  }
+  return (globalThis as any).__in_memory_storage?.[key] || defaultVal;
+}
+
+function safeStorageSet(key: string, val: string): void {
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem(key, val);
+  } else {
+    if (!(globalThis as any).__in_memory_storage) {
+      (globalThis as any).__in_memory_storage = {};
+    }
+    (globalThis as any).__in_memory_storage[key] = val;
+  }
+}
+
 export interface DriverClaimItem {
   id: string;
   userId: string;
@@ -771,9 +790,9 @@ export async function dbCreateClaim(claim: DriverClaimItem): Promise<void> {
       console.warn("Could not save claim to Firestore, saving to localStorage:", err);
     }
   }
-  const existingStr = localStorage.getItem("acc_driver_claims_v1") || "[]";
+  const existingStr = safeStorageGet("acc_driver_claims_v1", "[]");
   const existing = JSON.parse(existingStr) as DriverClaimItem[];
-  localStorage.setItem("acc_driver_claims_v1", JSON.stringify([...existing.filter(c => c.id !== claim.id), claim]));
+  safeStorageSet("acc_driver_claims_v1", JSON.stringify([...existing.filter(c => c.id !== claim.id), claim]));
 }
 
 export async function dbFetchPendingClaims(): Promise<DriverClaimItem[]> {
@@ -788,7 +807,7 @@ export async function dbFetchPendingClaims(): Promise<DriverClaimItem[]> {
       console.warn("Could not fetch claims from Firestore, reading local:", err);
     }
   }
-  const existingStr = localStorage.getItem("acc_driver_claims_v1") || "[]";
+  const existingStr = safeStorageGet("acc_driver_claims_v1", "[]");
   return (JSON.parse(existingStr) as DriverClaimItem[]).filter(c => c.status === "pending");
 }
 
@@ -804,8 +823,48 @@ export async function dbUpdateClaimStatus(claimId: string, driverId: string, use
       console.warn("Could not update claim status in Firestore:", err);
     }
   }
-  const existingStr = localStorage.getItem("acc_driver_claims_v1") || "[]";
+  const existingStr = safeStorageGet("acc_driver_claims_v1", "[]");
   const existing = JSON.parse(existingStr) as DriverClaimItem[];
   const updated = existing.map(c => c.id === claimId ? { ...c, status } : c);
-  localStorage.setItem("acc_driver_claims_v1", JSON.stringify(updated));
+  safeStorageSet("acc_driver_claims_v1", JSON.stringify(updated));
+}
+
+// ---------------------------------------------------------------------------
+// SYNC RUN LOGS (Section 5.3 & 10.3)
+// ---------------------------------------------------------------------------
+
+export interface SyncRunLog {
+  runId: string;
+  startedAt: string;
+  completedAt?: string;
+  status: "success" | "partial" | "error";
+  seriesId?: string;
+  roundsCount?: number;
+  docsWritten?: number;
+  docsSkipped?: number;
+  errors?: string[];
+  changed?: boolean;
+  hash?: string;
+}
+
+export async function dbFetchRecentSyncRuns(): Promise<SyncRunLog[]> {
+  if (isCloudEnabled && db) {
+    try {
+      const q = query(collection(db, "syncRuns"), orderBy("startedAt", "desc"), limit(5));
+      const snap = await getDocs(q);
+      const items: SyncRunLog[] = [];
+      snap.forEach((d) => items.push(d.data() as SyncRunLog));
+      if (items.length > 0) return items;
+    } catch (err) {
+      console.warn("Could not fetch syncRuns from Firestore:", err);
+    }
+  }
+  const existingStr = safeStorageGet("acc_sync_runs_v1", "[]");
+  return JSON.parse(existingStr) as SyncRunLog[];
+}
+
+export function recordLocalSyncRun(run: SyncRunLog): void {
+  const existingStr = safeStorageGet("acc_sync_runs_v1", "[]");
+  const existing = JSON.parse(existingStr) as SyncRunLog[];
+  safeStorageSet("acc_sync_runs_v1", JSON.stringify([run, ...existing.filter(r => r.runId !== run.runId)].slice(0, 10)));
 }

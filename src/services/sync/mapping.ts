@@ -159,10 +159,10 @@ export function resolveTrackKey(rawTrack: string): string {
   // Direct match in ACC_TRACKS
   if (ACC_TRACKS[lower]) return lower;
 
-  // Fuzzy keyword matching
+  // Fuzzy keyword matching (check specific variants like 24h before general ring)
   if (lower.includes("bathurst") || lower.includes("panorama") || lower.includes("mount")) return "mount_panorama";
-  if (lower.includes("nurburg") || lower.includes("nürburg") || lower.includes("ring gp")) return "nurburgring";
   if (lower.includes("nordschleife") || lower.includes("24h")) return "nurburgring_24h";
+  if (lower.includes("nurburg") || lower.includes("nürburg") || lower.includes("ring gp")) return "nurburgring";
   if (lower.includes("spa") || lower.includes("francorchamps")) return "spa";
   if (lower.includes("monza")) return "monza";
   if (lower.includes("silverstone")) return "silverstone";

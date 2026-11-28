@@ -83,13 +83,13 @@ If using Google Service Account for private workbook access:
 ## 4. Automated Sync Schedules
 
 ### A. Vercel Cron (Configured in `vercel.json`)
-The project includes a cron schedule in `vercel.json` configured to sync hourly:
+The project includes a cron schedule in `vercel.json` configured to sync daily at midnight UTC (`0 0 * * *`) to stay within Vercel Hobby tier limits (1 run per 24 hours):
 ```json
 {
   "crons": [
     {
       "path": "/api/sync-league",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }

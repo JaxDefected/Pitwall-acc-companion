@@ -13,12 +13,14 @@ import {
   ChevronRight,
   ShieldCheck,
   HelpCircle,
+  Sparkles,
+  Check,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { useSetups } from "../context/SetupContext";
 import { useDriverProfile } from "../hooks/useDriverStats";
 import { ACC_CARS } from "../utils/accParser";
-import { dbCheckUsernameAvailable, dbCreateClaim } from "../firebase";
+import { dbCheckUsernameAvailable, dbCreateClaim, dbUpdateClaimStatus } from "../firebase";
 
 export default function MyProfilePage() {
   const { user, profile, loading, login, logout, saveProfileData } = useAuth();
@@ -83,31 +85,45 @@ export default function MyProfilePage() {
     }
   };
 
-  const handleClaimSubmit = async () => {
-    if (!selectedDriverId) {
+  const handleClaimSubmit = async (driverIdOverride?: string) => {
+    const targetId = driverIdOverride || selectedDriverId;
+    if (!targetId) {
       showToast("Please select a driver from the roster", "error");
       return;
     }
+
+    const targetDriver = allMockDrivers.find((d) => d.id === targetId);
+    const driverName = targetDriver ? targetDriver.name : targetId;
 
     setIsClaiming(true);
     try {
       // Auto-approve if user's email matches admin or driver slug matches username
       const isAutoApprove =
         user.email?.toLowerCase().includes("jack") ||
-        username.toLowerCase() === selectedDriverId.toLowerCase();
+        (username && username.toLowerCase().trim() === targetId.toLowerCase().trim());
 
       const status = isAutoApprove ? "approved" : "pending";
 
+      await dbCreateClaim({
+        id: `claim_${user.uid}_${targetId}`,
+        userId: user.uid,
+        userEmail: user.email || "",
+        driverId: targetId,
+        driverName: driverName,
+        status: status,
+        createdAt: new Date().toISOString(),
+      });
+
       await saveProfileData(username, pinnedCars, {
-        claimedDriverId: selectedDriverId,
+        claimedDriverId: targetId,
         claimStatus: status,
       });
 
       if (isAutoApprove) {
-        showToast(`Linked profile to @${selectedDriverId}!`, "success");
+        showToast(`Linked profile to @${driverName}!`, "success");
       } else {
         showToast(
-          `Claim for @${selectedDriverId} submitted! An administrator will review your request.`,
+          `Claim for @${driverName} submitted! An administrator will review your request.`,
           "info"
         );
       }
@@ -119,11 +135,26 @@ export default function MyProfilePage() {
   };
 
   const handleUnlink = async () => {
+    if (profile?.claimedDriverId) {
+      try {
+        await dbUpdateClaimStatus(
+          `claim_${user.uid}_${profile.claimedDriverId}`,
+          profile.claimedDriverId,
+          user.uid,
+          "rejected"
+        );
+      } catch {
+        // Ignore
+      }
+    }
     await saveProfileData(username, pinnedCars, {
       claimedDriverId: "",
       claimStatus: "none",
     });
-    showToast("Driver profile unlinked", "info");
+    showToast(
+      profile?.claimStatus === "pending" ? "Driver claim canceled" : "Driver profile unlinked",
+      "info"
+    );
   };
 
   const togglePinnedCar = (carKey: string) => {
@@ -137,6 +168,17 @@ export default function MyProfilePage() {
       setPinnedCars([...pinnedCars, carKey]);
     }
   };
+
+  // Section 6.3: Suggested match if onboarding username matches a driver name (case-insensitive)
+  const cleanUsername = (username || profile?.username || user?.displayName || "").toLowerCase().trim();
+  const suggestedDriver = cleanUsername
+    ? allMockDrivers.find(
+        (d) =>
+          d.name.toLowerCase().trim() === cleanUsername ||
+          d.id.toLowerCase().trim() === cleanUsername ||
+          d.name.toLowerCase().trim().replace(/[^a-z0-9]/g, "") === cleanUsername.replace(/[^a-z0-9]/g, "")
+      )
+    : null;
 
   // Filter roster for claiming
   const matchingDrivers = allMockDrivers.filter(
@@ -280,6 +322,37 @@ export default function MyProfilePage() {
           </div>
         ) : (
           <div className="space-y-3 font-mono text-xs">
+            {suggestedDriver && (
+              <div className="p-3.5 bg-gradient-to-r from-red-950/40 via-zinc-900 to-zinc-900 border border-red-500/40 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-600/20 text-red-400 rounded-lg shrink-0">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider block">
+                      Suggested Competitor Match
+                    </span>
+                    <span className="text-white font-bold text-sm">
+                      @{suggestedDriver.name}{" "}
+                      <span className="text-zinc-400 text-xs font-normal">
+                        ({suggestedDriver.class.toUpperCase()} · P{suggestedDriver.seasonRecord.championshipPos} · {suggestedDriver.seasonRecord.points} pts)
+                      </span>
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleClaimSubmit(suggestedDriver.id)}
+                  disabled={isClaiming}
+                  className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all shadow cursor-pointer flex items-center gap-1.5 shrink-0"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>{isClaiming ? "Submitting..." : "This is Me (Submit Claim)"}</span>
+                </button>
+              </div>
+            )}
+
             <p className="text-zinc-400 text-xs">
               Search the championship roster to claim your competitor profile:
             </p>
@@ -310,7 +383,8 @@ export default function MyProfilePage() {
               </select>
 
               <button
-                onClick={handleClaimSubmit}
+                type="button"
+                onClick={() => handleClaimSubmit()}
                 disabled={!selectedDriverId || isClaiming}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg font-bold transition-all shadow-md cursor-pointer shrink-0"
               >
