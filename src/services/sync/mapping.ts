@@ -1,29 +1,80 @@
 import { ACC_TRACKS, ACC_CARS } from "../../utils/accParser";
 
+export const LNR_DEFAULT_SHEET_ID = "1s9m3yWd-zBLKf4An5rAJ7sxHy9ouU4y8OZjnN9pXoEs";
+export const LNR_CALENDAR_GID = "2119190192";
+
 /**
  * Google Sheets column header mapping for LNR ACC Calendar & League Data.
  * 
- * If a column header is renamed in the Google Sheet, update ONLY this config object.
- * Logic uses the mapped keys, ensuring resilience to sheet header modifications.
+ * Column A: Date and Time in Sydney (Event Date-TIme (Syd))
+ * Column B: Game (Must be filtered strictly for 'ACC')
+ * Column C: Series name (e.g. GT3 Triple Crown, Ginetta GT4 Trophy)
+ * Column D: Track Location (e.g. Bathurst, Barcelona, Silverstone)
+ * Column E: Day of Week (Thu, Sun)
+ * Column F: Notes
+ * Column G: Discord Channel ID
+ * Column H: Race Format (e.g. 40 Mins, 30 Mins, 100 Mins)
  */
 export const CALENDAR_SHEET_MAPPING = {
-  sheetName: "Calendar",
+  sheetName: "LNR CAL v2",
+  sheetGid: "2119190192",
   fallbackSheetNames: ["LNR CAL v2", "Calendar", "Schedule", "Rounds"],
   columns: {
-    seriesId: ["seriesId", "Series ID", "series", "Series"],
-    season: ["season", "Season", "seasonLabel", "Season Label"],
+    dateTime: ["Event Date-TIme (Syd) ", "Event Date-TIme (Syd)", "date", "Date", "dateTime", "DateTime"],
+    game: ["Game", "game"],
+    series: ["Series", "series", "Series Name", "seriesId", "Series ID"],
+    location: ["Location", "location", "Track Location", "Track", "Circuit", "trackKey"],
+    dow: ["DOW", "dow", "Day", "Day of Week"],
+    notes: ["Notes", "notes", "Details"],
+    discordChannel: ["discord channel ID", "discord", "channel", "channelId"],
+    format: ["Race Format", "format", "Format", "Duration"],
+    // Legacy compatibility aliases
     round: ["round", "Round", "roundNumber", "Round Number", "Rnd", "R#"],
-    trackKey: ["trackKey", "Track Key", "circuit", "Circuit", "location", "Location", "Track"],
+    trackKey: ["Location", "location", "Track Location", "trackKey", "circuit", "Circuit", "Track"],
     carKey: ["carKey", "Car Key", "car", "Car", "vehicle", "Vehicle", "Car Class"],
-    classIds: ["classIds", "Classes", "class", "Class"],
+    status: ["status", "Status", "state", "State"],
     practiceAt: ["practiceAt", "Practice", "Practice Time", "practice"],
     qualifyingAt: ["qualifyingAt", "Qualifying", "Quali Time", "qualy", "Qualifying Time"],
-    raceAt: ["raceAt", "Race", "Race 1", "Race Time", "race"],
-    race2At: ["race2At", "Race 2", "Race 2 Time", "sprint"],
-    status: ["status", "Status", "state", "State"],
-    notes: ["notes", "Notes", "format", "Format", "Session Notes", "Details"]
+    raceAt: ["Event Date-TIme (Syd) ", "raceAt", "Race", "Race 1", "Race Time", "race"],
   }
 };
+
+/**
+ * Converts a raw Sydney date/time string (e.g. '2026-11-26 21:00') into UTC ISO format.
+ * Correctly accounts for Australian Eastern Daylight Time (AEDT UTC+11) vs Standard Time (AEST UTC+10).
+ */
+export function sydneyToUtcIso(dateStr: string): string {
+  if (!dateStr) return "";
+  const clean = dateStr.replace(/\u00a0/g, " ").trim();
+  const m = clean.match(/^(\d{4})-(\d{2})-(\d{2})[\sT]+(\d{1,2}):(\d{2})/);
+  if (!m) return "";
+  const [_, y, mo, d, h, min] = m;
+  const monthNum = parseInt(mo, 10);
+  const isAedt = monthNum >= 10 || monthNum <= 3 || (monthNum === 4 && parseInt(d, 10) < 7);
+  const offset = isAedt ? "+11:00" : "+10:00";
+  try {
+    return new Date(`${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}T${h.padStart(2, "0")}:${min.padStart(2, "0")}:00${offset}`).toISOString();
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Resolves the primary ACC carKey and carName based on the official LNR series name.
+ */
+export function resolveCarFromSeries(seriesName: string): { carKey: string; carName: string } {
+  const lower = (seriesName || "").toLowerCase();
+  if (lower.includes("ginetta")) return { carKey: "ginetta_g55_gt4", carName: "Ginetta G55 GT4" };
+  if (lower.includes("mustang")) return { carKey: "ford_mustang_gt3", carName: "Ford Mustang GT3" };
+  if (lower.includes("bull") || lower.includes("lamborghini")) return { carKey: "lamborghini_huracan_gt3_evo2", carName: "Lamborghini Huracan GT3 EVO2" };
+  if (lower.includes("camaro")) return { carKey: "chevrolet_camaro_gt4r", carName: "Chevrolet Camaro GT4.R" };
+  if (lower.includes("porsche")) return { carKey: "porsche_992_gt3_r", carName: "Porsche 992 GT3 R" };
+  if (lower.includes("m2") || lower.includes("bmw")) return { carKey: "bmw_m4_gt3", carName: "BMW M4 GT3" };
+  if (lower.includes("gt2")) return { carKey: "all_gt2", carName: "GT2 Class" };
+  if (lower.includes("gt4") || lower.includes("alpine")) return { carKey: "alpine_a110_gt4", carName: "Alpine A110 GT4" };
+  if (lower.includes("gt3") || lower.includes("triple crown")) return { carKey: "all_gt3", carName: "GT3 Class" };
+  return { carKey: "all_gt3", carName: "GT3 Class" };
+}
 
 /**
  * Google Sheets column header mapping for Race Results.

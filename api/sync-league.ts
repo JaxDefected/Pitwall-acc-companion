@@ -13,6 +13,10 @@ import {
   resolveRoundStatus,
   canonicalizeDriverId,
   resolveClassId,
+  sydneyToUtcIso,
+  resolveCarFromSeries,
+  LNR_CALENDAR_GID,
+  LNR_DEFAULT_SHEET_ID,
 } from "../src/services/sync/mapping.js";
 import { ACC_TRACKS, ACC_CARS } from "../src/utils/accParser.js";
 
@@ -145,6 +149,79 @@ function getTierFromPercentage(pct: number): "Alien" | "Competitive" | "Good" | 
 }
 
 /**
+ * Helper to fetch and parse official LNR Calendar rows directly from Google Sheets.
+ * Filters strictly for Game == 'ACC', Column A date, Column C series, Column D track, Column H format.
+ */
+async function fetchLnrCalendarRows(sheetId: string, gid: string = LNR_CALENDAR_GID): Promise<Record<string, string>[]> {
+  // 1. Query via Google Visualization API with SQL filter: B = 'ACC' AND C IS NOT NULL
+  try {
+    const query = encodeURIComponent("SELECT A, B, C, D, E, F, G, H WHERE B = 'ACC' AND C IS NOT NULL ORDER BY A ASC");
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&gid=${gid}&tq=${query}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const text = await res.text();
+      const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?/);
+      if (match) {
+        const data = JSON.parse(match[1]);
+        const rows = data.table?.rows || [];
+        const results: Record<string, string>[] = [];
+        for (const row of rows) {
+          const rawDate = (row.c[0]?.f || row.c[0]?.v || "").replace(/\u00a0/g, " ").trim();
+          const game = String(row.c[1]?.v || "").trim();
+          if (game.toUpperCase() !== "ACC") continue;
+
+          const series = String(row.c[2]?.v || "").trim();
+          const location = String(row.c[3]?.v || "").trim();
+          if (!location || series.toLowerCase().includes("break week")) continue;
+
+          const dow = String(row.c[4]?.v || "").trim();
+          const notes = String(row.c[5]?.v || "").trim();
+          const channel = String(row.c[6]?.v || "").trim();
+          const format = String(row.c[7]?.v || "").trim();
+
+          results.push({
+            "Event Date-TIme (Syd) ": rawDate,
+            Game: game,
+            Series: series,
+            Location: location,
+            DOW: dow,
+            Notes: notes,
+            "discord channel ID": channel,
+            "Race Format": format,
+          });
+        }
+        if (results.length > 0) {
+          console.log(`[Sync] Successfully parsed ${results.length} ACC events from Google Sheet gid=${gid}.`);
+          return results;
+        }
+      }
+    }
+  } catch (err: any) {
+    console.warn("[Sync] GViz query for LNR Calendar failed, trying CSV export:", err.message);
+  }
+
+  // 2. Fallback to direct CSV export by GID
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const text = await res.text();
+      const rows = parseCsv(text);
+      return rows.filter((r) => {
+        const game = (r.Game || r.game || "").trim().toUpperCase();
+        const loc = (r.Location || r.location || "").trim();
+        const ser = (r.Series || r.series || "").trim().toLowerCase();
+        return game === "ACC" && loc && !ser.includes("break week");
+      });
+    }
+  } catch (err: any) {
+    console.warn("[Sync] CSV export for LNR Calendar failed:", err.message);
+  }
+
+  return [];
+}
+
+/**
  * Helper to fetch a sheet tab by primary or fallback names.
  */
 async function fetchSheetRows(sheetId: string, primaryName: string, fallbackNames: string[] = []): Promise<Record<string, string>[]> {
@@ -182,82 +259,83 @@ export async function syncLeagueCalendar(options: {
   const targetSheetId =
     options.sheetId ||
     process.env.SHEET_ID_LNR_ACC ||
-    "1s9m3yWd-zBLKf4An5rAJ7sxHy9ouU4y8OZjnN9pXoEs";
+    LNR_DEFAULT_SHEET_ID;
 
-  const targetSeriesId = options.seriesId || "lnr-acc-s18";
-  const targetSeasonLabel = options.seasonLabel || "Season 18";
+  const targetSeriesId = options.seriesId || "lnr-acc-active";
+  const targetSeasonLabel = options.seasonLabel || "LNR ACC Championship";
 
   console.log(`[Sync ${runId}] Starting League Sync for sheet ${targetSheetId}...`);
 
-  // 1. Fetch Calendar
-  let calendarRows = await fetchSheetRows(
-    targetSheetId,
-    CALENDAR_SHEET_MAPPING.sheetName,
-    CALENDAR_SHEET_MAPPING.fallbackSheetNames
-  );
-
-  // Fallback to high-quality default calendar if Google Sheets is unreachable
-  if (calendarRows.length === 0) {
-    console.log(`[Sync ${runId}] Using default Season 18 championship schedule...`);
-    calendarRows = [
-      { Round: "1", Circuit: "Monza", Car: "GT3 Class", Status: "Completed", Practice: "2026-10-17T09:00:00Z", Qualifying: "2026-10-17T09:45:00Z", Race: "2026-10-17T10:05:00Z" },
-      { Round: "2", Circuit: "Spa-Francorchamps", Car: "GT3 Class", Status: "Completed", Practice: "2026-10-24T09:00:00Z", Qualifying: "2026-10-24T09:45:00Z", Race: "2026-10-24T10:05:00Z" },
-      { Round: "3", Circuit: "Mount Panorama", Car: "GT3 Class", Status: "Completed", Practice: "2026-10-31T09:00:00Z", Qualifying: "2026-10-31T09:45:00Z", Race: "2026-10-31T10:05:00Z" },
-      { Round: "4", Circuit: "Silverstone", Car: "GT3 Class", Status: "Completed", Practice: "2026-11-07T09:00:00Z", Qualifying: "2026-11-07T09:45:00Z", Race: "2026-11-07T10:05:00Z" },
-      { Round: "5", Circuit: "Kyalami", Car: "GT3 Class & Ginetta GT4", Status: "Next", Practice: "2026-11-26T09:00:00Z", Qualifying: "2026-11-26T09:45:00Z", Race: "2026-11-26T10:05:00Z" },
-      { Round: "6", Circuit: "Nurburgring GP", Car: "GT3 Class", Status: "Upcoming", Practice: "2026-12-03T09:00:00Z", Qualifying: "2026-12-03T09:45:00Z", Race: "2026-12-03T10:05:00Z" },
-      { Round: "7", Circuit: "Barcelona", Car: "GT3 Class", Status: "Upcoming", Practice: "2026-12-10T09:00:00Z", Qualifying: "2026-12-10T09:45:00Z", Race: "2026-12-10T10:05:00Z" },
-      { Round: "8", Circuit: "Suzuka", Car: "GT3 Class", Status: "Upcoming", Practice: "2026-12-17T09:00:00Z", Qualifying: "2026-12-17T09:45:00Z", Race: "2026-12-17T10:05:00Z" },
-      { Round: "9", Circuit: "Watkins Glen", Car: "GT3 Class", Status: "Upcoming", Practice: "2026-12-24T09:00:00Z", Qualifying: "2026-12-24T09:45:00Z", Race: "2026-12-24T10:05:00Z" },
-      { Round: "10", Circuit: "Mount Panorama", Car: "GT3 Class", Status: "Upcoming", Practice: "2027-01-07T09:00:00Z", Qualifying: "2027-01-07T09:45:00Z", Race: "2027-01-07T10:05:00Z" },
-    ];
-  }
+  // 1. Fetch Calendar from Google Sheet (Strictly ACC events)
+  const calendarRows = await fetchLnrCalendarRows(targetSheetId, LNR_CALENDAR_GID);
 
   // 2. Parse and Build Rounds
   const rounds: any[] = [];
+  const now = Date.now();
+
   calendarRows.forEach((row, idx) => {
-    const rawRnd = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.round) || String(idx + 1);
-    const roundNumber = parseInt(rawRnd.replace(/[^0-9]/g, ""), 10) || idx + 1;
-    const roundId = `r${String(roundNumber).padStart(2, "0")}`;
-
-    const rawTrack = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.trackKey);
+    const rawDate = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.dateTime) || "";
+    const series = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.series) || "LNR ACC Round";
+    const rawTrack = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.location) || "";
     const trackKey = resolveTrackKey(rawTrack);
+    const { carKey, carName } = resolveCarFromSeries(series);
+    const format = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.format) || "40 Mins";
+    const dow = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.dow) || "";
+    const notes = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.notes) || "";
 
-    const rawCar = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.carKey);
-    const carKey = resolveCarKey(rawCar);
+    const startAtUtc = sydneyToUtcIso(rawDate);
+    const raceTimeMs = startAtUtc ? new Date(startAtUtc).getTime() : 0;
 
-    const rawStatus = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.status);
-    const practiceAt = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.practiceAt);
-    const qualifyingAt = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.qualifyingAt);
-    const raceAt = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.raceAt);
-    const race2At = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.race2At);
-    const notes = getMappedValue(row, CALENDAR_SHEET_MAPPING.columns.notes);
+    // Practice (1h prior), Qualy (15m prior), Race (event time)
+    const practiceAt = raceTimeMs
+      ? new Date(raceTimeMs - 60 * 60 * 1000).toISOString()
+      : "";
+    const qualifyingAt = raceTimeMs
+      ? new Date(raceTimeMs - 15 * 60 * 1000).toISOString()
+      : "";
 
-    const status = resolveRoundStatus(rawStatus, raceAt);
+    // Dynamic round status
+    let status: "upcoming" | "live" | "completed" = "upcoming";
+    if (raceTimeMs && now > raceTimeMs + 2 * 3600 * 1000) {
+      status = "completed";
+    } else if (raceTimeMs && now >= raceTimeMs && now <= raceTimeMs + 2 * 3600 * 1000) {
+      status = "live";
+    }
+
+    const rndMatch = series.match(/Round\s*(\d+)/i);
+    const roundNumber = rndMatch ? parseInt(rndMatch[1], 10) : idx + 1;
+    const roundId = `r${String(idx + 1).padStart(2, "0")}`;
 
     rounds.push({
       id: roundId,
       roundNumber,
+      seriesName: series,
       trackKey,
-      trackName: ACC_TRACKS[trackKey] || trackKey,
+      trackName: ACC_TRACKS[trackKey] || rawTrack || trackKey,
       carKey,
-      carName: ACC_CARS[carKey] || carKey || "GT3 Class",
-      startAt: raceAt || practiceAt || new Date().toISOString(),
+      carName,
+      format,
+      dow,
+      startAt: startAtUtc || new Date().toISOString(),
       sessions: {
-        practiceAt: practiceAt || "",
-        qualifyingAt: qualifyingAt || "",
-        raceAt: raceAt || "",
-        race2At: race2At || undefined,
+        practiceAt,
+        qualifyingAt,
+        raceAt: startAtUtc,
       },
       status,
       notes: notes || undefined,
     });
   });
 
-  rounds.sort((a, b) => a.roundNumber - b.roundNumber);
-  const nextRound = rounds.find((r) => r.status === "live") || rounds.find((r) => r.status === "upcoming") || rounds[0];
+  const nextRound =
+    rounds.find((r) => r.status === "live") ||
+    rounds.find((r) => r.status === "upcoming") ||
+    rounds[rounds.length - 1] ||
+    null;
 
-  // 3. Fetch Standings Tab
+  const lastCompletedRound = [...rounds].reverse().find((r) => r.status === "completed") || rounds[0] || null;
+
+  // 3. Fetch Standings Tab (if provided)
   const standingsRows = await fetchSheetRows(
     targetSheetId,
     STANDINGS_SHEET_MAPPING.sheetName,
@@ -303,17 +381,11 @@ export async function syncLeagueCalendar(options: {
       standingsByClass[c].sort((a, b) => a.position - b.position);
     });
   } else {
-    // High-quality default standings
-    standingsByClass.pro = [
-      { position: 1, driverId: "apexhunter", name: "ApexHunter", class: "pro", car: "Ferrari 296 GT3", points: 142, wins: 2, podiums: 4, poles: 2, fastestLaps: 2 },
-      { position: 2, driverId: "turbotadpole", name: "TurboTadpole", class: "pro", car: "BMW M4 GT3", points: 128, wins: 1, podiums: 3, poles: 1, fastestLaps: 1 },
-      { position: 3, driverId: "velocekev", name: "VeloceKev", class: "pro", car: "Porsche 992 GT3 R", points: 115, wins: 1, podiums: 2, poles: 1, fastestLaps: 1 },
-      { position: 4, driverId: "ozsimracer", name: "OzSimRacer", class: "pro", car: "Aston Martin Vantage V8", points: 104, wins: 0, podiums: 2, poles: 0, fastestLaps: 0 },
-      { position: 5, driverId: "trackphantom", name: "TrackPhantom", class: "pro", car: "McLaren 720S GT3 Evo", points: 92, wins: 0, podiums: 1, poles: 0, fastestLaps: 0 },
-    ];
-    standingsByClass.proam = [
-      { position: 1, driverId: "koalaracing", name: "KoalaRacing", class: "proam", car: "Porsche 992 GT3 R", points: 135, wins: 2, podiums: 3, poles: 1, fastestLaps: 2 },
-      { position: 2, driverId: "shiftinggears", name: "ShiftingGears", class: "proam", car: "Ferrari 296 GT3", points: 120, wins: 1, podiums: 3, poles: 2, fastestLaps: 0 },
+    // Leave standings empty rather than inserting fabricated fake drivers
+    standingsByClass.pro = [];
+    standingsByClass.proam = [];
+    standingsByClass.am = [];
+  }
       { position: 3, driverId: "downforcesam", name: "DownforceSam", class: "proam", car: "BMW M4 GT3", points: 108, wins: 1, podiums: 2, poles: 0, fastestLaps: 1 },
     ];
     standingsByClass.am = [
